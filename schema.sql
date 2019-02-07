@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS players (
+    owner_id BIGINT PRIMARY KEY UNIQUE NOT NULL,
+    name VARCHAR(32) NOT NULL,
+    map_id INT NOT NULL
+);
