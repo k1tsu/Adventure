@@ -24,6 +24,8 @@ class Handler:
 
     async def on_command_error(self, ctx, exc):
         exc = getattr(exc, "original", exc)
+        if isinstance(exc, (commands.CommandNotFound, commands.NoPrivateMessage, commands.DisabledCommand)):
+            return
         if isinstance(exc, commands.CommandOnCooldown):
             now = datetime.now()
             later = timedelta(seconds=exc.retry_after)
@@ -32,8 +34,6 @@ class Handler:
         ctx.command.reset_cooldown(ctx)
         if isinstance(exc, commands.UserInputError):
             return await ctx.invoke(self.bot.get_command("help"), *ctx.command.qualified_name.split())
-        if isinstance(exc, (commands.CommandNotFound, commands.NoPrivateMessage, commands.DisabledCommand)):
-            return
         if isinstance(exc, (commands.NotOwner, commands.MissingPermissions)):
             return await ctx.send("You don't have permission to use this command.")
         if isinstance(exc, commands.BotMissingPermissions):

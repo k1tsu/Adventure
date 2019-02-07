@@ -7,6 +7,12 @@ import aioredis
 import asyncpg
 from discord.ext import commands
 
+import os
+os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
+
+from jishaku import shell as jskshell
+jskshell.WINDOWS = False
+
 import logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -85,9 +91,9 @@ class Adventure(commands.Bot):
         self.dispatch("logout")
         self.prepared.clear()
         for event in self.unload_complete:
-            log.debug("waiting logout on %s.", event)
+            # log.debug("waiting logout on %s.", event)
             await event.wait()
-        log.debug("logout wait complete.")
+        # log.debug("logout wait complete.")
         await self.db.close()
         self.redis.close()
         await self.redis.wait_closed()
