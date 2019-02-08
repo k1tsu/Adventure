@@ -28,6 +28,9 @@ class Player:
         self.name = name
         self._map = self._bot.map_manager.get_map(0)
 
+    def __repr__(self):
+        return "<Player name={0.name} owner={0.owner} map={0.map}>".format(self)
+
     @property
     def map(self):
         return self._map

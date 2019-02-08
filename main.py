@@ -9,6 +9,7 @@ from discord.ext import commands
 
 import os
 os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
+os.environ['JISHAKU_HIDE'] = "true"
 
 from jishaku import shell as jskshell
 jskshell.WINDOWS = False
@@ -62,6 +63,9 @@ class Adventure(commands.Bot):
                 log.info("%s loaded successfully.", extension)
             except Exception as e:
                 log.critical("%s failed to load [%s: %s]", extension, type(e).__name__, str(e))
+
+    async def is_owner(self, user):
+        return user.id in config.OWNERS
 
     # noinspection PyUnusedLocal
     async def getprefix(self, *args):

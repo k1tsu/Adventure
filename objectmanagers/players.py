@@ -1,5 +1,7 @@
 from utils import Player
 
+from discord.ext import commands
+
 import asyncio
 import logging
 log = logging.getLogger("Adventure.PlayerManager")
@@ -8,13 +10,26 @@ log = logging.getLogger("Adventure.PlayerManager")
 class PlayerManager:
     def __init__(self, bot):
         self.bot = bot
-        self.players = set()
+        self.players = list()
         self.unload_event = asyncio.Event()
         self.bot.unload_complete.append(self.unload_event)
         # log.debug("init")
 
+    # -- Commands -- #
+
+    @commands.group(invoke_without_command=True)
+    async def player(self, ctx):
+        pass
+
+    # -- Player Manager stuff -- #
+
     def fetch_players(self):
         return self.bot.db.fetch("SELECT * FROM players;")
+
+    # -- Events -- #
+
+    def __unload(self):
+        self.bot.unload_complete.remove(self.unload_event)
 
     async def on_ready(self):
         # log.debug("on_ready")
@@ -23,7 +38,7 @@ class PlayerManager:
         for owner_id, name, map_id in await self.fetch_players():
             player = Player(owner=self.bot.get_user(owner_id), name=name, bot=self.bot)
             player.map = map_id
-            self.players.add(player)
+            self.players.append(player)
             log.info("Player \"%s\" (%s) initialized at map \"%s\".", player.name, str(player.owner), player.map)
 
     async def on_logout(self):
