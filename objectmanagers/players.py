@@ -66,6 +66,8 @@ class PlayerManager:
         player = self.get_player(ctx.author._user)
         if not player:
             return await ctx.send("You don't have a player! Create one with `%screate`!" % ctx.prefix)
+        if destination.id in (-1, 696969):
+            return await ctx.send("Unknown map %s" % blobs.BLOB_WINK)
         time = player.map.calculate_travel_to(destination)
         if time > 4500:
             if not await ctx.warn("%s It's a long trip, are you sure you want to go?" % blobs.BLOB_THINK):
