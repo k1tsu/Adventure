@@ -42,7 +42,7 @@ class MapManager:
     def _add_map_nearby(*maps: utils.Map):
         for _map in maps:
             for _map2 in maps:
-                if _map == _map2:
+                if _map == _map2 or (_map or _map2):
                     continue
                 # log.debug("%s", repr(_map2))
                 _map.nearby.add(_map2)

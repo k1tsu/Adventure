@@ -2,10 +2,12 @@ import asyncio
 import sys
 
 import config
+import utils
 
 import aioredis
 import asyncpg
 from discord.ext import commands
+import discord
 
 import os
 os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
@@ -54,6 +56,8 @@ class Adventure(commands.Bot):
         self.session = self.http._session
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
+        self.tick = discord.PartialEmoji(False, "tickYes", 490607182010777620)
+        self.cross = discord.PartialEmoji(False, "tickNo", 490607198443929620)
         self.prepare_extensions()
 
     def prepare_extensions(self):
@@ -72,6 +76,9 @@ class Adventure(commands.Bot):
         if not self.prepared.is_set():
             return commands.when_mentioned(*args)
         return commands.when_mentioned_or(config.PREFIX)(*args)
+
+    async def get_context(self, message, *, cls=None):
+        return await super().get_context(message, cls=utils.EpicContext)
 
     # noinspection PyAttributeOutsideInit
     async def on_ready(self):
