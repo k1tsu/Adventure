@@ -20,6 +20,7 @@ class PlayerManager:
         self.players = list()
         self.unload_event = asyncio.Event()
         self.bot.unload_complete.append(self.unload_event)
+        self.is_creating = []
 
     def __repr__(self):
         return "<PlayerManager players={0}>".format(len(self.players))
@@ -34,9 +35,12 @@ class PlayerManager:
 
     @commands.command()
     async def create(self, ctx):
+        if ctx.author.id in self.is_creating:
+            return
         player = self.get_player(ctx.author._user)
         if player:
             return await ctx.send("You already own \"%s\"!" % player)
+        self.is_creating.append(ctx.author.id)
         await ctx.send(":exclamation: What should the name be? (Name must be 32 characters or lower in length)")
 
         def msgcheck(m):
@@ -52,7 +56,9 @@ class PlayerManager:
             player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot)
             await player.save()
             self.players.append(player)
-            await ctx.send("Success! \"%s\" was sent to map #0 (Home)." % msg)
+            await ctx.send("%s Success! \"%s\" was sent to map #0 (Home)." % (blobs.BLOB_PARTY, msg))
+        finally:
+            self.is_creating.remove(ctx.author.id)
 
     @commands.command()
     async def delete(self, ctx):

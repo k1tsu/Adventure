@@ -1,4 +1,6 @@
 from discord.ext.commands import Context
+from jishaku.paginators import WrappedPaginator, PaginatorEmbedInterface
+from discord import Embed, Colour
 
 import blobs
 
@@ -8,6 +10,14 @@ import asyncio
 class EpicContext(Context):
     def __repr__(self):
         return "<EpicContext author={0.author} channel={0.channel} guild={0.guild}>".format(self)
+
+    async def paginate(self, *words):
+        embed = Embed(color=Colour.blurple())
+        pg = WrappedPaginator(prefix="", suffix="", max_size=2048)
+        for line in words:
+            pg.add_line(line)
+        inf = PaginatorEmbedInterface(self.bot, pg, owner=self.author, embed=embed)
+        await inf.send_to(self)
 
     async def warn(self, message):
         msg = await super().send(message)
