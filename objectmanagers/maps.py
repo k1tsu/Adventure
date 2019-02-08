@@ -25,7 +25,7 @@ class MapManager:
     # -- Commands -- #
 
     @commands.command(name="maps")
-    async def _maps_(self, ctx):
+    async def maps_(self, ctx):
         pass
 
     # -- MapManager stuff -- #
@@ -33,6 +33,15 @@ class MapManager:
     @property
     def maps(self):
         return self._maps
+
+    def resolve_map(self, item):
+        if isinstance(item, int) or (isinstance(item, str) and item.lstrip("-").isdigit()):
+            return self.get_map(int(item))
+        elif isinstance(item, str):
+            return find(self.maps, name=item)
+        elif isinstance(item, utils.Map):
+            return item
+        raise RuntimeError("what")
 
     def _add_map(self, **data):
         _id = int(data.pop("id"))
@@ -55,9 +64,7 @@ class MapManager:
             for _map2 in maps:
                 if _map == _map2 or (_map or _map2):
                     continue
-                # log.debug("%s", repr(_map2))
                 _map.nearby.add(_map2)
-            # log.debug("%s", repr(_map))
 
     def get_map(self, map_id: int):
         return find(self._maps, id=int(map_id))

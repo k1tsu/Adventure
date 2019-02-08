@@ -1,13 +1,17 @@
-from utils import Player
-
 from discord.ext import commands
 import discord
 
-from utils import Player
+import utils
+import blobs
 
 import asyncio
 import logging
 log = logging.getLogger("Adventure.PlayerManager")
+
+
+class MapConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        return ctx.bot.map_manager.resolve_map(argument)
 
 
 class PlayerManager:
@@ -15,9 +19,7 @@ class PlayerManager:
         self.bot = bot
         self.players = list()
         self.unload_event = asyncio.Event()
-        self.salute = discord.PartialEmoji(False, "blobsalute", 543272198463553537)
         self.bot.unload_complete.append(self.unload_event)
-        # log.debug("init")
 
     def __repr__(self):
         return "<PlayerManager players={0}>".format(len(self.players))
@@ -45,7 +47,7 @@ class PlayerManager:
         else:
             msg = await commands.clean_content().convert(ctx, msg.content)
             log.info("Player \"%s\" was created by \"%s\".", msg, ctx.author)
-            player = Player(owner=ctx.author._user, name=msg, bot=self.bot)
+            player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot)
             await player.save()
             self.players.append(player)
             await ctx.send("Success! \"%s\" was sent to map #0 (Home)." % msg)
@@ -53,9 +55,24 @@ class PlayerManager:
     @player.command()
     async def delete(self, ctx):
         player = self.get_player(ctx.author._user)
-        if await ctx.warn("Are you sure you want to delete \"%s\"?" % player):
+        if not player:
+            return await ctx.send("You don't have a player.")
+        if await ctx.warn("Are you sure you want to delete \"%s\"? %s" % (player, blobs.BLOB_PLSNO)):
             await player.delete()
-            await ctx.send("Goodbye, %s. %s" % (player, self.salute))
+            await ctx.send("Goodbye, %s. %s" % (player, blobs.BLOB_SALUTE))
+
+    @player.command()
+    async def travel(self, ctx, *, destination: MapConverter):
+        player = self.get_player(ctx.author._user)
+        if not player:
+            return await ctx.send("You don't have a player! Create one with `%screate`!" % ctx.prefix)
+        time = player.map.calculate_travel_to(destination)
+        if time > 4500:
+            if not await ctx.warn("%s It's a long trip, are you sure you want to go?" % blobs.BLOB_THINK):
+                return
+        await player.travel_to(destination)
+        await ctx.send("%s %s is now travelling to %s and will return in %s hours." %
+                       (blobs.BLOB_SALUTE, player.name, destination.name, time))
 
     # -- Player Manager stuff -- #
 
@@ -71,11 +88,9 @@ class PlayerManager:
         self.bot.unload_complete.remove(self.unload_event)
 
     async def on_ready(self):
-        # log.debug("on_ready")
         await self.bot.prepared.wait()
-        # log.debug("wait complete")
         for owner_id, name, map_id in await self.fetch_players():
-            player = Player(owner=self.bot.get_user(owner_id), name=name, bot=self.bot)
+            player = utils.Player(owner=self.bot.get_user(owner_id), name=name, bot=self.bot)
             player.map = map_id
             self.players.append(player)
             log.info("Player \"%s\" (%s) initialized at map \"%s\".", player.name, str(player.owner), player.map)

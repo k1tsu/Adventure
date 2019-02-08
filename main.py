@@ -57,8 +57,6 @@ class Adventure(commands.Bot):
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
-        self.tick = discord.PartialEmoji(False, "tickYes", 490607182010777620)
-        self.cross = discord.PartialEmoji(False, "tickNo", 490607198443929620)
         self.prepare_extensions()
 
     def prepare_extensions(self):
@@ -103,9 +101,7 @@ class Adventure(commands.Bot):
         self.dispatch("logout")
         self.prepared.clear()
         for event in self.unload_complete:
-            # log.debug("waiting logout on %s.", event)
             await event.wait()
-        # log.debug("logout wait complete.")
         await self.db.close()
         self.redis.close()
         await self.redis.wait_closed()

@@ -1,6 +1,8 @@
 import humanize
 from datetime import datetime, timedelta
 
+import utils
+
 import logging
 maplog = logging.getLogger("Adventure.MapManager")
 plylog = logging.getLogger("Adventure.PlayerManager")
@@ -80,6 +82,7 @@ class Player:
             dest = self._next_map.id
         if not dest:
             return  # the player isnt travelling at all
+        plylog.info("%s has returned from their adventure.", self.name)
         self._map = self._bot.map_manager.get_map(dest)
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
 
@@ -88,15 +91,10 @@ class Player:
 
     async def travel_to(self, destination: Map):
         if await self.is_travelling():
-            raise IndexError("%s is already travelling! He will return in %s." %
-                             (
-                                 self.name,
-                                 humanize.naturaltime(
-                                     (datetime.now() + timedelta(hours=self.map.calculate_travel_to(
-                                         destination
-                                     )))
-                                 ))
-                             )
+            raise utils.AlreadyTravelling(self.name,
+                                          humanize.naturaltime((datetime.now() + timedelta(
+                                                          seconds=await self.travel_time()))))
+
         time = int(((datetime.now() + timedelta(
             hours=self.map.calculate_travel_to(destination))) - datetime.now()).total_seconds())
         self._next_map = destination
@@ -104,6 +102,7 @@ class Player:
                     self.name, destination, self.map.calculate_travel_to(destination))
         x = await self._bot.redis.execute("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))
         await self._bot.redis.execute("SET", f"next_map_{self.owner.id}", str(destination.id))
+        return round(self.map.calculate_travel_to(destination))
 
     async def save(self, *, cursor=None):
         q = """
