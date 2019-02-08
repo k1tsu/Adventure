@@ -8,3 +8,4 @@ ASYNCPG = {
     "database": "database name",
     "host": "host address"
 }
+OWNERS = []  # list of user ids (ints)
