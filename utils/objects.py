@@ -14,7 +14,7 @@ class Map:
     def __init__(self, *, map_id: int, name: str, density: int):
         self.id = map_id
         self.name = name
-        self.nearby = set()
+        self.nearby = list()
         self.density = density
 
     def _mini_repr(self):
@@ -22,6 +22,9 @@ class Map:
 
     def __repr__(self):
         return f"<Map id={self.id} name='{self.name}' nearby={set(map(self.__class__._mini_repr, self.nearby))}>"
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and other.id == self.id
 
     def __str__(self):
         return self.name
@@ -77,13 +80,13 @@ class Player:
         if await self.is_travelling():
             return  # the TTL hasnt expired
         if not self._next_map:
-            dest = self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
+            dest = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
         else:
             dest = self._next_map.id
         if not dest:
             return  # the player isnt travelling at all
         plylog.info("%s has returned from their adventure.", self.name)
-        self._map = self._bot.map_manager.get_map(dest)
+        self._map = self._bot.map_manager.get_map(int(dest))
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
 
     async def travel_time(self):

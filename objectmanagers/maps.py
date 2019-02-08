@@ -62,9 +62,9 @@ class MapManager:
     def _add_map_nearby(*maps: utils.Map):
         for _map in maps:
             for _map2 in maps:
-                if _map == _map2 or (_map or _map2):
+                if _map == _map2 or (_map is None or _map2 is None):
                     continue
-                _map.nearby.add(_map2)
+                _map.nearby.append(_map2)
 
     def get_map(self, map_id: int):
         return find(self._maps, id=int(map_id))

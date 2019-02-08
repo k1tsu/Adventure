@@ -1,5 +1,6 @@
 import asyncio
 import sys
+from datetime import datetime
 
 import config
 import utils
@@ -7,7 +8,6 @@ import utils
 import aioredis
 import asyncpg
 from discord.ext import commands
-import discord
 
 import os
 os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
@@ -22,7 +22,7 @@ logging.basicConfig(
     format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
     datefmt="%H:%M:%S",
     handlers=[
-        logging.FileHandler("logs/adventure.log", "w"),
+        logging.FileHandler("logs/adventure.log", "a"),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -38,6 +38,7 @@ finally:
     pass
 log = logging.getLogger("Adventure.main")
 # log.setLevel(logging.DEBUG)
+log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*30)
 
 try:
     import uvloop
@@ -113,6 +114,10 @@ class Adventure(commands.Bot):
             loop.run_until_complete(self.start(token))
         except KeyboardInterrupt:
             loop.run_until_complete(self.logout())
+
+
+# https://discordapp.com/channels/336642139381301249/381963689470984203/543337687797727242
+# :rooThink:
 
 
 Adventure().run(config.TOKEN)

@@ -24,13 +24,15 @@ class PlayerManager:
     def __repr__(self):
         return "<PlayerManager players={0}>".format(len(self.players))
 
+    async def on_command(self, ctx):
+        player = self.get_player(ctx.author._user)
+        if not player:
+            return
+        await player.update_travelling()
+
     # -- Commands -- #
 
-    @commands.group(invoke_without_command=True)
-    async def player(self, ctx):
-        raise commands.BadArgument
-
-    @player.command()
+    @commands.command()
     async def create(self, ctx):
         player = self.get_player(ctx.author._user)
         if player:
@@ -52,7 +54,7 @@ class PlayerManager:
             self.players.append(player)
             await ctx.send("Success! \"%s\" was sent to map #0 (Home)." % msg)
 
-    @player.command()
+    @commands.command()
     async def delete(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -61,27 +63,37 @@ class PlayerManager:
             await player.delete()
             await ctx.send("Goodbye, %s. %s" % (player, blobs.BLOB_SALUTE))
 
-    @player.command()
+    @commands.command()
     async def travel(self, ctx, *, destination: MapConverter):
         player = self.get_player(ctx.author._user)
         if not player:
             return await ctx.send("You don't have a player! Create one with `%screate`!" % ctx.prefix)
+        if not destination:
+            return await ctx.send("Unknown map.")
         if destination.id in (-1, 696969):
-            return await ctx.send("Unknown map %s" % blobs.BLOB_WINK)
+            return await ctx.send("Unknown map {}".format(blobs.BLOB_WINK))
+        if destination not in player.map.nearby:
+            raise utils.NotNearby(player.map, destination)
         time = player.map.calculate_travel_to(destination)
         if time > 4500:
             if not await ctx.warn("%s It's a long trip, are you sure you want to go?" % blobs.BLOB_THINK):
                 return
+        # noinspection PyTypeChecker
         await player.travel_to(destination)
         await ctx.send("%s %s is now travelling to %s and will return in %s hours." %
                        (blobs.BLOB_SALUTE, player.name, destination.name, time))
+
+    @commands.command()
+    async def profile(self, ctx, *, member: discord.Member = None):
+        member = member or ctx.author
+
 
     # -- Player Manager stuff -- #
 
     def fetch_players(self):
         return self.bot.db.fetch("SELECT * FROM players;")
 
-    def get_player(self, user):
+    def get_player(self, user: discord.User) -> utils.Player:
         return discord.utils.get(self.players, owner=user)
 
     # -- Events -- #
