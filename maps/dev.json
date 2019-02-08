@@ -1,5 +1,6 @@
 {
-          "id": "696969",
+          "id": 696969,
         "name": "Developer Map",
-      "nearby": ["-1"]
+      "nearby": [-1],
+     "density": 0
 }

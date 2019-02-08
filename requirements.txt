@@ -5,3 +5,4 @@ jishaku>=1.4.0
 uvloop>=0.12.0; sys_platform=='linux'
 asyncpg>=0.18.3
 aioredis>=1.2.0
+psutil>=5.5.0

@@ -30,8 +30,9 @@ class PlayerManager:
 
     @player.command()
     async def create(self, ctx):
-        if self.get_player(ctx.author._user):
-            return await ctx.send("You already have a player!")
+        player = self.get_player(ctx.author._user)
+        if player:
+            return await ctx.send("You already own \"%s\"!" % player)
         await ctx.send(":exclamation: What should the name be? (Name must be 32 characters or lower in length)")
 
         def msgcheck(m):

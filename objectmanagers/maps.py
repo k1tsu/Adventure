@@ -1,4 +1,6 @@
 from discord.utils import get as find
+from discord.ext import commands
+
 import ujson
 import os
 
@@ -20,6 +22,14 @@ class MapManager:
     def __unload(self):
         del self._maps[:]
 
+    # -- Commands -- #
+
+    @commands.command(name="maps")
+    async def _maps_(self, ctx):
+        pass
+
+    # -- MapManager stuff -- #
+
     @property
     def maps(self):
         return self._maps
@@ -30,8 +40,9 @@ class MapManager:
             log.error("Map with id \"%s\" already exists. (%s)", _id, self.get_map(_id))
             return
         name = data.pop("name")
+        density = data.pop("density")
         near = list(map(self.get_map, data.pop("nearby")))
-        _map = utils.Map(map_id=_id, name=name)
+        _map = utils.Map(map_id=_id, name=name, density=density)
         self._add_map_nearby(_map, *near)
         self._maps.append(_map)
         if data:

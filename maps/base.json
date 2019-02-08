@@ -1,5 +1,6 @@
 {
-          "id": "-1",
+          "id": -1,
         "name": "Null World",
-      "nearby": ["696969"]
+      "nearby": [696969],
+     "density": 9999
 }

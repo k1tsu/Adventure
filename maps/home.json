@@ -1,5 +1,6 @@
 {
-          "id": "0",
+          "id": 0,
         "name": "Home",
-      "nearby": []
+      "nearby": [],
+     "density": 0
 }

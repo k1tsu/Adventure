@@ -54,6 +54,7 @@ class Adventure(commands.Bot):
         super().__init__(self.getprefix)
         # noinspection PyProtectedMember
         self.session = self.http._session
+        self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
         self.tick = discord.PartialEmoji(False, "tickYes", 490607182010777620)
