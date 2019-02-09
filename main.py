@@ -25,7 +25,7 @@ logging.basicConfig(
     format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
     datefmt="%H:%M:%S",
     handlers=[
-        logging.FileHandler("logs/adventure.log", "a", encoding='UTF-8'),
+        logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
         logging.StreamHandler()
     ]
 )
