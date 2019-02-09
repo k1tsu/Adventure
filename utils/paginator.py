@@ -104,8 +104,8 @@ class EmbedInterface:  # pylint: disable=too-many-instance-attributes
         display_page = self.display_page
         page_num = f'\nPage {display_page + 1}/{self.page_count}'
         page = self.pages[display_page]
-        if page.footer:
-            page._footer.text += " | " + page_num
+        if page.footer and page._footer['text'] != page_num:
+            page._footer['text'] += " | " + page_num
         else:
             page.set_footer(text=page_num)
         return {'embed': page}
@@ -206,16 +206,12 @@ class EmbedInterface:  # pylint: disable=too-many-instance-attributes
                     return
 
                 if emoji == start:
-                    log.debug("EMOTE IS START")
                     self._display_page = 0
                 elif emoji == end:
-                    log.debug("EMOTE IS END")
                     self._display_page = self.page_count - 1
                 elif emoji == back:
-                    log.debug("EMOTE IS BACK")
                     self._display_page -= 1
                 elif emoji == forward:
-                    log.debug("EMOTE IS FORWARD")
                     self._display_page += 1
 
                 self.bot.loop.create_task(self.update())
