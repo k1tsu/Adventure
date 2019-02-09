@@ -1,9 +1,10 @@
+import sys
 import os
-os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
+if sys.platform == "win32":
+    os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
 os.environ['JISHAKU_HIDE'] = "true"
 
 import asyncio
-import sys
 from datetime import datetime
 
 import config
