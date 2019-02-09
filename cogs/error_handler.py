@@ -4,11 +4,18 @@ from datetime import datetime, timedelta
 
 import utils
 
+import traceback
 import logging
 log = logging.getLogger("Adventure.cogs.Handler")
 
 
-ERROR_FMT = """Command error occured:
+EVENT_ERROR_FMT = """Error in %s
+Args: %s
+Kwargs: %s
+%s
+"""
+
+CMD_ERROR_FMT = """Command error occured:
 Guild: %s (%s)
 User: %s (%s)
 Invocation: %s
@@ -41,10 +48,13 @@ class Handler:
             return await ctx.send("You don't have permission to use this command.")
         if isinstance(exc, commands.BotMissingPermissions):
             return await ctx.send("I don't have permission to execute this command.")
-        log.error(ERROR_FMT, ctx.guild.name, ctx.guild.id,
+        log.error(CMD_ERROR_FMT, ctx.guild.name, ctx.guild.id,
                   str(ctx.author), ctx.author.id,
                   ctx.message.content, utils.format_exception(exc))
         await ctx.send(":exclamation: Something went wrong.")
+
+    async def on_error(self, event, *args, **kwargs):
+        log.error(EVENT_ERROR_FMT, event, args, kwargs, traceback.format_exc())
 
 
 def setup(bot):

@@ -1,6 +1,6 @@
 from discord.ext.commands import Context
 from jishaku.paginators import WrappedPaginator, PaginatorEmbedInterface
-from discord import Embed, Colour
+from discord import Embed, Colour, Forbidden
 
 import blobs
 
@@ -10,6 +10,19 @@ import asyncio
 class EpicContext(Context):
     def __repr__(self):
         return "<EpicContext author={0.author} channel={0.channel} guild={0.guild}>".format(self)
+
+    async def add_reaction(self, emote):
+        try:
+            await self.message.add_reaction(emote)
+        except Forbidden:
+            pass
+
+    async def safe_delete(self):
+        try:
+            await self.message.delete()
+            return True
+        except Forbidden:
+            return False
 
     async def paginate(self, *words):
         embed = Embed(color=Colour.blurple())

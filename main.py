@@ -61,7 +61,14 @@ class Adventure(commands.Bot):
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
+        self.blacklist = dict()
+        self.add_check(self.blacklist_check)
         self.prepare_extensions()
+
+    async def blacklist_check(self, ctx):
+        if ctx.author.id in self.blacklist:
+            raise utils.Blacklisted(self.blacklist[ctx.author.id])
+        return True
 
     def prepare_extensions(self):
         for extension in config.EXTENSIONS:
@@ -90,8 +97,16 @@ class Adventure(commands.Bot):
         self.redis = await aioredis.create_pool(config.REDIS_ADDRESS)
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
-        with open("schema.sql") as f:
-            await self.db.execute(f.read())
+        async with self.db.acquire() as cur:
+            with open("schema.sql") as f:
+                await cur.execute(f.read())
+            for userid, reason in await cur.fetch("SELECT user_id, reason FROM blacklist;"):
+                if not self.get_user(userid):
+                    log.warning("Blacklisted ID \"%s\" is unknown.", userid)
+                    await cur.execute("DELETE FROM blacklist WHERE userid=$1;", userid)
+                    continue
+                self.blacklist[userid] = reason
+                log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
         log.info("Connected to PostgreSQL server.")
 
         self.player_manager = self.get_cog("PlayerManager")
@@ -108,6 +123,11 @@ class Adventure(commands.Bot):
         log.info("logout() called. Closing down.")
         self.dispatch("logout")
         self.prepared.clear()
+        async with self.db.acquire() as cur:
+            await cur.execute("DELETE FROM blacklist;")
+            for userid, reason in self.blacklist.items():
+                await cur.execute("INSERT INTO blacklist VALUES ($1, $2);", userid, reason)
+                # update because using *blacklist should automatically add them to the db
         for event in self.unload_complete:
             await event.wait()
         await self.db.close()

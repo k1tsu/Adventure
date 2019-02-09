@@ -19,3 +19,8 @@ class PlayerExists(AdventureBase):
 class NotNearby(AdventureBase):
     def __init__(self, map1, map2):
         super().__init__("%s isn't nearby %s. This is a limitation, I haven't created this much." % (map1, map2))
+
+
+class Blacklisted(AdventureBase):
+    def __init__(self, reason):
+        super().__init__("You have been blacklisted for: %s" % reason)
