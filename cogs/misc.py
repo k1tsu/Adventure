@@ -1,10 +1,7 @@
 from discord.ext import commands
-import discord
 
-import io
 import time
-
-from utils import TabularData, format_exception
+import random
 
 
 class Misc:
@@ -14,11 +11,12 @@ class Misc:
     @commands.command()
     async def epic(self, ctx):
         await ctx.trigger_typing()
-        async for message in ctx.history().filter(
-                lambda m: not m.content.startswith("*") and "epic" in m.content.lower()
-        ):
-            return await ctx.send(message.jump_url)
-        await ctx.send("Not epic.")
+        messages = await ctx.history().filter(
+            lambda m: not m.content.startswith("*") and "epic" in m.content.lower() and not m.author.bot
+        ).flatten()
+        if not messages:
+            return await ctx.send("Not epic.")
+        await ctx.send(random.choice(messages).jump_url)
 
     @commands.command()
     async def ping(self, ctx):
