@@ -85,7 +85,7 @@ class Adventure(commands.Bot):
 
     # noinspection PyAttributeOutsideInit
     async def on_ready(self):
-        if self.prepared.set():
+        if self.prepared.is_set():
             return
         self.redis = await aioredis.create_pool(config.REDIS_ADDRESS)
         log.info("Connected to Redis server.")
