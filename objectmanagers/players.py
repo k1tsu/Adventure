@@ -5,6 +5,7 @@ import utils
 import blobs
 
 import asyncio
+from datetime import datetime
 import logging
 log = logging.getLogger("Adventure.PlayerManager")
 
@@ -29,7 +30,8 @@ class PlayerManager:
         player = self.get_player(ctx.author._user)
         if not player:
             return
-        await player.update_travelling()
+        if await player.update_travelling():
+            await ctx.send("%s %s returned from their travels!" % (player, blobs.BLOB_PARTY))
 
     # -- Commands -- #
 
@@ -53,7 +55,7 @@ class PlayerManager:
         else:
             msg = await commands.clean_content().convert(ctx, msg.content)
             log.info("Player \"%s\" was created by \"%s\".", msg, ctx.author)
-            player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot)
+            player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot, created_at=datetime.utcnow())
             await player.save()
             self.players.append(player)
             await ctx.send("%s Success! \"%s\" was sent to map #0 (Home)." % (blobs.BLOB_PARTY, msg))
@@ -90,9 +92,17 @@ class PlayerManager:
                        (blobs.BLOB_SALUTE, player.name, destination.name, time))
 
     @commands.command()
-    async def profile(self, ctx, *, member: discord.Member = None):
+    async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
         member = member or ctx.author
-
+        player = self.get_player(member._user)
+        if not player:
+            return await ctx.send(f"%s doesn't have a player %s" % (member, blobs.BLOB_PLSNO))
+        embed = discord.Embed(color=discord.Colour.blurple())
+        embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
+        embed.add_field(name="Name", value=player.name)
+        embed.add_field(name="Currently At", value=player.map)
+        embed.add_field(name="Created At", value=player.created_at.strftime("%d/%m/%y @ %H:%M"), inline=False)
+        await ctx.send(embed=embed)
 
     # -- Player Manager stuff -- #
 
@@ -109,8 +119,9 @@ class PlayerManager:
 
     async def on_ready(self):
         await self.bot.prepared.wait()
-        for owner_id, name, map_id in await self.fetch_players():
-            player = utils.Player(owner=self.bot.get_user(owner_id), name=name, bot=self.bot)
+        for owner_id, name, map_id, created in await self.fetch_players():
+            player = utils.Player(owner=self.bot.get_user(owner_id), name=name,
+                                  bot=self.bot, created_at=created)
             player.map = map_id
             self.players.append(player)
             log.info("Player \"%s\" (%s) initialized at map \"%s\".", player.name, str(player.owner), player.map)

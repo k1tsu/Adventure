@@ -1,8 +1,10 @@
 from discord.utils import get as find
 from discord.ext import commands
+import discord
 
 import ujson
 import os
+from typing import List
 
 import utils
 
@@ -13,10 +15,11 @@ log = logging.getLogger("Adventure.MapManager")
 
 class MapManager:
     __slots__ = ("bot", "_maps")
+    _ignore = (-1, 696969)
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._maps = []
+        self._maps: List[utils.Map] = []
         self.prepare_maps()
 
     def __unload(self):
@@ -26,7 +29,18 @@ class MapManager:
 
     @commands.command(name="maps")
     async def maps_(self, ctx):
-        pass
+        pg = utils.EmbedPaginator()
+        for _map in self._maps:
+            if _map.id in self._ignore:
+                continue
+            embed = discord.Embed(color=_map._raw['colour'])
+            embed.set_author(name=_map.name)
+            embed.add_field(name="ID", value=str(_map.id))
+            embed.add_field(name="Density", value=str(_map.density))
+            embed.add_field(name="Nearby Maps", value="\n".join(map(str, _map.nearby)), inline=False)
+            pg.add_page(embed)
+        inf = utils.EmbedInterface(self.bot, pg, ctx.author)
+        await inf.send_to(ctx)
 
     # -- MapManager stuff -- #
 
@@ -44,14 +58,16 @@ class MapManager:
         raise RuntimeError("what")
 
     def _add_map(self, **data):
+        clone = data.copy()
         _id = int(data.pop("id"))
         if self.get_map(_id):
             log.error("Map with id \"%s\" already exists. (%s)", _id, self.get_map(_id))
             return
+        data.pop("colour")
         name = data.pop("name")
         density = data.pop("density")
         near = list(map(self.get_map, data.pop("nearby")))
-        _map = utils.Map(map_id=_id, name=name, density=density)
+        _map = utils.Map(map_id=_id, name=name, density=density, data=clone)
         self._add_map_nearby(_map, *near)
         self._maps.append(_map)
         if data:

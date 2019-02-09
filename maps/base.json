@@ -2,5 +2,6 @@
           "id": -1,
         "name": "Null World",
       "nearby": [696969],
-     "density": 9999
+     "density": 9999,
+      "colour": 0
 }

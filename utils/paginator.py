@@ -3,6 +3,9 @@ import discord
 import asyncio
 import collections
 
+import logging
+log = logging.getLogger("Adventure.main")
+
 
 EmojiSettings = collections.namedtuple('EmojiSettings', 'start back forward end close')
 
@@ -203,12 +206,16 @@ class EmbedInterface:  # pylint: disable=too-many-instance-attributes
                     return
 
                 if emoji == start:
+                    log.debug("EMOTE IS START")
                     self._display_page = 0
                 elif emoji == end:
+                    log.debug("EMOTE IS END")
                     self._display_page = self.page_count - 1
                 elif emoji == back:
+                    log.debug("EMOTE IS BACK")
                     self._display_page -= 1
                 elif emoji == forward:
+                    log.debug("EMOTE IS FORWARD")
                     self._display_page += 1
 
                 self.bot.loop.create_task(self.update())

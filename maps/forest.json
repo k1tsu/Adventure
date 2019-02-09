@@ -2,5 +2,6 @@
           "id": 149947,
         "name": "Forest",
       "nearby": [0],
-     "density": 3500
+     "density": 3500,
+      "colour": 3066993
 }

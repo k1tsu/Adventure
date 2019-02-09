@@ -1,5 +1,8 @@
-import humanize
 from datetime import datetime, timedelta
+import asyncio
+
+import humanize
+import discord
 
 import utils
 
@@ -9,13 +12,14 @@ plylog = logging.getLogger("Adventure.PlayerManager")
 
 
 class Map:
-    __slots__ = ("id", "name", "nearby", "density")
+    __slots__ = ("id", "name", "nearby", "density", "_raw")
 
-    def __init__(self, *, map_id: int, name: str, density: int):
+    def __init__(self, *, map_id: int, name: str, density: int, data: dict):
         self.id = map_id
         self.name = name
         self.nearby = list()
         self.density = density
+        self._raw = data
 
     def _mini_repr(self):
         return f"<Map id={self.id} name={self.name}>"
@@ -40,14 +44,15 @@ class Map:
 
 
 class Player:
-    __slots__ = ("owner", "name", "_map", "_bot", "_next_map")
+    __slots__ = ("owner", "name", "_map", "_bot", "_next_map", "created_at")
 
-    def __init__(self, *, owner, name, bot):
+    def __init__(self, *, owner: discord.User, name: str, bot, created_at: datetime):
         self._bot = bot
         self.owner = owner
         self.name = name
         self._map = self._bot.map_manager.get_map(0)
         self._next_map: Map = None
+        self.created_at = created_at
 
     def __repr__(self):
         return "<Player name='{0.name}' owner={0.owner!r} map={0.map!r}>".format(self)
@@ -77,6 +82,7 @@ class Player:
         return await self.travel_time() > 0
 
     async def update_travelling(self):
+        await asyncio.sleep(1)
         if await self.is_travelling():
             return  # the TTL hasnt expired
         if not self._next_map:
@@ -88,6 +94,7 @@ class Player:
         plylog.info("%s has returned from their adventure.", self.name)
         self._map = self._bot.map_manager.get_map(int(dest))
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
+        return self._map
 
     async def travel_time(self):
         return await self._bot.redis.execute("TTL", f"travelling_{self.owner.id}")
@@ -110,16 +117,16 @@ class Player:
     async def save(self, *, cursor=None):
         q = """
 INSERT INTO players
-VALUES ($1, $2, $3)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (owner_id)
 DO UPDATE
 SET map_id = $3
 WHERE players.owner_id = $1;
         """
         if not cursor:
-            await self._bot.db.execute(q, self.owner.id, self.name, self._map.id)
+            await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at)
         else:
-            await cursor.execute(q, self.owner.id, self.name, self._map.id)
+            await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at)
 
     async def delete(self, *, cursor=None):
         if not cursor:

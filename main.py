@@ -1,3 +1,7 @@
+import os
+os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
+os.environ['JISHAKU_HIDE'] = "true"
+
 import asyncio
 import sys
 from datetime import datetime
@@ -9,21 +13,19 @@ import aioredis
 import asyncpg
 from discord.ext import commands
 
-import os
-os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
-os.environ['JISHAKU_HIDE'] = "true"
-
 from jishaku import shell as jskshell
 jskshell.WINDOWS = False
 
 import logging
+
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
     datefmt="%H:%M:%S",
     handlers=[
-        logging.FileHandler("logs/adventure.log", "a"),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler("logs/adventure.log", "a", encoding='UTF-8'),
+        logging.StreamHandler()
     ]
 )
 try:
@@ -85,6 +87,8 @@ class Adventure(commands.Bot):
         self.redis = await aioredis.create_pool(config.REDIS_ADDRESS)
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
+        with open("schema.sql") as f:
+            await self.db.execute(f.read())
         log.info("Connected to PostgreSQL server.")
 
         self.player_manager = self.get_cog("PlayerManager")
