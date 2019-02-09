@@ -29,7 +29,7 @@ class Moderator:
         return content.strip('` \n')
 
     @commands.command(hidden=True)
-    async def bl(self, ctx, member: Union[discord.Member, discord.User], reason: str = "None provided."):
+    async def bl(self, ctx, member: Union[discord.Member, discord.User], *, reason: str = "None provided."):
         if len(reason) > 255:
             return await ctx.send("Limitation: Reason too long.", delete_after=10)
         if member.id not in self.bot.blacklist:
