@@ -119,6 +119,8 @@ class PlayerManager:
 
     async def on_ready(self):
         await self.bot.prepared.wait()
+        if len(self.players) > 0:
+            return
         for owner_id, name, map_id, created in await self.fetch_players():
             player = utils.Player(owner=self.bot.get_user(owner_id), name=name,
                                   bot=self.bot, created_at=created)

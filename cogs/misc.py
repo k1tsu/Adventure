@@ -22,6 +22,13 @@ class Misc:
         return content.strip('` \n')
 
     @commands.command()
+    async def epic(self, ctx):
+        async for message in ctx.history().filter(
+                lambda m: not m.content.startswith("*") and "epic" in m.content.lower()
+        ):
+            return await ctx.send(message.jump_url)
+
+    @commands.command()
     async def ping(self, ctx):
         start = time.perf_counter()
         await ctx.author.trigger_typing()
