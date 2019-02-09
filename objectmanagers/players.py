@@ -43,7 +43,7 @@ class PlayerManager:
         if player:
             return await ctx.send("You already own \"%s\"!" % player)
         self.is_creating.append(ctx.author.id)
-        await ctx.send("%s What should the name be? (Name must be 32 characters or lower in length)" % blobs.BLOB_O)
+        await ctx.send("%s What should the name be? (Name must be 32 characters or lower in length)" % (blobs.BLOB_O,))
 
         def msgcheck(m):
             return len(m.content) < 33 and m.author == ctx.author
