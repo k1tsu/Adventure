@@ -53,6 +53,17 @@ except ImportError:
     uvloop = None
 
 
+EXTENSIONS = [
+    "jishaku",
+    "cogs.error_handler",
+    "cogs.help",
+    "cogs.misc",
+    "cogs.moderators",
+    "objectmanagers.players",
+    "objectmanagers.maps"
+]
+
+
 class Adventure(commands.Bot):
     def __init__(self):
         super().__init__(self.getprefix)
@@ -71,7 +82,7 @@ class Adventure(commands.Bot):
         return True
 
     def prepare_extensions(self):
-        for extension in config.EXTENSIONS:
+        for extension in EXTENSIONS:
             try:
                 self.load_extension(extension)
                 log.info("%s loaded successfully.", extension)
