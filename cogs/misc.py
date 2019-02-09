@@ -26,7 +26,6 @@ class Misc:
         embed = discord.Embed(color=discord.Colour.blurple())
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(format="png", size=32))
         embed.set_image(url=member.avatar_url_as(static_format="png"))
-        embed.set_footer(text=str(ctx.author), icon_url=ctx.author.avatar_url_as(format="png", size=32))
         await ctx.send(embed=embed)
 
     @commands.command()
