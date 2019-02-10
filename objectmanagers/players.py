@@ -58,7 +58,7 @@ class PlayerManager:
             player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot, created_at=datetime.utcnow())
             await player.save()
             self.players.append(player)
-            await ctx.send("%s Success! \"%s\" was sent to map #0 (Home)." % (blobs.BLOB_PARTY, msg))
+            await ctx.send("%s Success! \"%s\" was sent to map #0 (Kingdom of Eden)." % (blobs.BLOB_PARTY, msg))
         finally:
             self.is_creating.remove(ctx.author.id)
 

@@ -62,7 +62,6 @@ class MapManager:
         if self.get_map(_id):
             log.error("Map with id \"%s\" already exists. (%s)", _id, self.get_map(_id))
             return
-        name = data['name']
         _map = utils.Map(**data)
         self._add_map_nearby(_map, *list(map(self.get_map, data['nearby'])))
         self._maps.append(_map)

@@ -139,6 +139,8 @@ WHERE players.owner_id = $1;
             await self._bot.db.execute("DELETE FROM players WHERE owner_id=$1;", self.owner.id)
         else:
             await cursor.execute("DELETE FROM players WHERE owner_id=$1;", self.owner.id)
+        await self._bot.redis.execute("DEL", f"travelling_{self.owner.id}")
+        await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
         self._bot.player_manager.players.remove(self)
         plylog.info("Player \"%s\" was deleted. (%s [%s])", self.name, self.owner, self.owner.id)
         del self
