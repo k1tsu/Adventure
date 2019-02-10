@@ -12,14 +12,15 @@ plylog = logging.getLogger("Adventure.PlayerManager")
 
 
 class Map:
-    __slots__ = ("id", "name", "nearby", "density", "_raw")
+    __slots__ = ("id", "name", "nearby", "density", "_raw", "description")
 
-    def __init__(self, *, map_id: int, name: str, density: int, data: dict):
-        self.id = map_id
-        self.name = name
+    def __init__(self, **kwg):
+        self._raw = kwg.copy()
+        self.id = kwg.get("id")
+        self.name = kwg.get("name")
         self.nearby = list()
-        self.density = density
-        self._raw = data
+        self.density = kwg.get("density")
+        self.description = kwg.get("description")
 
     def _mini_repr(self):
         return f"<Map id={self.id} name={self.name}>"

@@ -1,7 +1,8 @@
 {
           "id": 149947,
-        "name": "Forest",
+        "name": "Eden Forest",
+ "description": "A small forest on the outskirts of Eden.",
       "nearby": [0],
-     "density": 3500,
+     "density": 2000,
       "colour": 3066993
 }

@@ -33,7 +33,7 @@ class MapManager:
         for _map in self._maps:
             if _map.id in self._ignore:
                 continue
-            embed = discord.Embed(color=_map._raw['colour'])
+            embed = discord.Embed(color=_map._raw['colour'], description=_map.description)
             embed.set_author(name=_map.name)
             embed.add_field(name="ID", value=str(_map.id))
             embed.add_field(name="Density", value=str(_map.density))
@@ -52,7 +52,7 @@ class MapManager:
         if isinstance(item, int) or (isinstance(item, str) and item.lstrip("-").isdigit()):
             return self.get_map(int(item))
         elif isinstance(item, str):
-            return find(self.maps, name=item)
+            return find(self.maps, name=item.lower())
         elif isinstance(item, utils.Map):
             return item
         raise RuntimeError("what")
