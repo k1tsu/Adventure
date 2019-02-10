@@ -121,7 +121,7 @@ WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                       map(operator.attrgetter("id"), self._explored_maps))
+                                       list(map(operator.attrgetter("id"), self._explored_maps)))
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at)
 
