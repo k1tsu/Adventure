@@ -119,7 +119,7 @@ class PlayerManager:
         old_name = copy.copy(player.name)
         n = await ctx.send("%s What are you going to rename %s to?" % (blobs.BLOB_O, player))
         try:
-            msg = await self.bot.wait_for('message', check=msgcheck, timeout=10)
+            msg = await self.bot.wait_for('message', check=msgcheck, timeout=60.0)
         except asyncio.TimeoutError:
             await ctx.send("Timed out...")
         else:
