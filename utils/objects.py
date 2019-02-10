@@ -97,11 +97,11 @@ class Player:
         await asyncio.sleep(1)
         if await self.is_travelling():
             return  # the TTL hasnt expired
-        if not self._next_map:
+        if self._next_map is None:
             dest = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
         else:
             dest = self._next_map.id
-        if not dest:
+        if dest is None:
             return  # the player isnt travelling at all
         self._next_map = None
         plylog.info("%s has arrived at their location.", self.name)

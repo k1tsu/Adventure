@@ -49,7 +49,11 @@ class MapManager:
         return self._maps
 
     def resolve_map(self, item):
-        if isinstance(item, int) or (isinstance(item, str) and item.lstrip("-").isdigit()):
+        if isinstance(item, int):
+            return self.get_map(item)
+        elif isinstance(item, str) and item.lstrip("-").isdigit():
+            return self.get_map(int(item))
+        elif isinstance(item, bytes) and item.lstrip(b"-").isdigit():
             return self.get_map(int(item))
         elif isinstance(item, str):
             return find(self.maps, name=item.lower())
