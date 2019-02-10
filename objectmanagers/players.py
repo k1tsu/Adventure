@@ -5,7 +5,9 @@ import utils
 import blobs
 
 import asyncio
+import copy
 from datetime import datetime
+
 import logging
 log = logging.getLogger("Adventure.PlayerManager")
 
@@ -39,7 +41,7 @@ class PlayerManager:
     async def player(self, ctx):
         raise commands.BadArgument
 
-    @player.command()
+    @player.command(ignore_extra=False)
     async def create(self, ctx):
         if ctx.author.id in self.is_creating:
             return
@@ -107,6 +109,26 @@ class PlayerManager:
         embed.add_field(name="Currently At", value=player.map)
         embed.add_field(name="Created At", value=player.created_at.strftime("%d/%m/%y @ %H:%M"), inline=False)
         await ctx.send(embed=embed)
+
+    @player.command(ignore_extra=False)
+    async def rename(self, ctx):
+        def msgcheck(m):
+            return m.author.id == ctx.author.id and len(m.content) < 33
+
+        player = self.get_player(ctx.author._user)
+        old_name = copy.copy(player.name)
+        n = await ctx.send("%s What are you going to rename %s to?" % (blobs.BLOB_O, player))
+        try:
+            msg = await self.bot.wait_for('message', check=msgcheck, timeout=10)
+        except asyncio.TimeoutError:
+            await ctx.send("Timed out...")
+        else:
+            fmt = await commands.clean_content().convert(ctx, msg.content)
+            player.name = fmt
+            await player.save()
+            await ctx.send("%s %s was renamed to %s" % (blobs.BLOB_THUMB, old_name, fmt))
+        finally:
+            await n.delete()
 
     # -- Player Manager stuff -- #
 
