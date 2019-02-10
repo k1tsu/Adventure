@@ -54,13 +54,21 @@ class Player:
         self._map = self._bot.map_manager.get_map(0)
         self._next_map: Map = None
         self.created_at = kwg.get("created_at")
-        self._explored_maps = kwg.get("explored", [0])
+        self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
 
     def __repr__(self):
         return "<Player name='{0.name}' owner={0.owner!r} map={0.map!r}>".format(self)
 
     def __str__(self):
         return self.name
+
+    @property
+    def explored_maps(self):
+        return self._explored_maps
+
+    @explored_maps.setter
+    def explored_maps(self, value):
+        self._explored_maps = list(map(self._bot.map_manager.get_map, value))
 
     @property
     def is_admin(self):
@@ -121,9 +129,10 @@ WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                       list(map(operator.attrgetter("id"), self._explored_maps)))
+                                       list(map(operator.attrgetter("id"), self.explored_maps)))
         else:
-            await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at)
+            await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
+                                 list(map(operator.attrgetter("id"), self.explored_maps)))
 
     async def delete(self, *, cursor=None):
         if not cursor:

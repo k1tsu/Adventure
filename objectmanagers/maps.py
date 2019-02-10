@@ -66,9 +66,6 @@ class MapManager:
         _map = utils.Map(**data)
         self._add_map_nearby(_map, *list(map(self.get_map, data['nearby'])))
         self._maps.append(_map)
-        if data:
-            for item in data.keys():
-                log.warning("Unused key \"%s\" in map \"%s\".", item, name)
 
     @staticmethod
     def _add_map_nearby(*maps: utils.Map):
