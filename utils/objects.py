@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import asyncio
+import operator
 
 import humanize
 
@@ -118,14 +119,15 @@ class Player:
     async def save(self, *, cursor=None):
         q = """
 INSERT INTO players
-VALUES ($1, $2, $3, $4)
+VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET map_id = $3
+SET map_id = $3, explored = $5
 WHERE players.owner_id = $1;
         """
         if not cursor:
-            await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at)
+            await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
+                                       map(operator.attrgetter("id"), self._explored_maps))
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at)
 
