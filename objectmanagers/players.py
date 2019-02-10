@@ -35,7 +35,11 @@ class PlayerManager:
 
     # -- Commands -- #
 
-    @commands.command()
+    @commands.group(invoke_without_command=True)
+    async def player(self, ctx):
+        raise commands.BadArgument
+
+    @player.command()
     async def create(self, ctx):
         if ctx.author.id in self.is_creating:
             return
@@ -62,7 +66,7 @@ class PlayerManager:
         finally:
             self.is_creating.remove(ctx.author.id)
 
-    @commands.command()
+    @player.command()
     async def delete(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -71,7 +75,7 @@ class PlayerManager:
             await player.delete()
             await ctx.send("Goodbye, %s. %s" % (player, blobs.BLOB_SALUTE))
 
-    @commands.command()
+    @player.command()
     async def travel(self, ctx, *, destination: MapConverter):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -88,10 +92,10 @@ class PlayerManager:
                 return
         # noinspection PyTypeChecker
         await player.travel_to(destination)
-        await ctx.send("%s %s is now travelling to %s and will return in %s hours." %
+        await ctx.send("%s %s is now travelling to %s and will arrive in %s hours." %
                        (blobs.BLOB_SALUTE, player.name, destination.name, time))
 
-    @commands.command()
+    @player.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
         member = member or ctx.author
         player = self.get_player(member._user)

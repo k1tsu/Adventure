@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import asyncio
 import operator
+import enum
 
 import humanize
 
@@ -42,6 +43,13 @@ class Map:
         if not isinstance(other, Map):
             raise ValueError("Must be a Map object.")
         return (self.density + other.density) // 1234
+
+
+class Status(enum.Enum):
+    null = 0
+    idle = 1
+    travelling = 2,
+    exploring = 3
 
 
 class Player:
@@ -124,7 +132,7 @@ INSERT INTO players
 VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET map_id = $3, explored = $5
+SET name = $2, map_id = $3, explored = $5
 WHERE players.owner_id = $1;
         """
         if not cursor:
