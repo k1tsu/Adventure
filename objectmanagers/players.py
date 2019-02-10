@@ -121,9 +121,19 @@ class PlayerManager:
         await self.bot.prepared.wait()
         if len(self.players) > 0:
             return
-        for owner_id, name, map_id, created in await self.fetch_players():
-            player = utils.Player(owner=self.bot.get_user(owner_id), name=name,
-                                  bot=self.bot, created_at=created)
+        for owner_id, name, map_id, created, explored in await self.fetch_players():
+            try:
+                user = self.bot.get_user(owner_id) or await self.bot.get_user_info(owner_id)
+            except discord.NotFound:
+                log.warning("Unresolved user id %s with player %s. Skipping initialization.", owner_id, name)
+                continue
+            player = utils.Player(**dict(
+                owner=user,
+                bot=self.bot,
+                name=name,
+                created_at=created,
+                explored=list(map(self.bot.map_manager.get_map, explored))
+            ))
             player.map = map_id
             self.players.append(player)
             log.info("Player \"%s\" (%s) initialized at map \"%s\".", player.name, str(player.owner), player.map)

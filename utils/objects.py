@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import asyncio
 
 import humanize
-import discord
 
 import utils
 
@@ -45,15 +44,16 @@ class Map:
 
 
 class Player:
-    __slots__ = ("owner", "name", "_map", "_bot", "_next_map", "created_at")
+    __slots__ = ("owner", "name", "_map", "_bot", "_next_map", "created_at", "_explored_maps")
 
-    def __init__(self, *, owner: discord.User, name: str, bot, created_at: datetime):
-        self._bot = bot
-        self.owner = owner
-        self.name = name
+    def __init__(self, **kwg):
+        self._bot = kwg.get("bot")
+        self.owner = kwg.get("owner")
+        self.name = kwg.get("name")
         self._map = self._bot.map_manager.get_map(0)
         self._next_map: Map = None
-        self.created_at = created_at
+        self.created_at = kwg.get("created_at")
+        self._explored_maps = kwg.get("explored")
 
     def __repr__(self):
         return "<Player name='{0.name}' owner={0.owner!r} map={0.map!r}>".format(self)
@@ -111,7 +111,7 @@ class Player:
         self._next_map = destination
         plylog.info("%s is adventuring to %s and will return in %.0f hours.",
                     self.name, destination, self.map.calculate_travel_to(destination))
-        x = await self._bot.redis.execute("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))
+        await self._bot.redis.execute("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))
         await self._bot.redis.execute("SET", f"next_map_{self.owner.id}", str(destination.id))
         return round(self.map.calculate_travel_to(destination))
 
