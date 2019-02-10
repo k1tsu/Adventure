@@ -103,6 +103,7 @@ class Player:
             dest = self._next_map.id
         if not dest:
             return  # the player isnt travelling at all
+        self._next_map = None
         plylog.info("%s has arrived at their location.", self.name)
         self.map = dest
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
