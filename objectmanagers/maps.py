@@ -58,16 +58,17 @@ class MapManager:
         raise RuntimeError("what")
 
     def _add_map(self, **data):
-        _id = int(data.pop("id"))
+        _id = int(data["id"])
         if self.get_map(_id):
             log.error("Map with id \"%s\" already exists. (%s)", _id, self.get_map(_id))
             return
+        name = data['name']
         _map = utils.Map(**data)
-        self._add_map_nearby(_map, *data['nearby'])
+        self._add_map_nearby(_map, *list(map(self.get_map, data['nearby'])))
         self._maps.append(_map)
         if data:
             for item in data.keys():
-                log.warning("Unused key \"%s\" in map \"%s\".", item, data['name'])
+                log.warning("Unused key \"%s\" in map \"%s\".", item, name)
 
     @staticmethod
     def _add_map_nearby(*maps: utils.Map):
