@@ -54,7 +54,7 @@ class Player:
         self._map = self._bot.map_manager.get_map(0)
         self._next_map: Map = None
         self.created_at = kwg.get("created_at")
-        self._explored_maps = kwg.get("explored")
+        self._explored_maps = kwg.get("explored", [0])
 
     def __repr__(self):
         return "<Player name='{0.name}' owner={0.owner!r} map={0.map!r}>".format(self)
@@ -72,13 +72,7 @@ class Player:
 
     @map.setter
     def map(self, value):
-        if isinstance(value, Map):
-            self._map = value
-        else:
-            _map = self._bot.map_manager.get_map(value)
-            if not _map:
-                raise ValueError("Unknown map")
-            self._map = _map
+        self._map = self._bot.map_manager.resolve_map(value)
 
     async def is_travelling(self):
         return await self.travel_time() > 0
@@ -93,8 +87,8 @@ class Player:
             dest = self._next_map.id
         if not dest:
             return  # the player isnt travelling at all
-        plylog.info("%s has returned from their adventure.", self.name)
-        self._map = self._bot.map_manager.get_map(int(dest))
+        plylog.info("%s has arrived at their location.", self.name)
+        self.map = dest
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
         return self._map
 

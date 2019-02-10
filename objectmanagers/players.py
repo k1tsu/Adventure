@@ -31,7 +31,7 @@ class PlayerManager:
         if not player:
             return
         if await player.update_travelling():
-            await ctx.send("%s %s returned from their travels!" % (player, blobs.BLOB_PARTY))
+            await ctx.send("%s %s has arrived at %s!" % (player, blobs.BLOB_PARTY, player.map))
 
     # -- Commands -- #
 
