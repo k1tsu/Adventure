@@ -129,7 +129,7 @@ class Adventure(commands.Bot):
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
-                                                             name=f"{config.PREFIX}help"))
+                                                             name=f"*help"))
 
     async def start(self, token):
         await self.login(token, bot=True)
