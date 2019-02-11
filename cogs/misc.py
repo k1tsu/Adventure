@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord
+import jishaku
 
 import inspect
 import os
@@ -65,7 +66,7 @@ class Misc:
             source += "/blob/master"
 
         elif module.startswith("jishaku"):
-            source = "https://github.com/Gorialis/jishaku/blob/master"
+            source = f"https://github.com/Gorialis/jishaku/blob/{jishaku.__version__}"
             location = module.replace(".", "/") + ".py"
 
         else:
