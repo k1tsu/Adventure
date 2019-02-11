@@ -1,9 +1,11 @@
 from discord.ext import commands
 import discord
 
+import inspect
+import os
+import random
 import typing
 import time
-import random
 
 
 class Misc:
@@ -45,8 +47,32 @@ class Misc:
         await ctx.send(f":ping_pong: **{end*1000:.2f}ms**")
 
     @commands.command()
-    async def source(self, ctx):
-        await ctx.send("<https://github.com/XuaTheGrate/Adventure>")
+    async def source(self, ctx, *, command=None):
+        source = "https://github.com/XuaTheGrate/Adventure"
+        if not command:
+            return await ctx.send(source)
+
+        cmd = self.bot.get_command(command.replace(".", " "))
+        if not cmd:
+            return await ctx.send("Couldn't find that command.")
+
+        src = cmd.callback
+        lines, first = inspect.getsourcelines(src)
+        module = inspect.getmodule(src).__name__
+
+        if module.startswith(self.__module__.split(".")[0]):
+            location = os.path.relpath(inspect.getfile(src)).replace('\\', '/')
+            source += "/blob/master"
+
+        elif module.startswith("jishaku"):
+            source = "https://github.com/Gorialis/jishaku/blob/master"
+            location = module.replace(".", "/") + ".py"
+
+        else:
+            raise RuntimeError("*source")
+
+        final = f"<{source}/{location}#L{first}-L{first + len(lines) - 1}>"
+        await ctx.send(final)
 
 
 def setup(bot):
