@@ -106,7 +106,11 @@ class PlayerManager:
         embed = discord.Embed(color=discord.Colour.blurple())
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
         embed.add_field(name="Name", value=player.name)
-        embed.add_field(name="Currently At", value=player.map)
+        pl = self.get_player(ctx.author)
+        if not pl or player.map not in pl.explored_maps:
+            embed.add_field(name="Currently At", value="???")
+        else:
+            embed.add_field(name="Currently At", value=player.map)
         embed.add_field(name="Created At", value=player.created_at.strftime("%d/%m/%y @ %H:%M"), inline=False)
         await ctx.send(embed=embed)
 
