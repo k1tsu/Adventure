@@ -90,7 +90,7 @@ class PlayerManager:
                 return
         # noinspection PyTypeChecker
         await player.travel_to(destination)
-        await ctx.send("%s %s is now travelling to %s and will arrive in %s hours." %
+        await ctx.send("%s %s is now travelling to %s and will arrive in %.1f hours." %
                        (blobs.BLOB_SALUTE, player.name, destination.name, time))
 
     @commands.command()
@@ -103,7 +103,7 @@ class PlayerManager:
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
         embed.add_field(name="Name", value=player.name)
         pl = self.get_player(ctx.author)
-        if not pl or player.map not in pl.explored_maps:
+        if player.owner != ctx.author._user and (not pl or player.map not in pl.explored_maps):
             embed.add_field(name="Currently At", value="???")
         else:
             embed.add_field(name="Currently At", value=player.map)

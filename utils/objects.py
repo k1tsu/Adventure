@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import asyncio
 import operator
-import enum
 
 import humanize
 
@@ -39,17 +38,12 @@ class Map:
         return self.id
 
     def calculate_travel_to(self, other):
-        # hours of travel
         if not isinstance(other, Map):
             raise ValueError("Must be a Map object.")
-        return (self.density + other.density) // 1234
+        return (self.density + other.density) / 1234
 
-
-class Status(enum.Enum):
-    null = 0
-    idle = 1
-    travelling = 2,
-    exploring = 3
+    def calculate_explore(self):
+        pass
 
 
 class Player:
@@ -90,6 +84,9 @@ class Player:
     def map(self, value):
         self._map = self._bot.map_manager.resolve_map(value)
 
+    async def explore(self):
+        ...
+
     async def is_travelling(self):
         return await self.travel_time() > 0
 
@@ -118,8 +115,15 @@ class Player:
                                           humanize.naturaltime((datetime.now() + timedelta(
                                                           seconds=await self.travel_time()))))
 
-        time = int(((datetime.now() + timedelta(
-            hours=self.map.calculate_travel_to(destination))) - datetime.now()).total_seconds())
+        time = int(
+            (
+                    (
+                            datetime.now() + timedelta(
+                                hours=self.map.calculate_travel_to(destination)
+                            )
+                    ) - datetime.now()
+            ).total_seconds()
+        )
         self._next_map = destination
         plylog.info("%s is adventuring to %s and will return in %.0f hours.",
                     self.name, destination, self.map.calculate_travel_to(destination))
