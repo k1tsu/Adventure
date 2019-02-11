@@ -105,7 +105,7 @@ class PlayerManager:
                                                                                                ctx.prefix))
         time = player.map.calculate_explore()
         if time > 2.0:
-            if not await ctx.warn("%s It'll take a while, are you sure?" % blobs.BLOB_THINK):
+            if not await ctx.warn("%s It'll take a while, are you sure?" % (blobs.BLOB_THINK,)):
                 return
         await player.explore()
         await ctx.send("%s %s is now exploring %s and will finish in %.1f hours." %
