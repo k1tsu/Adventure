@@ -13,6 +13,7 @@ os.environ['JISHAKU_HIDE'] = "true"
 # -> Pip packages
 import aioredis
 import asyncpg
+import discord
 from discord.ext import commands
 from jishaku import shell as jskshell
 
@@ -127,6 +128,8 @@ class Adventure(commands.Bot):
 
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
+        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
+                                                             name=f"{config.PREFIX}help"))
 
     async def start(self, token):
         await self.login(token, bot=True)
