@@ -1,11 +1,14 @@
 from discord.ext import commands
+
+import discord
 import humanize
-from datetime import datetime, timedelta
 
 import utils
 
-import traceback
+from datetime import datetime, timedelta
+
 import logging
+import traceback
 log = logging.getLogger("Adventure.cogs.Handler")
 
 
@@ -58,8 +61,9 @@ class Handler:
                   ctx.message.content, utils.format_exception(exc))
         await ctx.send(":exclamation: Something went wrong.")
 
-    @staticmethod
-    async def on_error(event, *args, **kwargs):
+    async def on_error(self, event, *args, **kwargs):
+        if not self.bot.prepared.is_set():
+            await self.bot.change_presence(status=discord.Status.dnd)
         log.error(EVENT_ERROR_FMT, event, args, kwargs, traceback.format_exc())
 
 
