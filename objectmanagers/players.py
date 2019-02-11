@@ -1,14 +1,17 @@
-from discord.ext import commands
-import discord
+# -> Builtin modules
+import asyncio
+import copy
+import logging
+from datetime import datetime
 
+# -> Pip packages
+import discord
+from discord.ext import commands
+
+# -> Local files
 import utils
 import blobs
 
-import asyncio
-import copy
-from datetime import datetime
-
-import logging
 log = logging.getLogger("Adventure.PlayerManager")
 
 

@@ -1,12 +1,16 @@
-from discord.ext import commands
-import discord
-
+# -> Builtin modules
 import io
-from typing import Union
 import logging
-log = logging.getLogger("Adventure.cogs.Moderator")
+from typing import Union
 
+# -> Pip packages
+import discord
+from discord.ext import commands
+
+# -> Local files
 import utils
+
+log = logging.getLogger("Adventure.cogs.Moderator")
 
 
 class Moderator:

@@ -1,14 +1,16 @@
-from discord.utils import get as find
-from discord.ext import commands
-import discord
-
-import ujson
+# -> Builtin modules
+import logging
 import os
 from typing import List
 
-import utils
+# -> Pip packages
+import discord
+import ujson
+from discord.ext import commands
+from discord.utils import get as find
 
-import logging
+# -> Local files
+import utils
 
 log = logging.getLogger("Adventure.MapManager")
 

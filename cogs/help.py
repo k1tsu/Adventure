@@ -1,7 +1,10 @@
+# -> Builtin modules
+import logging
+
+# -> Pip packages
 from discord.ext import commands
 import discord
 
-import logging
 log = logging.getLogger("Adventure.Help")
 
 

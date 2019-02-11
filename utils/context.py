@@ -1,10 +1,13 @@
-from discord.ext.commands import Context
-from jishaku.paginators import WrappedPaginator, PaginatorEmbedInterface
-from discord import Embed, Colour, Forbidden
-
-import blobs
-
+# -> Builtin modules
 import asyncio
+
+# -> Pip packages
+from discord import Colour, Embed, Forbidden
+from discord.ext.commands import Context
+from jishaku.paginators import PaginatorEmbedInterface, WrappedPaginator
+
+# -> Local files
+import blobs
 
 
 class EpicContext(Context):

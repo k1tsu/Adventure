@@ -1,12 +1,14 @@
-from discord.ext import commands
-import discord
-import jishaku
-
+# -> Builtin modules
 import inspect
 import os
 import random
-import typing
 import time
+import typing
+
+# -> Pip packages
+import discord
+import jishaku
+from discord.ext import commands
 
 
 class Misc:

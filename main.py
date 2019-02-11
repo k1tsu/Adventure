@@ -1,23 +1,26 @@
-import sys
+# -> Builtin modules
+import asyncio
+import logging
 import os
+import sys
+from datetime import datetime
+
+# -> This is required prior to importing "jishaku"
 if sys.platform == "win32":
     os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
 os.environ['JISHAKU_HIDE'] = "true"
 
-import asyncio
-from datetime import datetime
-
-import config
-import utils
-
+# -> Pip packages
 import aioredis
 import asyncpg
 from discord.ext import commands
-
 from jishaku import shell as jskshell
-jskshell.WINDOWS = False
 
-import logging
+# -> Local files
+import config
+import utils
+
+jskshell.WINDOWS = False
 
 
 logging.basicConfig(

@@ -1,9 +1,12 @@
-from discord.ext import commands
-import discord
+# -> Builtin modules
 import asyncio
 import collections
-
 import logging
+
+# -> Pip packages
+import discord
+from discord.ext import commands
+
 log = logging.getLogger("Adventure.main")
 
 

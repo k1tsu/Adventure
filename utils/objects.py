@@ -1,13 +1,16 @@
-from datetime import datetime, timedelta
+# -> Builtin modules
 import asyncio
-import operator
 import enum
+import logging
+import operator
+from datetime import datetime, timedelta
 
+# -> Pip packages
 import humanize
 
+# -> Local files
 import utils
 
-import logging
 maplog = logging.getLogger("Adventure.MapManager")
 plylog = logging.getLogger("Adventure.PlayerManager")
 

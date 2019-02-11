@@ -1,4 +1,7 @@
+# -> Pip packages
 from discord.ext.commands import CommandError
+
+# -> Local files
 import blobs
 
 

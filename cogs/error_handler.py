@@ -1,14 +1,16 @@
-from discord.ext import commands
-
-import discord
-import humanize
-
-import utils
-
-from datetime import datetime, timedelta
-
+# -> Builtin modules
 import logging
 import traceback
+from datetime import datetime, timedelta
+
+# -> Pip packages
+import discord
+import humanize
+from discord.ext import commands
+
+# -> Local files
+import utils
+
 log = logging.getLogger("Adventure.cogs.Handler")
 
 
