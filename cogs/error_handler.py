@@ -42,8 +42,13 @@ class Handler:
         ctx.command.reset_cooldown(ctx)
         if isinstance(exc, utils.AdventureBase):
             return await ctx.send(str(exc))
-        if isinstance(exc, commands.UserInputError):
+        if isinstance(exc, commands.BadArgument):
             return await ctx.invoke(self.bot.get_command("help"), *ctx.command.qualified_name.split())
+        if isinstance(exc, commands.TooManyArguments):
+            return await ctx.send(f"{ctx.command} doesn't take any extra arguments."
+                                  f" See `{ctx.prefix}help {ctx.command}")
+        if isinstance(exc, commands.MissingRequiredArgument):
+            return await ctx.send(f"You must fill in the \"{exc.param.name}\" parameter.")
         if isinstance(exc, (commands.NotOwner, commands.MissingPermissions)):
             return await ctx.send("You don't have permission to use this command.")
         if isinstance(exc, commands.BotMissingPermissions):
@@ -53,7 +58,8 @@ class Handler:
                   ctx.message.content, utils.format_exception(exc))
         await ctx.send(":exclamation: Something went wrong.")
 
-    async def on_error(self, event, *args, **kwargs):
+    @staticmethod
+    async def on_error(event, *args, **kwargs):
         log.error(EVENT_ERROR_FMT, event, args, kwargs, traceback.format_exc())
 
 

@@ -98,7 +98,7 @@ class PlayerManager:
         await ctx.send("{} {} is now travelling to {} and will arrive in {:.1f} hours.".format(
             blobs.BLOB_SALUTE, player.name, destination.name, time))
 
-    @commands.command()
+    @commands.command(ignore_extra=False)
     async def explore(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -111,6 +111,26 @@ class PlayerManager:
         await player.explore()
         await ctx.send("{} {} is now exploring {} and will finish in {:.1f} hours.".format(
             blobs.BLOB_SALUTE, player.name, player.map.name, time))
+
+    @commands.command(ignore_extra=False)
+    async def status(self, ctx):
+        player = self.get_player(ctx.author._user)
+        if not player:
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+        time = await player.travel_time()
+        if time > 0:
+            hours, ex = divmod(time, 3600)
+            minutes, seconds = divmod(ex, 60)
+            return await ctx.send("{} is currently travelling and will finish in {} hours, {} minutes and {} seconds."
+                                  .format(player, hours, minutes, seconds))
+        time = await player.explore_time()
+        if time > 0:
+            hours, ex = divmod(time, 3600)
+            minutes, seconds = divmod(ex, 60)
+            return await ctx.send("{} is currently exploring and will finish in {} hours, {} minutes and {} seconds."
+                                  .format(player, hours, minutes, seconds))
+        await ctx.send("{} is currently idling. Try exploring or travelling!".format(player))
 
     @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
