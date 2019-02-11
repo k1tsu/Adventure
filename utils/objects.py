@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import asyncio
 import operator
+import enum
 
 import humanize
 
@@ -9,6 +10,12 @@ import utils
 import logging
 maplog = logging.getLogger("Adventure.MapManager")
 plylog = logging.getLogger("Adventure.PlayerManager")
+
+
+class Status(enum.Enum):
+    idle = 0
+    travelling = 1
+    exploring = 2
 
 
 class Map:
@@ -37,17 +44,17 @@ class Map:
     def __int__(self):
         return self.id
 
-    def calculate_travel_to(self, other):
+    def calculate_travel_to(self, other) -> float:
         if not isinstance(other, Map):
             raise ValueError("Must be a Map object.")
         return (self.density + other.density) / 1234
 
-    def calculate_explore(self):
-        pass
+    def calculate_explore(self) -> float:
+        return (self.density * 1234) / (1000 ** 2)
 
 
 class Player:
-    __slots__ = ("owner", "name", "_map", "_bot", "_next_map", "created_at", "_explored_maps")
+    __slots__ = ("owner", "name", "_map", "_bot", "_next_map", "created_at", "_explored_maps", "status")
 
     def __init__(self, **kwg):
         self._bot = kwg.get("bot")
@@ -57,6 +64,7 @@ class Player:
         self._next_map: Map = None
         self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
+        self.status = kwg.get("status", Status.idle)
 
     def __repr__(self):
         return "<Player name='{0.name}' owner={0.owner!r} map={0.map!r}>".format(self)
@@ -84,11 +92,15 @@ class Player:
     def map(self, value):
         self._map = self._bot.map_manager.resolve_map(value)
 
-    async def explore(self):
-        ...
+    # -- Checks -- #
 
-    async def is_travelling(self):
+    async def is_travelling(self) -> bool:
         return await self.travel_time() > 0
+
+    async def is_exploring(self) -> bool:
+        return await self.explore_time() > 0
+
+    # -- Updaters -- #
 
     async def update_travelling(self):
         await asyncio.sleep(1)
@@ -104,32 +116,65 @@ class Player:
         plylog.info("%s has arrived at their location.", self.name)
         self.map = dest
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
-        return self._map
+        await self._bot.redis.execute("SET", f"status_{self.owner.id}", "0")
+        self.status = Status.idle
+        return True
 
-    async def travel_time(self):
-        return await self._bot.redis.execute("TTL", f"travelling_{self.owner.id}")
+    async def update_exploring(self):
+        await asyncio.sleep(1)
+        if await self.is_exploring():
+            return
+        if self.status == Status.exploring or await self._bot.redis.execute("GET", f"status_{self.owner.id}") == 2:
+            plylog.info("%s has finished exploring %s.", self.name, self.map)
+            await self._bot.redis.execute("SET", f"status_{self.owner.id}", "0")
+            self.status = Status.idle
+            return True
+
+    def travel_time(self):
+        return self._bot.redis.execute("TTL", f"travelling_{self.owner.id}")
+
+    def explore_time(self):
+        return self._bot.redis.execute("TTL", f"exploring_{self.owner.id}")
+
+    # -- Real functions -- #
 
     async def travel_to(self, destination: Map):
         if await self.is_travelling():
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
                                                           seconds=await self.travel_time()))))
-
-        time = int(
-            (
-                    (
-                            datetime.now() + timedelta(
-                                hours=self.map.calculate_travel_to(destination)
-                            )
-                    ) - datetime.now()
-            ).total_seconds()
-        )
+        elif await self.is_exploring():
+            raise utils.AlreadyTravelling(self.name,
+                                          humanize.naturaltime((datetime.now() + timedelta(
+                                                          seconds=await self.explore_time()))))
+        time = int(((datetime.now() + timedelta(hours=self.map.calculate_travel_to(destination))) - datetime.now()
+                    ).total_seconds())
         self._next_map = destination
-        plylog.info("%s is adventuring to %s and will return in %.0f hours.",
+        plylog.info("%s is adventuring to %s and will finish in %.2f hours.",
                     self.name, destination, self.map.calculate_travel_to(destination))
         await self._bot.redis.execute("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))
         await self._bot.redis.execute("SET", f"next_map_{self.owner.id}", str(destination.id))
-        return round(self.map.calculate_travel_to(destination))
+        await self._bot.redis.execute("SET", f"status_{self.owner.id}", "1")
+        self.status = Status.travelling
+
+    async def explore(self):
+        if await self.is_travelling():
+            raise utils.AlreadyTravelling(self.name,
+                                          humanize.naturaltime((datetime.now() + timedelta(
+                                              seconds=await self.travel_time()))))
+        elif await self.is_exploring():
+            raise utils.AlreadyTravelling(self.name,
+                                          humanize.naturaltime((datetime.now() + timedelta(
+                                              seconds=await self.explore_time()))))
+        if self.map in self._explored_maps:
+            raise utils.AlreadyExplored(self.map)
+        time = int(((datetime.now() + timedelta(hours=self.map.calculate_explore())) - datetime.now()).total_seconds())
+        plylog.info("%s is exploring %s and will finish in %.2f hours.",
+                    self.name, self.map, self.map.calculate_explore())
+        await self._bot.redis.execute("SET", f"exploring_{self.owner.id}", str(time), "EX", str(time))
+        await self._bot.redis.execute("SET", f"status_{self.owner.id}", "2")
+        self.status = Status.exploring
+        self._explored_maps.append(self.map)
 
     async def save(self, *, cursor=None):
         q = """
@@ -154,6 +199,8 @@ WHERE players.owner_id = $1;
             await cursor.execute("DELETE FROM players WHERE owner_id=$1;", self.owner.id)
         await self._bot.redis.execute("DEL", f"travelling_{self.owner.id}")
         await self._bot.redis.execute("DEL", f"next_map_{self.owner.id}")
+        await self._bot.redis.execute("DEL", f"exploring_{self.owner.id}")
+        await self._bot.redis.execute("DEL", f"status_{self.owner.id}")
         self._bot.player_manager.players.remove(self)
         plylog.info("Player \"%s\" was deleted. (%s [%s])", self.name, self.owner, self.owner.id)
         del self

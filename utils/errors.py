@@ -1,4 +1,5 @@
 from discord.ext.commands import CommandError
+import blobs
 
 
 class AdventureBase(CommandError):
@@ -8,12 +9,17 @@ class AdventureBase(CommandError):
 
 class AlreadyTravelling(AdventureBase):
     def __init__(self, *stuff):
-        super().__init__("%s is already travelling! He will return in %s." % stuff)
+        super().__init__("{0} {1} is busy and will finish in {2}".format(blobs.BLOB_ARMSCROSSED, *stuff))
+
+
+class AlreadyExplored(AdventureBase):
+    def __init__(self, _map):
+        super().__init__("%s %s is already explored!" % (blobs.BLOB_ARMSCROSSED, _map))
 
 
 class PlayerExists(AdventureBase):
     def __init__(self, player):
-        super().__init__("You already own someone named \"%s\"!" % player)
+        super().__init__("%s You already own someone named \"%s\"!" % (player, blobs.BLOB_ARMSCROSSED))
 
 
 class NotNearby(AdventureBase):

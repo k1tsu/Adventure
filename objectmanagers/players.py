@@ -34,6 +34,8 @@ class PlayerManager:
             return
         if await player.update_travelling():
             await ctx.send("%s %s has arrived at %s!" % (blobs.BLOB_PARTY, player, player.map))
+        elif await player.update_exploring():
+            await ctx.send("%s %s has finished exploring %s!" % (blobs.BLOB_PARTY, player, player.map))
 
     # -- Commands -- #
 
@@ -43,7 +45,7 @@ class PlayerManager:
             return
         player = self.get_player(ctx.author._user)
         if player:
-            return await ctx.send("You already own \"%s\"!" % player)
+            return await ctx.send("%s You already own \"%s\"!" % (blobs.BLOB_ANGERY, player))
         self.is_creating.append(ctx.author.id)
         await ctx.send("%s What should the name be? (Name must be 32 characters or lower in length)" % (blobs.BLOB_O,))
 
@@ -68,7 +70,8 @@ class PlayerManager:
     async def delete(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
-            return await ctx.send("You don't have a player.")
+            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
+                                                                                               ctx.prefix))
         if await ctx.warn("Are you sure you want to delete \"%s\"? %s" % (player, blobs.BLOB_PLSNO)):
             await player.delete()
             await ctx.send("Goodbye, %s. %s" % (player, blobs.BLOB_SALUTE))
@@ -77,7 +80,8 @@ class PlayerManager:
     async def travel(self, ctx, *, destination: MapConverter):
         player = self.get_player(ctx.author._user)
         if not player:
-            return await ctx.send("You don't have a player! Create one with `%screate`!" % ctx.prefix)
+            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
+                                                                                               ctx.prefix))
         if not destination:
             return await ctx.send("Unknown map.")
         if destination.id in (-1, 696969):
@@ -85,7 +89,7 @@ class PlayerManager:
         if destination not in player.map.nearby:
             raise utils.NotNearby(player.map, destination)
         time = player.map.calculate_travel_to(destination)
-        if time > 4500:
+        if time > 2.0:
             if not await ctx.warn("%s It's a long trip, are you sure you want to go?" % blobs.BLOB_THINK):
                 return
         # noinspection PyTypeChecker
@@ -94,12 +98,26 @@ class PlayerManager:
                        (blobs.BLOB_SALUTE, player.name, destination.name, time))
 
     @commands.command()
+    async def explore(self, ctx):
+        player = self.get_player(ctx.author._user)
+        if not player:
+            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
+                                                                                               ctx.prefix))
+        time = player.map.calculate_explore()
+        if time > 2.0:
+            if not await ctx.warn("%s It'll take a while, are you sure?" % blobs.BLOB_THINK):
+                return
+        await player.explore()
+        await ctx.send("%s %s is now exploring %s and will finish in %.1f hours." %
+                       (blobs.BLOB_SALUTE, player.name, player.map.name, time))
+
+    @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
         member = member or ctx.author
         player = self.get_player(member._user)
         if not player:
             return await ctx.send(f"%s doesn't have a player %s" % (member, blobs.BLOB_PLSNO))
-        embed = discord.Embed(color=discord.Colour.blurple())
+        embed = discord.Embed(color=discord.Colour.blurple(), description=f"Currently {player.status.name}")
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
         embed.add_field(name="Name", value=player.name)
         pl = self.get_player(ctx.author)
@@ -112,16 +130,20 @@ class PlayerManager:
 
     @commands.command(ignore_extra=False)
     async def rename(self, ctx):
+        player = self.get_player(ctx.author._user)
+        if not player:
+            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
+                                                                                               ctx.prefix))
+
         def msgcheck(m):
             return m.author.id == ctx.author.id and len(m.content) < 33
 
-        player = self.get_player(ctx.author._user)
         old_name = copy.copy(player.name)
         n = await ctx.send("%s What are you going to rename %s to?" % (blobs.BLOB_O, player))
         try:
             msg = await self.bot.wait_for('message', check=msgcheck, timeout=60.0)
         except asyncio.TimeoutError:
-            await ctx.send("Timed out...")
+            await ctx.send("Took too long...")
         else:
             fmt = await commands.clean_content().convert(ctx, msg.content)
             player.name = fmt
@@ -153,12 +175,18 @@ class PlayerManager:
             except discord.NotFound:
                 log.warning("Unresolved user id %s with player %s. Skipping initialization.", owner_id, name)
                 continue
+            status = await self.bot.redis.execute("GET", f"status_{user.id}")
+            if status:
+                status = utils.Status(int(status))
+            else:
+                status = utils.Status.idle
             player = utils.Player(**dict(
                 owner=user,
                 bot=self.bot,
                 name=name,
                 created_at=created,
-                explored=list(map(self.bot.map_manager.get_map, explored))
+                explored=list(map(self.bot.map_manager.get_map, explored)),
+                status=status
             ))
             player.map = map_id
             self.players.append(player)
