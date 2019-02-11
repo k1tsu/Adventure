@@ -37,11 +37,7 @@ class PlayerManager:
 
     # -- Commands -- #
 
-    @commands.group(invoke_without_command=True)
-    async def player(self, ctx):
-        raise commands.BadArgument
-
-    @player.command(ignore_extra=False)
+    @commands.command(ignore_extra=False)
     async def create(self, ctx):
         if ctx.author.id in self.is_creating:
             return
@@ -68,7 +64,7 @@ class PlayerManager:
         finally:
             self.is_creating.remove(ctx.author.id)
 
-    @player.command()
+    @commands.command()
     async def delete(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -77,7 +73,7 @@ class PlayerManager:
             await player.delete()
             await ctx.send("Goodbye, %s. %s" % (player, blobs.BLOB_SALUTE))
 
-    @player.command()
+    @commands.command()
     async def travel(self, ctx, *, destination: MapConverter):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -97,7 +93,7 @@ class PlayerManager:
         await ctx.send("%s %s is now travelling to %s and will arrive in %s hours." %
                        (blobs.BLOB_SALUTE, player.name, destination.name, time))
 
-    @player.command()
+    @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
         member = member or ctx.author
         player = self.get_player(member._user)
@@ -114,7 +110,7 @@ class PlayerManager:
         embed.add_field(name="Created At", value=player.created_at.strftime("%d/%m/%y @ %H:%M"), inline=False)
         await ctx.send(embed=embed)
 
-    @player.command(ignore_extra=False)
+    @commands.command(ignore_extra=False)
     async def rename(self, ctx):
         def msgcheck(m):
             return m.author.id == ctx.author.id and len(m.content) < 33
