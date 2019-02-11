@@ -20,6 +20,15 @@ class Misc:
             return await ctx.send("Not epic.")
         await ctx.send(random.choice(messages).jump_url)
 
+    @commands.command(hidden=True)
+    async def git(self, ctx):
+        async for message in self.bot.get_channel(544405638349062155).history(limit=10).filter(
+            lambda m: len(m.embeds) > 0 and m.author.discriminator == "0000"
+        ):
+            return await ctx.send(embed=message.embeds[0])
+        await ctx.send("blank")
+        # ideally shouldnt happen
+
     @commands.command()
     async def avatar(self, ctx, *, member: typing.Union[discord.Member, discord.User] = None):
         member = member or ctx.author
