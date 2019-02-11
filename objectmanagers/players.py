@@ -33,9 +33,9 @@ class PlayerManager:
         if not player:
             return
         if await player.update_travelling():
-            await ctx.send("%s %s has arrived at %s!" % (blobs.BLOB_PARTY, player, player.map))
+            await ctx.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, player, player.map))
         elif await player.update_exploring():
-            await ctx.send("%s %s has finished exploring %s!" % (blobs.BLOB_PARTY, player, player.map))
+            await ctx.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, player, player.map))
 
     # -- Commands -- #
 
@@ -45,9 +45,10 @@ class PlayerManager:
             return
         player = self.get_player(ctx.author._user)
         if player:
-            return await ctx.send("%s You already own \"%s\"!" % (blobs.BLOB_ANGERY, player))
+            return await ctx.send("{} You already own \"{}\"!".format(blobs.BLOB_ANGERY, player))
         self.is_creating.append(ctx.author.id)
-        await ctx.send("%s What should the name be? (Name must be 32 characters or lower in length)" % (blobs.BLOB_O,))
+        await ctx.send("{} What should the name be? (Name must be 32 characters or lower in length)".format(
+            blobs.BLOB_O))
 
         def msgcheck(m):
             return len(m.content) < 33 and m.author == ctx.author
@@ -62,7 +63,7 @@ class PlayerManager:
             player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot, created_at=datetime.utcnow())
             await player.save()
             self.players.append(player)
-            await ctx.send("%s Success! \"%s\" was sent to map #0 (Kingdom of Eden)." % (blobs.BLOB_PARTY, msg))
+            await ctx.send("{} Success! \"{}\" was sent to map #0 (Kingdom of Eden).".format(blobs.BLOB_PARTY, msg))
         finally:
             self.is_creating.remove(ctx.author.id)
 
@@ -70,11 +71,11 @@ class PlayerManager:
     async def delete(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
-            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
-                                                                                               ctx.prefix))
-        if await ctx.warn("Are you sure you want to delete \"%s\"? %s" % (player, blobs.BLOB_PLSNO)):
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+        if await ctx.warn("Are you sure you want to delete \"{}\"? {}".format(player, blobs.BLOB_PLSNO)):
             await player.delete()
-            await ctx.send("Goodbye, %s. %s" % (player, blobs.BLOB_SALUTE))
+            await ctx.send("Goodbye, {}. {}".format(player, blobs.BLOB_SALUTE))
 
     @commands.command()
     async def travel(self, ctx, *, destination: MapConverter):
@@ -90,33 +91,33 @@ class PlayerManager:
             raise utils.NotNearby(player.map, destination)
         time = player.map.calculate_travel_to(destination)
         if time > 2.0:
-            if not await ctx.warn("%s It's a long trip, are you sure you want to go?" % blobs.BLOB_THINK):
+            if not await ctx.warn("{} It's a long trip, are you sure you want to go?".format(blobs.BLOB_THINK)):
                 return
         # noinspection PyTypeChecker
         await player.travel_to(destination)
-        await ctx.send("%s %s is now travelling to %s and will arrive in %.1f hours." %
-                       (blobs.BLOB_SALUTE, player.name, destination.name, time))
+        await ctx.send("{} {} is now travelling to {} and will arrive in {:.1f} hours.".format(
+            blobs.BLOB_SALUTE, player.name, destination.name, time))
 
     @commands.command()
     async def explore(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
-            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
-                                                                                               ctx.prefix))
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
         time = player.map.calculate_explore()
         if time > 2.0:
-            if not await ctx.warn("%s It'll take a while, are you sure?" % (blobs.BLOB_THINK,)):
+            if not await ctx.warn("{} It'll take a while, are you sure?".format(blobs.BLOB_THINK)):
                 return
         await player.explore()
-        await ctx.send("%s %s is now exploring %s and will finish in %.1f hours." %
-                       (blobs.BLOB_SALUTE, player.name, player.map.name, time))
+        await ctx.send("{} {} is now exploring {} and will finish in {:.1f} hours.".format(
+            blobs.BLOB_SALUTE, player.name, player.map.name, time))
 
     @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
         member = member or ctx.author
         player = self.get_player(member._user)
         if not player:
-            return await ctx.send(f"%s doesn't have a player %s" % (member, blobs.BLOB_PLSNO))
+            return await ctx.send("{} doesn't have a player {}".format(member, blobs.BLOB_PLSNO))
         embed = discord.Embed(color=discord.Colour.blurple(), description=f"Currently {player.status.name}")
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
         embed.add_field(name="Name", value=player.name)
@@ -132,14 +133,14 @@ class PlayerManager:
     async def rename(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
-            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
-                                                                                               ctx.prefix))
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
 
         def msgcheck(m):
             return m.author.id == ctx.author.id and len(m.content) < 33
 
         old_name = copy.copy(player.name)
-        n = await ctx.send("%s What are you going to rename %s to?" % (blobs.BLOB_O, player))
+        n = await ctx.send("{} What are you going to rename {} to?".format(blobs.BLOB_O, player))
         try:
             msg = await self.bot.wait_for('message', check=msgcheck, timeout=60.0)
         except asyncio.TimeoutError:
@@ -148,7 +149,7 @@ class PlayerManager:
             fmt = await commands.clean_content().convert(ctx, msg.content)
             player.name = fmt
             await player.save()
-            await ctx.send("%s %s was renamed to %s" % (blobs.BLOB_THUMB, old_name, fmt))
+            await ctx.send("{} {} was renamed to {}".format(blobs.BLOB_THUMB, old_name, fmt))
         finally:
             await n.delete()
 

@@ -115,7 +115,6 @@ class Adventure(commands.Bot):
                 if not self.get_user(userid):
                     log.warning("Blacklisted ID \"%s\" is unknown.", userid)
                     # await cur.execute("DELETE FROM blacklist WHERE userid=$1;", userid)
-                    continue
                 self.blacklist[userid] = reason
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
         log.info("Connected to PostgreSQL server.")
