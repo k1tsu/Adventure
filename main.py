@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 
 # -> Requires Python 3.6.x - 3.7.x
-if sys.version_info[0] < 3 or 6 <= sys.version_info[1] <= 7:
+if sys.version_info[0] < 3 or not (6 <= sys.version_info[1] <= 7):
     raise RuntimeError("Only usable with Python 3.6.x or Python 3.7.x")
 
 # -> This is required prior to importing "jishaku"
