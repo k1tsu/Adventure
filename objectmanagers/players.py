@@ -87,7 +87,7 @@ class PlayerManager:
             return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
                                                                                                ctx.prefix))
         if not destination:
-            return await ctx.send("Unknown map.")
+            return await ctx.send("Unknown map. Use `{}maps` to view the available maps.".format(ctx.prefix))
         if destination.id in (-1, 696969):
             return await ctx.send("Unknown map {}".format(blobs.BLOB_WINK))
         if destination not in player.map.nearby:

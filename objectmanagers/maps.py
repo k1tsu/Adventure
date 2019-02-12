@@ -7,7 +7,7 @@ from typing import List
 import discord
 import ujson
 from discord.ext import commands
-from discord.utils import get as find
+from discord.utils import find
 
 # -> Local files
 import utils
@@ -58,7 +58,7 @@ class MapManager:
         elif isinstance(item, bytes) and item.lstrip(b"-").isdigit():
             return self.get_map(int(item))
         elif isinstance(item, str):
-            return find(self.maps, name=item.lower())
+            return find(lambda m: m.name.lower() == item, self.maps)
         elif isinstance(item, utils.Map):
             return item
         raise RuntimeError("what")
