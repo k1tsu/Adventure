@@ -125,15 +125,16 @@ class PlayerManager:
         if time > 0:
             hours, ex = divmod(time, 3600)
             minutes, seconds = divmod(ex, 60)
-            return await ctx.send("{} is currently travelling and will finish in {} hours, {} minutes and {} seconds."
-                                  .format(player, hours, minutes, seconds))
+            return await ctx.send("{} {} is currently travelling and will finish"
+                                  " in {} hours, {} minutes and {} seconds."
+                                  .format(blobs.BLOB_PEEK, player, hours, minutes, seconds))
         time = await player.explore_time()
         if time > 0:
             hours, ex = divmod(time, 3600)
             minutes, seconds = divmod(ex, 60)
-            return await ctx.send("{} is currently exploring and will finish in {} hours, {} minutes and {} seconds."
-                                  .format(player, hours, minutes, seconds))
-        await ctx.send("{} is currently idling. Try exploring or travelling!".format(player))
+            return await ctx.send("{} {} is currently exploring and will finish in {} hours, {} minutes and {} seconds."
+                                  .format(blobs.BLOB_PEEK, player, hours, minutes, seconds))
+        await ctx.send("{} {} is currently idling. Try exploring or travelling!".format(blobs.BLOB_PEEK, player))
 
     @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
