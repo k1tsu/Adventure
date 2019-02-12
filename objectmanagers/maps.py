@@ -81,7 +81,7 @@ class MapManager:
                 _map.nearby.append(_map2)
 
     def get_map(self, map_id: int):
-        return find(self._maps, id=int(map_id))
+        return find(lambda m: m.id == map_id, self._maps)
 
     def prepare_maps(self):
         for _map in os.listdir("maps"):
