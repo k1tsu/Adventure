@@ -51,7 +51,7 @@ class Handler:
             return await ctx.invoke(self.bot.get_command("help"), *ctx.command.qualified_name.split())
         if isinstance(exc, commands.TooManyArguments):
             return await ctx.send(f"{ctx.command} doesn't take any extra arguments."
-                                  f" See `{ctx.prefix}help {ctx.command}")
+                                  f" See `{ctx.prefix}help {ctx.command}`")
         if isinstance(exc, commands.MissingRequiredArgument):
             return await ctx.send(f"You must fill in the \"{exc.param.name}\" parameter.")
         if isinstance(exc, (commands.NotOwner, commands.MissingPermissions)):
