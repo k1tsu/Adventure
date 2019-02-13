@@ -109,6 +109,9 @@ class Player:
     async def update_travelling(self):
         await asyncio.sleep(1)
         if await self.is_travelling():
+            if self._next_map is None:
+                dest = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
+                self._next_map = self._bot.map_manager.get_map(dest)
             return  # the TTL hasnt expired
         if self._next_map is None:
             dest = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")

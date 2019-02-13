@@ -85,7 +85,7 @@ class MapManager:
         return find(lambda m: m.id == map_id, self._maps)
 
     def prepare_maps(self):
-        for _map in os.listdir("maps"):
+        for _map in sorted(os.listdir("maps"), key=lambda i: i.lower()):
             with open("maps/" + _map) as f:
                 try:
                     json = ujson.load(f)

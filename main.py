@@ -28,13 +28,37 @@ import utils
 jskshell.WINDOWS = False
 
 
+ANSI_RESET = "\33[0m"
+
+ANSI_COLOURS = {
+    "WARNING": "\33[93m",
+    "INFO": "\33[96m",
+    "DEBUG": "\33[95m",
+    "ERROR": "\33[91m",
+    "CRITICAL": "\33[91m"
+}
+
+
+class ColouredFormatter(logging.Formatter):
+    def __init__(self):
+        super().__init__("[%(asctime)s %(name)s/%(levelname)s]: %(message)s", "%H:%M:%S")
+
+    def format(self, record: logging.LogRecord):
+        levelname = record.levelname
+        record.msg = ANSI_COLOURS[levelname] + record.msg + ANSI_RESET
+        return super().format(record)
+
+
+stream = logging.StreamHandler()
+stream.setFormatter(ColouredFormatter())
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
     datefmt="%H:%M:%S",
     handlers=[
         logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
-        logging.StreamHandler()
+        stream
     ]
 )
 try:
