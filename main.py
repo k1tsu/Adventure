@@ -45,8 +45,8 @@ class ColouredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord):
         levelname = record.levelname
-        record.msg = ANSI_COLOURS[levelname] + record.msg + ANSI_RESET
-        return super().format(record)
+        msg = super().format(record)
+        return ANSI_COLOURS[levelname] + msg + ANSI_RESET
 
 
 stream = logging.StreamHandler()
@@ -74,11 +74,6 @@ finally:
 log = logging.getLogger("Adventure.main")
 # log.setLevel(logging.DEBUG)
 log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*30)
-log.warning("WARN TEST")
-log.debug("DEBUG TEST")
-log.info("INFO TEST")
-log.error("ERROR TEST")
-log.critical("CRITICAL TEST")
 
 try:
     import uvloop
