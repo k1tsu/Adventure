@@ -73,12 +73,12 @@ class MapManager:
         self._maps.append(_map)
 
     @staticmethod
-    def _add_map_nearby(*maps: utils.Map):
+    def _add_map_nearby(map1: utils.Map, *maps: utils.Map):
         for _map in maps:
-            for _map2 in maps:
-                if _map == _map2 or (_map is None or _map2 is None):
-                    continue
-                _map.nearby.append(_map2)
+            if map1 == _map or (_map is None or map1 is None) or (map1 in _map.nearby or _map in map1.nearby):
+                continue
+            map1.nearby.append(_map)
+            _map.nearby.append(map1)
 
     def get_map(self, map_id: int):
         return find(lambda m: m.id == map_id, self._maps)
