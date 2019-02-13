@@ -74,6 +74,11 @@ finally:
 log = logging.getLogger("Adventure.main")
 # log.setLevel(logging.DEBUG)
 log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*30)
+log.warning("WARN TEST")
+log.debug("DEBUG TEST")
+log.info("INFO TEST")
+log.error("ERROR TEST")
+log.critical("CRITICAL TEST")
 
 try:
     import uvloop
