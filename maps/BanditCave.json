@@ -1,0 +1,8 @@
+{
+  "id": 525394,
+  "name": "Bandit Cave",
+  "description": "An old abandoned mineshaft outside of Eden Forest. A common hideout for bandits alike.",
+  "nearby": [149947],
+  "density": 5675,
+  "colour": 10048853
+}

@@ -58,7 +58,7 @@ class MapManager:
         elif isinstance(item, bytes) and item.lstrip(b"-").isdigit():
             return self.get_map(int(item))
         elif isinstance(item, str):
-            return find(lambda m: m.name.lower() == item, self.maps)
+            return find(lambda m: m.name.lower() == item.lower(), self.maps)
         elif isinstance(item, utils.Map):
             return item
         raise RuntimeError("what")

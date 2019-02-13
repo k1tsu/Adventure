@@ -1,0 +1,8 @@
+{
+  "id": 426333,
+  "name":  "Fort Stallion",
+  "description": "A fortress created to limit the people travelling to Stallion, now fallen to ruin.",
+  "nearby": [0],
+  "density": 1250,
+  "colour": 11184810
+}
