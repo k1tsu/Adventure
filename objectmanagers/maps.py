@@ -69,7 +69,8 @@ class MapManager:
             log.error("Map with id \"%s\" already exists. (%s)", _id, self.get_map(_id))
             return
         _map = utils.Map(**data)
-        self._add_map_nearby(_map, *list(map(self.get_map, data['nearby'])))
+        # self._add_map_nearby(_map, *list(map(self.get_map, data['nearby'])))
+        _map._nearby = data['nearby']
         self._maps.append(_map)
 
     @staticmethod
@@ -89,9 +90,12 @@ class MapManager:
                 try:
                     json = ujson.load(f)
                     self._add_map(**json)
-                    log.info("Prepared map %s.", _map)
                 except Exception as e:
                     log.error("Map %s is malformed. [%s: %s]", _map, type(e).__name__, str(e))
+
+        for _map in self.maps:
+            self._add_map_nearby(_map, *list(map(self.get_map, _map._nearby)))
+            log.info("Prepared map %s.", _map)
 
 
 def setup(bot):

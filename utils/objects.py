@@ -22,7 +22,7 @@ class Status(enum.Enum):
 
 
 class Map:
-    __slots__ = ("id", "name", "nearby", "density", "_raw", "description")
+    __slots__ = ("id", "name", "nearby", "_nearby", "density", "_raw", "description")
 
     def __init__(self, **kwg):
         self._raw = kwg.copy()
@@ -31,6 +31,7 @@ class Map:
         self.nearby = list()
         self.density = kwg.get("density")
         self.description = kwg.get("description")
+        self._nearby = []
 
     def _mini_repr(self):
         return f"<Map id={self.id} name={self.name}>"
