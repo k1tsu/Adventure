@@ -19,7 +19,7 @@ class MapManager:
     __slots__ = ("bot", "_maps")
     _ignore = (-1, 696969)
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
         self._maps: List[utils.Map] = []
         self.prepare_maps()
@@ -29,21 +29,33 @@ class MapManager:
 
     # -- Commands -- #
 
-    @commands.command(name="maps")
+    @commands.group(name="maps", invoke_without_command=True)
     async def maps_(self, ctx):
         pg = utils.EmbedPaginator()
-        for _map in self._maps:
+        player = self.bot.player_manager.get_player(ctx.author._user)
+        for _map in player.map.nearby:
+            embed = discord.Embed(color=_map._raw['colour'], description=_map.description)
+            embed.set_author(name=_map.name)
+            embed.add_field(name="ID", value=str(_map.id))
+            embed.add_field(name="Density", value=str(_map.density))
+            pg.add_page(embed)
+        inf = utils.EmbedInterface(self.bot, pg, ctx.author)
+        await inf.send_to(ctx)
+
+    @maps_.command(name="all", hidden=True)
+    async def all_(self, ctx):
+        pg = utils.EmbedPaginator()
+        for _map in self.maps:
             if _map.id in self._ignore:
                 continue
             embed = discord.Embed(color=_map._raw['colour'], description=_map.description)
             embed.set_author(name=_map.name)
             embed.add_field(name="ID", value=str(_map.id))
             embed.add_field(name="Density", value=str(_map.density))
-            embed.add_field(name="Nearby Maps", value="\n".join(map(str, _map.nearby)), inline=False)
+            embed.add_field(name="Nearby Maps", value="`" + "`, `".join(map(str, _map.nearby)) + "`")
             pg.add_page(embed)
         inf = utils.EmbedInterface(self.bot, pg, ctx.author)
         await inf.send_to(ctx)
-
     # -- MapManager stuff -- #
 
     @property
