@@ -52,7 +52,7 @@ class MapManager:
             embed.set_author(name=_map.name)
             embed.add_field(name="ID", value=str(_map.id))
             embed.add_field(name="Density", value=str(_map.density))
-            embed.add_field(name="Nearby Maps", value="`" + "`, `".join(map(str, _map.nearby)) + "`")
+            embed.add_field(name="Nearby Maps", value="`" + "`, `".join(map(str, _map.nearby)) + "`", inline=False)
             pg.add_page(embed)
         inf = utils.EmbedInterface(self.bot, pg, ctx.author)
         await inf.send_to(ctx)

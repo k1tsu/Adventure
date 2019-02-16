@@ -135,7 +135,8 @@ class PlayerManager:
             return await ctx.send("{} {} is currently exploring {} and will finish"
                                   " in {} hours, {} minutes and {} seconds."
                                   .format(blobs.BLOB_PEEK, player, player.map, hours, minutes, seconds))
-        await ctx.send("{} {} is currently idling. Try exploring or travelling!".format(blobs.BLOB_PEEK, player))
+        await ctx.send("{} {} is currently idling at {}. Try exploring or travelling!".format(
+                       blobs.BLOB_PEEK, player, player.map))
 
     @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):

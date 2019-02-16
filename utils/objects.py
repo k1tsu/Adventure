@@ -137,11 +137,13 @@ class Player:
             self.status = Status.idle
             return True
 
-    def travel_time(self):
-        return self._bot.redis.execute("TTL", f"travelling_{self.owner.id}")
+    async def travel_time(self):
+        if not self.map:
+            self.map = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
+        return await self._bot.redis.execute("TTL", f"travelling_{self.owner.id}")
 
-    def explore_time(self):
-        return self._bot.redis.execute("TTL", f"exploring_{self.owner.id}")
+    async def explore_time(self):
+        return await self._bot.redis.execute("TTL", f"exploring_{self.owner.id}")
 
     # -- Real functions -- #
 
