@@ -29,7 +29,7 @@ class PlayerManager:
         self.is_creating = []
 
     def __repr__(self):
-        return "<PlayerManager players={0}>".format(len(self.players))
+        return "<PlayerManager players=[{0}]>".format(len(self.players))
 
     async def on_command(self, ctx):
         player = self.get_player(ctx.author._user)
@@ -196,7 +196,7 @@ class PlayerManager:
         await self.bot.prepared.wait()
         if len(self.players) > 0:
             return
-        for owner_id, name, map_id, created, explored in await self.fetch_players():
+        for owner_id, name, map_id, created, explored, *_ in await self.fetch_players():
             try:
                 user = self.bot.get_user(owner_id) or await self.bot.get_user_info(owner_id)
             except discord.NotFound:
