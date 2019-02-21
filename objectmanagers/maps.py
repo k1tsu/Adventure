@@ -31,6 +31,8 @@ class MapManager:
 
     @commands.group(name="maps", invoke_without_command=True)
     async def maps_(self, ctx):
+        """Views all maps that you can travel to.
+        This wont show maps that are not nearby."""
         pg = utils.EmbedPaginator()
         player = self.bot.player_manager.get_player(ctx.author._user)
         for _map in player.map.nearby:
@@ -42,8 +44,9 @@ class MapManager:
         inf = utils.EmbedInterface(self.bot, pg, ctx.author)
         await inf.send_to(ctx)
 
-    @maps_.command(name="all", hidden=True)
+    @maps_.command(name="all")
     async def all_(self, ctx):
+        """View all maps, regardless if they are nearby."""
         pg = utils.EmbedPaginator()
         for _map in self.maps:
             if _map.id in self._ignore:

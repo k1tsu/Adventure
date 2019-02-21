@@ -22,6 +22,9 @@ class Help:
 
     @commands.command(name="help")
     async def _help(self, ctx, *cmds, _all=False):
+        """The help command.
+        Use this to view other commands.
+        Ignore the "_all" parameter."""
         if not cmds:
             embed = discord.Embed(color=discord.Color.blurple())
             embed.set_author(name=f"{ctx.me.display_name}'s Commands.", icon_url=ctx.me.avatar_url_as(format="png",

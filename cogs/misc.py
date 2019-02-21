@@ -17,6 +17,7 @@ class Misc:
 
     @commands.command()
     async def epic(self, ctx):
+        """Try to find the most epic message."""
         await ctx.trigger_typing()
         messages = await ctx.history().filter(
             lambda m: not m.content.startswith("*") and "epic" in m.content.lower() and not m.author.bot
@@ -36,6 +37,7 @@ class Misc:
 
     @commands.command()
     async def avatar(self, ctx, *, member: typing.Union[discord.Member, discord.User] = None):
+        """Views your, or someone elses avatar."""
         member = member or ctx.author
         embed = discord.Embed(color=discord.Colour.blurple())
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(format="png", size=32))
@@ -44,13 +46,17 @@ class Misc:
 
     @commands.command()
     async def ping(self, ctx):
+        """Check my connection time with Discord."""
         start = time.perf_counter()
         await ctx.author.trigger_typing()
-        end = time.perf_counter() - start
-        await ctx.send(f":ping_pong: **{end*1000:.2f}ms**")
+        end = time.perf_counter()
+        ms = round((end-start)*1000)
+        await ctx.send(f":ping_pong: **{ms}**ms")
 
     @commands.command()
     async def source(self, ctx, *, command=None):
+        """View the source code for my bot.
+        Can also find the source for specific commands."""
         source = "https://github.com/XuaTheGrate/Adventure"
         if not command:
             return await ctx.send(source)

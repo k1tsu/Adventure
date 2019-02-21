@@ -44,6 +44,9 @@ class PlayerManager:
 
     @commands.command(ignore_extra=False)
     async def create(self, ctx):
+        """Create a new player!
+        You can't create one if you already have one.
+        Use the "delete" command for that."""
         if ctx.author.id in self.is_creating:
             return
         player = self.get_player(ctx.author._user)
@@ -82,6 +85,9 @@ class PlayerManager:
 
     @commands.command()
     async def travel(self, ctx, *, destination: MapConverter):
+        """Travel to another area.
+        Use the "maps" command to view nearby areas.
+        You must own a player to use this."""
         player = self.get_player(ctx.author._user)
         if not player:
             return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
@@ -103,6 +109,9 @@ class PlayerManager:
 
     @commands.command(ignore_extra=False)
     async def explore(self, ctx):
+        """Explore the area around you.
+        This will let you record what this area is and what can be found in it.
+        More to come in this command soontm."""
         player = self.get_player(ctx.author._user)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
@@ -117,6 +126,8 @@ class PlayerManager:
 
     @commands.command(ignore_extra=False)
     async def status(self, ctx):
+        """View your current players status.
+        They can be idling, exploring, or travelling."""
         player = self.get_player(ctx.author._user)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
@@ -140,6 +151,8 @@ class PlayerManager:
 
     @commands.command()
     async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
+        """View information about your, or another persons player.
+        You cannot see where they are if you have not explored that area."""
         member = member or ctx.author
         player = self.get_player(member._user)
         if not player:
@@ -157,6 +170,8 @@ class PlayerManager:
 
     @commands.command(ignore_extra=False)
     async def rename(self, ctx):
+        """Rename your player.
+        The same rules apply, the name can only be 32 characters or less."""
         player = self.get_player(ctx.author._user)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,

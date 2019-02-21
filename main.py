@@ -91,8 +91,9 @@ EXTENSIONS = [
     "cogs.help",
     "cogs.misc",
     "cogs.moderators",
+    "objectmanagers.maps",
     "objectmanagers.players",
-    "objectmanagers.maps"
+    "objectmanagers.shop"
 ]
 
 
@@ -151,6 +152,7 @@ class Adventure(commands.Bot):
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
         log.info("Connected to PostgreSQL server.")
 
+        self.shop_manager = self.get_cog("ShopManager")
         self.player_manager = self.get_cog("PlayerManager")
         self.map_manager = self.get_cog("MapManager")
 
