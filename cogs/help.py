@@ -8,7 +8,7 @@ import discord
 log = logging.getLogger("Adventure.Help")
 
 
-class Help:
+class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -32,10 +32,11 @@ class Help:
             embed.set_footer(text="Prefix: %s" % ctx.prefix)
             n = []
             for cog in self.bot.cogs.keys():
-                if sum(1 for n in self.bot.get_cog_commands(cog) if not (n.hidden and not _all)) == 0:
+                _cog = self.bot.get_cog(cog)
+                if sum(1 for n in _cog.get_commands() if not (n.hidden and not _all)) == 0:
                     continue
                 n.append(f"**{cog}**\n")
-                for cmd in self.formatter(self.bot.get_cog_commands(cog), ignore_hidden=_all):
+                for cmd in self.formatter(_cog.get_commands(), ignore_hidden=_all):
                     n.append(cmd)
             embed.description = "".join(n)
             await ctx.send(embed=embed)

@@ -1,5 +1,6 @@
 # -> Builtin modules
 import asyncio
+import itertools
 import logging
 import os
 import sys
@@ -32,11 +33,14 @@ ANSI_RESET = "\33[0m"
 
 ANSI_COLOURS = {
     "WARNING": "\33[93m",
-    "INFO": "\33[96m",
-    "DEBUG": "\33[95m",
+    "DEBUG": "\33[96m",
     "ERROR": "\33[91m",
-    "CRITICAL": "\33[91m"
+    "CRITICAL": "\33[95m"
 }
+
+
+_COLOURS = ['\33[31m', '\33[33m', '\33[32m', '\33[36m', '\33[34m', '\33[35m']
+colours = itertools.cycle(_COLOURS)
 
 
 class ColouredFormatter(logging.Formatter):
@@ -45,7 +49,10 @@ class ColouredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord):
         levelname = record.levelname
+        record.levelname = levelname[:4]
         msg = super().format(record)
+        if levelname == "INFO":
+            return next(colours) + msg + ANSI_RESET
         return ANSI_COLOURS[levelname] + msg + ANSI_RESET
 
 
@@ -71,9 +78,13 @@ try:
     logging.getLogger("aioredis").disabled = True
 finally:
     pass
+
 log = logging.getLogger("Adventure.main")
 # log.setLevel(logging.DEBUG)
-log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*30)
+log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*20)
+
+for _ in range(len(_COLOURS)):
+    log.info("Colour test")
 
 try:
     import uvloop
@@ -152,9 +163,9 @@ class Adventure(commands.Bot):
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
         log.info("Connected to PostgreSQL server.")
 
-        self.shop_manager = self.get_cog("ShopManager")
-        self.player_manager = self.get_cog("PlayerManager")
-        self.map_manager = self.get_cog("MapManager")
+        self.shop_manager = self.get_cog("Shop Manager")
+        self.player_manager = self.get_cog("Player Manager")
+        self.map_manager = self.get_cog("Map Manager")
 
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)

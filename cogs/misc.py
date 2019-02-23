@@ -11,7 +11,7 @@ import jishaku
 from discord.ext import commands
 
 
-class Misc:
+class Misc(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
         self.bot = bot
 

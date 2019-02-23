@@ -27,10 +27,11 @@ Invocation: %s
 %s"""
 
 
-class Handler:
+class Handler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, exc, enf=False):
         if hasattr(ctx.command, "on_error") and not enf:
             return
@@ -63,6 +64,7 @@ class Handler:
                   ctx.message.content, utils.format_exception(exc))
         await ctx.send(":exclamation: Something went wrong.")
 
+    @commands.Cog.listener()
     async def on_error(self, event, *args, **kwargs):
         if not self.bot.prepared.is_set():
             await self.bot.change_presence(status=discord.Status.dnd)

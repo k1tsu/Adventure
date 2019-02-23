@@ -15,7 +15,7 @@ import utils
 log = logging.getLogger("Adventure.MapManager")
 
 
-class MapManager:
+class MapManager(commands.Cog, name="Map Manager"):
     __slots__ = ("bot", "_maps")
     _ignore = (-1, 696969)
 
@@ -24,7 +24,7 @@ class MapManager:
         self._maps: List[utils.Map] = []
         self.prepare_maps()
 
-    def __unload(self):
+    def cog_unload(self):
         del self._maps[:]
 
     # -- Commands -- #

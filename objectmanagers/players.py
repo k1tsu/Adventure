@@ -20,7 +20,7 @@ class MapConverter(commands.Converter):
         return ctx.bot.map_manager.resolve_map(argument)
 
 
-class PlayerManager:
+class PlayerManager(commands.Cog, name="Player Manager"):
     def __init__(self, bot):
         self.bot = bot
         self.players = list()
@@ -31,6 +31,7 @@ class PlayerManager:
     def __repr__(self):
         return "<PlayerManager players=[{0}]>".format(len(self.players))
 
+    @commands.Cog.listener()
     async def on_command(self, ctx):
         player = self.get_player(ctx.author._user)
         if not player:
@@ -204,9 +205,10 @@ class PlayerManager:
 
     # -- Events -- #
 
-    def __unload(self):
+    def cog_unload(self):
         self.bot.unload_complete.remove(self.unload_event)
 
+    @commands.Cog.listener()
     async def on_ready(self):
         await self.bot.prepared.wait()
         if len(self.players) > 0:
@@ -234,7 +236,9 @@ class PlayerManager:
             self.players.append(player)
             log.info("Player \"%s\" (%s) initialized at map \"%s\".", player.name, str(player.owner), player.map)
 
+    @commands.Cog.listener()
     async def on_logout(self):
+        log.debug("LOGOUT WAS CALLED")
         async with self.bot.db.acquire() as cur:
             for player in self.players:
                 await player.save(cursor=cur)
