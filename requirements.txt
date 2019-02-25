@@ -1,7 +1,7 @@
 git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py
 ujson>=1.35
 humanize>=0.5.1
-jishaku>=1.4.0
+jishaku>=1.6.0
 uvloop>=0.12.0; sys_platform=='linux'
 asyncpg>=0.18.3
 aioredis>=1.2.0
