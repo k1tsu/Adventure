@@ -10,6 +10,7 @@ from discord.ext import commands
 from discord.utils import find
 
 # -> Local files
+import blobs
 import utils
 
 log = logging.getLogger("Adventure.MapManager")
