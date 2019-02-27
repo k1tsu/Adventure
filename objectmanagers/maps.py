@@ -33,8 +33,10 @@ class MapManager(commands.Cog, name="Map Manager"):
     async def maps_(self, ctx):
         """Views all maps that you can travel to.
         This wont show maps that are not nearby."""
-        pg = utils.EmbedPaginator()
         player = self.bot.player_manager.get_player(ctx.author._user)
+        if not player:
+            return await ctx.send(f"You don't have a player! {blobs.BLOB_PLSNO} Create one with `{ctx.prefix}create`!")
+        pg = utils.EmbedPaginator()
         for _map in player.map.nearby:
             embed = discord.Embed(color=_map._raw['colour'], description=_map.description)
             embed.set_author(name=_map.name)
