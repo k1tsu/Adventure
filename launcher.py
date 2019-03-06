@@ -21,7 +21,6 @@ class ColouredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord):
         levelname = record.levelname
-        record.levelname = levelname[:4]
         msg = super().format(record)
         if levelname == "INFO":
             return msg
