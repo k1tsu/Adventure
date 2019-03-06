@@ -59,7 +59,7 @@ if sys.platform == "win32":
     py = "py"
     asyncio.set_event_loop(asyncio.ProactorEventLoop())
 else:
-    py = "venv/bin/python3"
+    py = "python"
 
 
 async def stderr(stream):
