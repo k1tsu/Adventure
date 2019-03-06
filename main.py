@@ -22,6 +22,18 @@ import discord
 from discord.ext import commands
 from jishaku import shell as jskshell
 
+try:
+    import uvloop
+except ImportError:
+    uvloop = None
+    if sys.platform in ("linux", "darwin"):
+        print("Platform is a linux distribution, but uvloop isn't installed!", file=sys.stderr)
+    else:
+        asyncio.set_event_loop(asyncio.ProactorEventLoop())
+else:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+del uvloop
+
 # -> Local files
 import config
 import utils
@@ -85,15 +97,6 @@ log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="
 
 for _ in range(len(_COLOURS)):
     log.info("Colour test")
-
-try:
-    import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    log.info("uvloop installed and running.")
-except ImportError:
-    if sys.platform == 'linux':
-        log.warning("The host is running Linux but uvloop isn't installed.")
-    uvloop = None
 
 
 EXTENSIONS = [
@@ -192,10 +195,10 @@ class Adventure(commands.Bot):
         await self.redis.wait_closed()
         await super().logout()
 
-    def run(self, token):
+    def run(self):
         loop = self.loop
         try:
-            loop.run_until_complete(self.start(token))
+            loop.run_until_complete(self.start(config.TOKEN))
         except KeyboardInterrupt:
             loop.run_until_complete(self.logout())
 
@@ -204,4 +207,4 @@ class Adventure(commands.Bot):
 # :rooThink:
 
 
-Adventure().run(config.TOKEN)
+# Adventure().run(config.TOKEN)

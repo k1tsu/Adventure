@@ -5,7 +5,6 @@ from typing import List
 
 # -> Pip packages
 import discord
-import ujson
 from discord.ext import commands
 from discord.utils import find
 
@@ -14,6 +13,12 @@ import blobs
 import utils
 
 log = logging.getLogger("Adventure.MapManager")
+
+try:
+    import ujson as json
+except ImportError:
+    log.warning("Couldn't import ujson. Using regular json instead.")
+    import json
 
 
 class MapManager(commands.Cog, name="Map Manager"):
@@ -106,8 +111,8 @@ class MapManager(commands.Cog, name="Map Manager"):
         for _map in sorted(os.listdir("maps"), key=lambda i: i.lower()):
             with open("maps/" + _map) as f:
                 try:
-                    json = ujson.load(f)
-                    self._add_map(**json)
+                    _json = json.load(f)
+                    self._add_map(**_json)
                 except Exception as e:
                     log.error("Map %s is malformed. [%s: %s]", _map, type(e).__name__, str(e))
 
