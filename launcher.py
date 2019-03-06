@@ -83,7 +83,7 @@ def silent(*things):
 
 
 async def main():
-    proc = await asyncio.create_subprocess_shell(py + " -m pip install -Ur requirements.txt",
+    proc = await asyncio.create_subprocess_shell("git pull && " + py + " -m pip install -Ur requirements.txt",
                                                  stdout=PIPE, stderr=PIPE)
     out = loop.create_task(stdout(proc.stdout))
     err = loop.create_task(stderr(proc.stderr))
