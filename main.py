@@ -1,6 +1,5 @@
 # -> Builtin modules
 import asyncio
-import itertools
 import logging
 import os
 import sys
@@ -40,64 +39,9 @@ import utils
 
 jskshell.WINDOWS = False
 
-
-ANSI_RESET = "\33[0m"
-
-ANSI_COLOURS = {
-    "WARNING": "\33[93m",
-    "DEBUG": "\33[96m",
-    "ERROR": "\33[91m",
-    "CRITICAL": "\33[95m"
-}
-
-
-_COLOURS = ['\33[31m', '\33[33m', '\33[32m', '\33[36m', '\33[34m', '\33[35m']
-colours = itertools.cycle(_COLOURS)
-
-
-class ColouredFormatter(logging.Formatter):
-    def __init__(self):
-        super().__init__("[%(asctime)s %(name)s/%(levelname)s]: %(message)s", "%H:%M:%S")
-
-    def format(self, record: logging.LogRecord):
-        levelname = record.levelname
-        record.levelname = levelname[:4]
-        msg = super().format(record)
-        if levelname == "INFO":
-            return next(colours) + msg + ANSI_RESET
-        return ANSI_COLOURS[levelname] + msg + ANSI_RESET
-
-
-stream = logging.StreamHandler()
-stream.setFormatter(ColouredFormatter())
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
-    datefmt="%H:%M:%S",
-    handlers=[
-        logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
-        stream
-    ]
-)
-try:
-    logging.getLogger("discord.client").disabled = True
-    logging.getLogger("discord.http").disabled = True
-    logging.getLogger("discord.gateway").disabled = True
-    logging.getLogger("discord.state").disabled = True
-    logging.getLogger("asyncio").disabled = True
-    logging.getLogger("websockets.protocol").disabled = True
-    logging.getLogger("aioredis").disabled = True
-finally:
-    pass
-
 log = logging.getLogger("Adventure.main")
-# log.setLevel(logging.DEBUG)
+
 log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*20)
-
-for _ in range(len(_COLOURS)):
-    log.info("Colour test")
-
 
 EXTENSIONS = [
     "jishaku",
