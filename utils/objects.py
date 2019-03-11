@@ -2,7 +2,9 @@
 import asyncio
 import enum
 import logging
+import math
 import operator
+from typing import *
 from datetime import datetime, timedelta
 
 # -> Pip packages
@@ -33,7 +35,7 @@ class Map:
         self.description = kwg.get("description")
         self._nearby = []
 
-    def _mini_repr(self):
+    def _mini_repr(self) -> str:
         return f"<Map id={self.id} name={self.name}>"
 
     def __repr__(self):
@@ -58,15 +60,15 @@ class Map:
 
 
 class Player:
-    __slots__ = ("owner", "name", "_map", "_bot", "_next_map", "created_at", "_explored_maps", "status")
 
     def __init__(self, **kwg):
         self._bot = kwg.get("bot")
         self.owner = kwg.get("owner")
         self.name = kwg.get("name")
         self._map = self._bot.map_manager.get_map(0)
-        self._next_map: Map = None
-        self.created_at = kwg.get("created_at")
+        self._next_map = None
+        self.exp = kwg.get("exp", 0)
+        self.created_at: datetime = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
         self.status = kwg.get("status", Status.idle)
 
@@ -77,7 +79,11 @@ class Player:
         return self.name
 
     @property
-    def explored_maps(self):
+    def level(self) -> int:
+        return math.floor(self.exp / 3)
+
+    @property
+    def explored_maps(self) -> List[Map]:
         return self._explored_maps
 
     @explored_maps.setter
@@ -85,11 +91,11 @@ class Player:
         self._explored_maps = list(map(self._bot.map_manager.get_map, value))
 
     @property
-    def is_admin(self):
+    def is_admin(self) -> bool:
         return self.owner.id in self._bot.config.OWNERS
 
     @property
-    def map(self):
+    def map(self) -> Map:
         return self._map
 
     @map.setter
@@ -106,19 +112,19 @@ class Player:
 
     # -- Updaters -- #
 
-    async def update_travelling(self):
+    async def update_travelling(self) -> bool:
         await asyncio.sleep(1)
         if await self.is_travelling():
             if self._next_map is None:
                 dest = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
                 self._next_map = self._bot.map_manager.get_map(dest)
-            return  # the TTL hasnt expired
+            return False  # the TTL hasnt expired
         if self._next_map is None:
             dest = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
         else:
             dest = self._next_map.id
         if dest is None:
-            return  # the player isnt travelling at all
+            return False  # the player isnt travelling at all
         self._next_map = None
         plylog.info("%s has arrived at their location.", self.name)
         self.map = dest
@@ -127,22 +133,22 @@ class Player:
         self.status = Status.idle
         return True
 
-    async def update_exploring(self):
+    async def update_exploring(self) -> bool:
         await asyncio.sleep(1)
         if await self.is_exploring():
-            return
+            return False
         if self.status == Status.exploring or await self._bot.redis.execute("GET", f"status_{self.owner.id}") == 2:
             plylog.info("%s has finished exploring %s.", self.name, self.map)
             await self._bot.redis.execute("SET", f"status_{self.owner.id}", "0")
             self.status = Status.idle
             return True
 
-    async def travel_time(self):
+    async def travel_time(self) -> int:
         if not self.map:
             self.map = await self._bot.redis.execute("GET", f"next_map_{self.owner.id}")
         return await self._bot.redis.execute("TTL", f"travelling_{self.owner.id}")
 
-    async def explore_time(self):
+    async def explore_time(self) -> int:
         return await self._bot.redis.execute("TTL", f"exploring_{self.owner.id}")
 
     # -- Real functions -- #
