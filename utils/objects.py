@@ -114,7 +114,7 @@ class Player:
 
     # -- Updaters -- #
 
-    async def update(self, ctx: utils.EpicContext):
+    async def update(self, ctx):
         if await self.update_travelling():
             await ctx.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, self, self.map))
         elif await self.update_exploring():
