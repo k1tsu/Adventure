@@ -36,10 +36,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         player = self.get_player(ctx.author._user)
         if not player:
             return
-        if await player.update_travelling():
-            await ctx.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, player, player.map))
-        elif await player.update_exploring():
-            await ctx.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, player, player.map))
+        await player.update(ctx)
 
     # -- Commands -- #
 
@@ -160,7 +157,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             return await ctx.send("{} doesn't have a player {}".format(member, blobs.BLOB_PLSNO))
         embed = discord.Embed(color=discord.Colour.blurple(),
                               description=f"Currently {player.status.name}\n"
-                              f"Level {player.level} ({player.exp} EXP)")
+                              f"Tier {player.level} ({player.exp} EXP)")
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
         embed.add_field(name="Name", value=player.name)
         pl = self.get_player(ctx.author)

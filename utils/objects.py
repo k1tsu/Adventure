@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import humanize
 
 # -> Local files
+import blobs
 import utils
 
 maplog = logging.getLogger("Adventure.MapManager")
@@ -68,7 +69,8 @@ class Player:
         self._map = self._bot.map_manager.get_map(0)
         self._next_map = None
         self.exp = kwg.get("exp", 0)
-        self.created_at: datetime = kwg.get("created_at")
+        self._next_level = math.floor(self.exp / 3) + 1
+        self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
         self.status = kwg.get("status", Status.idle)
 
@@ -112,6 +114,20 @@ class Player:
 
     # -- Updaters -- #
 
+    async def update(self, ctx: utils.Context):
+        if await self.update_travelling():
+            await ctx.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, self, self.map))
+        elif await self.update_exploring():
+            await ctx.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, self, self.map))
+        if self.update_level():
+            await ctx.send("{} {} levelled to tier **{}**!".format(blobs.BLOB_PARTY, self, self.level))
+
+    def update_level(self) -> bool:
+        if self.level == self._next_level:
+            self._next_level += 1
+            return True
+        return False
+
     async def update_travelling(self) -> bool:
         await asyncio.sleep(1)
         if await self.is_travelling():
@@ -153,6 +169,13 @@ class Player:
 
     # -- Real functions -- #
 
+    def travel_exp(self, map: Map) -> int:
+        time = map.calculate_travel_to(self.map) * 10
+        return math.floor(time / 3)
+
+    def explore_exp(self) -> int:
+        return math.floor((self.map.calculate_explore() * 10) / 3)
+
     async def travel_to(self, destination: Map):
         if await self.is_travelling():
             raise utils.AlreadyTravelling(self.name,
@@ -193,16 +216,16 @@ class Player:
 
     async def save(self, *, cursor=None):
         q = """
-INSERT INTO players
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO players (owner_id, name, map_id, created_at, explored, exp)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET name = $2, map_id = $3, explored = $5
+SET name = $2, map_id = $3, explored = $5, exp = $6
 WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                       list(map(operator.attrgetter("id"), self.explored_maps)))
+                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
                                  list(map(operator.attrgetter("id"), self.explored_maps)))
