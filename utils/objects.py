@@ -36,11 +36,8 @@ class Map:
         self.description = kwg.get("description")
         self._nearby = []
 
-    def _mini_repr(self) -> str:
-        return f"<Map id={self.id} name={self.name}>"
-
     def __repr__(self):
-        return f"<Map id={self.id} name='{self.name}' nearby={set(map(self.__class__._mini_repr, self.nearby))}>"
+        return f"<Map id={self.id} name='{self.name}'>"
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and other.id == self.id
@@ -59,6 +56,15 @@ class Map:
     def calculate_explore(self) -> float:
         return (self.density * 1234) / (1000 ** 2)
 
+    def travel_exp(self, map) -> int:
+        if not isinstance(map, self.__class__):
+            raise ValueError("'map' argument must be Map")
+        time = map.calculate_travel_to(self) * 10
+        return math.floor(time / 3)
+
+    def explore_exp(self) -> int:
+        return math.floor((self.calculate_explore() * 10) / 3)
+
 
 class Player:
 
@@ -75,7 +81,7 @@ class Player:
         self.status = kwg.get("status", Status.idle)
 
     def __repr__(self):
-        return "<Player name='{0.name}' owner={0.owner!r} map={0.map!r}>".format(self)
+        return "<Player name='{0.name}' owner={0.owner!r} exp={0.exp}>".format(self)
 
     def __str__(self):
         return self.name
@@ -141,7 +147,7 @@ class Player:
             dest = self._next_map.id
         if dest is None:
             return False  # the player isnt travelling at all
-        self.exp += self.travel_exp(self._next_map)
+        self.exp += self.map.travel_exp(self._next_map)
         self._next_map = None
         plylog.info("%s has arrived at their location.", self.name)
         self.map = dest
@@ -158,7 +164,7 @@ class Player:
             plylog.info("%s has finished exploring %s.", self.name, self.map)
             await self._bot.redis("SET", f"status_{self.owner.id}", "0")
             self.status = Status.idle
-            self.exp += self.explore_exp()
+            self.exp += self.map.explore_exp()
             return True
 
     async def travel_time(self) -> int:
@@ -170,13 +176,6 @@ class Player:
         return await self._bot.redis("TTL", f"exploring_{self.owner.id}")
 
     # -- Real functions -- #
-
-    def travel_exp(self, map: Map) -> int:
-        time = map.calculate_travel_to(self.map) * 10
-        return math.floor(time / 3)
-
-    def explore_exp(self) -> int:
-        return math.floor((self.map.calculate_explore() * 10) / 3)
 
     async def travel_to(self, destination: Map):
         if await self.is_travelling():
