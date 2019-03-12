@@ -36,10 +36,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         player = self.get_player(ctx.author._user)
         if not player:
             return
-        if await player.update_travelling():
-            await ctx.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, player, player.map))
-        elif await player.update_exploring():
-            await ctx.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, player, player.map))
+        await player.update(ctx)
 
     # -- Commands -- #
 
@@ -158,14 +155,16 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         player = self.get_player(member._user)
         if not player:
             return await ctx.send("{} doesn't have a player {}".format(member, blobs.BLOB_PLSNO))
-        embed = discord.Embed(color=discord.Colour.blurple(), description=f"Currently {player.status.name}")
+        embed = discord.Embed(color=discord.Colour.blurple(),
+                              description=f"Currently {player.status.name}\n"
+                              f"Tier {player.level} ({player.exp} EXP)")
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
         embed.add_field(name="Name", value=player.name)
         pl = self.get_player(ctx.author)
         if player.owner != ctx.author._user and (not pl or player.map not in pl.explored_maps):
             embed.add_field(name="Currently At", value="???")
         else:
-            embed.add_field(name="Currently At", value=player.map)
+            embed.add_field(name="Currently At", value=str(player.map))
         embed.add_field(name="Created At", value=player.created_at.strftime("%d/%m/%y @ %H:%M"), inline=False)
         await ctx.send(embed=embed)
 
@@ -213,13 +212,14 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await self.bot.prepared.wait()
         if len(self.players) > 0:
             return
-        for owner_id, name, map_id, created, explored, *_ in await self.fetch_players():
+        for data in await self.fetch_players():
+            owner_id, name, map_id, created, explored, _, exp, *_ = data
             try:
                 user = self.bot.get_user(owner_id) or await self.bot.get_user_info(owner_id)
             except discord.NotFound:
                 log.warning("Unresolved user id %s with player %s. Skipping initialization.", owner_id, name)
                 continue
-            status = await self.bot.redis.execute("GET", f"status_{user.id}")
+            status = await self.bot.redis("GET", f"status_{user.id}")
             if status:
                 status = utils.Status(int(status))
             else:
@@ -230,7 +230,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 name=name,
                 created_at=created,
                 explored=list(map(self.bot.map_manager.get_map, explored)),
-                status=status
+                status=status,
+                exp=exp
             ))
             player.map = map_id
             self.players.append(player)

@@ -5,6 +5,8 @@ import logging
 from discord.ext import commands
 import discord
 
+from config import PREFIX
+
 log = logging.getLogger("Adventure.Help")
 
 
@@ -16,7 +18,7 @@ class Help(commands.Cog):
         for cmd in i:
             if cmd.hidden and not ignore_hidden:
                 continue
-            yield "\u200b " * (stack*2) + f"►{cmd}\n"
+            yield "\u200b " * (stack*2) + f"►\\{PREFIX}{cmd}\n"
             if isinstance(cmd, commands.Group):
                 yield from self.formatter(cmd.commands, stack+1)
 
