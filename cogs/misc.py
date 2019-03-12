@@ -1,6 +1,8 @@
 # -> Builtin modules
+import collections
 import inspect
 import os
+import pathlib
 import random
 import time
 import typing
@@ -14,6 +16,26 @@ from discord.ext import commands
 class Misc(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
         self.bot = bot
+        self.valid = ("py", "sql", "md", "txt", "json")
+
+    @commands.command(aliases=['loc'], hidden=True)
+    @commands.is_owner()
+    async def linecount(self, ctx):
+        total = collections.Counter()
+        for path, subdirs, files in os.walk("."):
+            for name in files:
+                ext = name.split(".")[-1]
+                if ext not in self.valid:
+                    continue
+                with open('./' + str(pathlib.PurePath(path, name)), 'r', encoding='utf-8') as f:
+                    for l in f:
+                        if l.strip().startswith("#") or len(l.strip()) == 0:
+                            continue
+                        total[ext] += 1
+        size = max([f"{x} lines of {y} code" for y, x in total.items()], key=lambda m: len(m))
+        fmt = "```\n" + "\n".join(sorted([f"{f'{x} lines of {y} code':>{size}}" for y, x in total.items()],
+                                         key=lambda m: len(m))) + "```"
+        await ctx.send(fmt)
 
     @commands.command()
     async def epic(self, ctx):

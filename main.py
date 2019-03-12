@@ -92,13 +92,22 @@ class Adventure(commands.Bot):
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=utils.EpicContext)
 
+    async def redis(self, *args, **kw):
+        try:
+            return await self._redis.execute(*args, **kw)
+        except aioredis.errors.PoolClosedError:
+            return
+
     # noinspection PyAttributeOutsideInit
     async def on_ready(self):
         if self.prepared.is_set():
             return
-        self.redis = await aioredis.create_pool(config.REDIS_ADDRESS)
+
+        self._redis = await aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS)
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
+        log.info("Connected to PostgreSQL server.")
+
         async with self.db.acquire() as cur:
             with open("schema.sql") as f:
                 await cur.execute(f.read())
@@ -108,7 +117,6 @@ class Adventure(commands.Bot):
                     # await cur.execute("DELETE FROM blacklist WHERE userid=$1;", userid)
                 self.blacklist[userid] = reason
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
-        log.info("Connected to PostgreSQL server.")
 
         self.shop_manager = self.get_cog("Shop Manager")
         self.player_manager = self.get_cog("Player Manager")
@@ -135,8 +143,8 @@ class Adventure(commands.Bot):
         for event in self.unload_complete:
             await event.wait()
         await self.db.close()
-        self.redis.close()
-        await self.redis.wait_closed()
+        self._redis.close()
+        await self._redis.wait_closed()
         await super().logout()
 
     def run(self):

@@ -219,7 +219,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             except discord.NotFound:
                 log.warning("Unresolved user id %s with player %s. Skipping initialization.", owner_id, name)
                 continue
-            status = await self.bot.redis.execute("GET", f"status_{user.id}")
+            status = await self.bot.redis("GET", f"status_{user.id}")
             if status:
                 status = utils.Status(int(status))
             else:

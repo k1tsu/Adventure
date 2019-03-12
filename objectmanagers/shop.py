@@ -34,7 +34,10 @@ class ShopManager(commands.Cog, name="Shop Manager"):
     async def on_ready(self):
         await self.bot.prepared.wait()
 
-        for name, cost, _id in await self.bot.db.fetch("SELECT * FROM shop;"):
+        if len(self.items) > 0:
+            return
+
+        for name, cost, lr, _id in await self.bot.db.fetch("SELECT * FROM shop;"):
             n = utils.Item(id=_id, name=name, cost=cost)
             self.items.append(n)
             log.info("Prepared item %r", n)
