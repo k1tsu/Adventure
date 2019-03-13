@@ -245,29 +245,9 @@ WHERE players.owner_id = $1;
         del self
 
 
-class Item:
-    __slots__ = ("id", "name", "cost")
 
-    def __init__(self, *, id: int, name: str, cost: float, **kwargs):
+class Item:
+    def __init__(self, *, id: int, name: str, cost: float):
         self.id = id
         self.name = name
         self.cost = cost
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return "<Item name=\"{0.name}\" id={0.id} cost={0.cost:.2f}>".format(self)
-
-    @classmethod
-    async def without_id(cls, db, *, name: str, cost: float):
-        _id = await db.fetchval("INSERT INTO shop VALUES ($1, $2) RETURNING item_id;", name, cost)
-        return cls(id=_id, name=name, cost=cost)
-
-    def price(self) -> float:
-        """
-        The sell price of the item.
-        """
-
-    async def save(self, db):
-        await db.execute("UPDATE shop SET name=$1, cost=$2 WHERE item_id=$3;", self.name, self.cost, self.id)

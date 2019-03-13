@@ -51,7 +51,7 @@ EXTENSIONS = [
     "cogs.moderators",
     "objectmanagers.maps",
     "objectmanagers.players",
-    "objectmanagers.shop"
+    "objectmanagers.items"
 ]
 
 
@@ -71,6 +71,11 @@ class Adventure(commands.Bot):
         if ctx.author.id in self.blacklist:
             raise utils.Blacklisted(self.blacklist[ctx.author.id])
         return True
+
+    def dispatch(self, event, *args, **kwargs):
+        if not self.prepared.is_set() and event not in ("ready", "connect", "logout"):
+            return  # this is to prevent events like on_message, on_command etc to be sent out before im ready to start
+        return super().dispatch(event, *args, **kwargs)
 
     def prepare_extensions(self):
         for extension in EXTENSIONS:
@@ -103,7 +108,8 @@ class Adventure(commands.Bot):
         if self.prepared.is_set():
             return
 
-        self._redis = await aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS)
+        self._redis = await asyncio.wait_for(aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS),
+                                             timeout=20.0)
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         log.info("Connected to PostgreSQL server.")
@@ -118,7 +124,7 @@ class Adventure(commands.Bot):
                 self.blacklist[userid] = reason
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
 
-        self.shop_manager = self.get_cog("Shop Manager")
+        self.item_manager = self.get_cog("Item Manager")
         self.player_manager = self.get_cog("Player Manager")
         self.map_manager = self.get_cog("Map Manager")
 
