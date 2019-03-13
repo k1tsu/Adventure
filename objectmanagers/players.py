@@ -216,9 +216,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     @utils.async_executor()
     def profile_for(self, avatar: io.BytesIO, player: utils.Player = None):
         img = Image.open(avatar)
-        background = Image.new("RGBA", (854, 480), 0)
+        background = Image.new("RGBA", (854, 480), 1)
         img.convert("RGBA")
-        pic = self.add_corners(img, 125)
+        pic = self.add_corners(img, 120)
         background.paste(pic, (0, 0), mask=pic)
         n = io.BytesIO()
         background.save(n, "png")
