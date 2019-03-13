@@ -219,7 +219,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         background = Image.new("RGBA", (854, 480), 0)
         img.convert("RGBA")
         pic = self.add_corners(img, 125)
-        background.paste(pic, (0, 0), mask=background)
+        background.paste(pic, (0, 0), mask=pic)
         n = io.BytesIO()
         background.save(n, "png")
         n.seek(0)
