@@ -1,12 +1,15 @@
 # -> Builtin modules
 import asyncio
 import copy
+import io
 import logging
+import time
 from datetime import datetime
 
 # -> Pip packages
 import discord
 from discord.ext import commands
+from PIL import Image, ImageDraw
 
 # -> Local files
 import utils
@@ -194,6 +197,14 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         finally:
             await n.delete()
 
+    @commands.command(hidden=True)
+    async def _profile(self, ctx):
+        async with self.bot.session.get(ctx.author.avatar_url_as(format="png")) as get:
+            n = io.BytesIO(await get.read())
+        profile = await self.profile_for(n)
+        f = discord.File(profile, filename="profile.png")
+        await ctx.send(file=f)
+
     # -- Player Manager stuff -- #
 
     def fetch_players(self):
@@ -201,6 +212,30 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     def get_player(self, user: discord.User) -> utils.Player:
         return discord.utils.get(self.players, owner=user)
+
+    @utils.async_executor()
+    def profile_for(self, avatar: io.BytesIO, player: utils.Player = None):
+        img = Image.open(avatar)
+        background = Image.new("RGBA", (854, 480), 0)
+        img.convert("RGBA")
+        pic = self.add_corners(img, 125)
+        background.paste(pic, (0, 0), mask=background)
+        n = io.BytesIO()
+        background.save(n, "png")
+        n.seek(0)
+        return n
+
+    def add_corners(self, im: Image, rad: int) -> Image:
+        circle = Image.new('L', (rad * 2, rad * 2), 0)
+        draw = ImageDraw.Draw(circle)
+        draw.ellipse((0, 0, rad * 2, rad * 2), fill=255)
+        alpha = Image.new('L', im.size, 255)
+        w, h = im.size
+        alpha.paste(circle.crop((0, rad, rad, rad * 2)), (0, h - rad))
+        alpha.paste(circle.crop((rad, 0, rad * 2, rad)), (w - rad, 0))
+        alpha.paste(circle.crop((rad, rad, rad * 2, rad * 2)), (w - rad, h - rad))
+        im.putalpha(alpha)
+        return im
 
     # -- Events -- #
 
