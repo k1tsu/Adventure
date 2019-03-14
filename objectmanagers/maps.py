@@ -84,6 +84,9 @@ class MapManager(commands.Cog, name="Map Manager"):
             return find(lambda m: m.name.lower() == item.lower(), self.maps)
         elif isinstance(item, utils.Map):
             return item
+        elif item is None:
+            return None
+        log.debug(f"{item} {type(item)}")
         raise RuntimeError("what")
 
     def _add_map(self, **data):

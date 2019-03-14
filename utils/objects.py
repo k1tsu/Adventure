@@ -73,7 +73,9 @@ class Player:
         self.owner = kwg.get("owner")
         self.name = kwg.get("name")
         self._map = self._bot.map_manager.get_map(0)
-        self._next_map = None
+        self._next_map = kwg.get("next_map", None)
+        if self._next_map is not None:
+            self._next_map = self._bot.map_manager.resolve_map(self._next_map)
         self.exp = kwg.get("exp", 0)
         self._next_level = self.level + 1
         self.created_at = kwg.get("created_at")
@@ -85,6 +87,14 @@ class Player:
 
     def __str__(self):
         return self.name
+
+    @property
+    def next_map(self) -> Map:
+        return self._next_map
+
+    @next_map.setter
+    def next_map(self, value):
+        self._next_map = self._bot.map_manager.resolve_map(value)
 
     @property
     def level(self) -> int:
@@ -137,17 +147,17 @@ class Player:
     async def update_travelling(self) -> bool:
         await asyncio.sleep(1)
         if await self.is_travelling():
-            if self._next_map is None:
+            if self.next_map is None:
                 dest = await self._bot.redis("GET", f"next_map_{self.owner.id}")
-                self._next_map = self._bot.map_manager.get_map(dest)
+                self.next_map = dest.decode()
             return False  # the TTL hasnt expired
-        if self._next_map is None:
+        if self.next_map is None:
             dest = await self._bot.redis("GET", f"next_map_{self.owner.id}")
         else:
-            dest = self._next_map.id
+            dest = self.next_map.id
         if dest is None:
             return False  # the player isnt travelling at all
-        self.exp += self.map.travel_exp(self._next_map)
+        self.exp += self.map.travel_exp(self.next_map)
         self._next_map = None
         plylog.info("%s has arrived at their location.", self.name)
         self.map = dest
@@ -168,8 +178,8 @@ class Player:
             return True
 
     async def travel_time(self) -> int:
-        if not self.map:
-            self.map = await self._bot.redis("GET", f"next_map_{self.owner.id}")
+        if not self.next_map:
+            self.next_map = await self._bot.redis("GET", f"next_map_{self.owner.id}")
         return await self._bot.redis("TTL", f"travelling_{self.owner.id}")
 
     async def explore_time(self) -> int:
@@ -188,7 +198,7 @@ class Player:
                                                           seconds=await self.explore_time()))))
         time = int(((datetime.now() + timedelta(hours=self.map.calculate_travel_to(destination))) - datetime.now()
                     ).total_seconds())
-        self._next_map = destination
+        self.next_map = destination
         plylog.info("%s is adventuring to %s and will finish in %.2f hours.",
                     self.name, destination, self.map.calculate_travel_to(destination))
         await self._bot.redis("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))

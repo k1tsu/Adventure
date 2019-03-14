@@ -3,13 +3,13 @@ import asyncio
 import copy
 import io
 import logging
-import time
 from datetime import datetime
 
 # -> Pip packages
 import discord
+import humanize
 from discord.ext import commands
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 # -> Local files
 import utils
@@ -30,6 +30,14 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self.unload_event = asyncio.Event()
         self.bot.unload_complete.append(self.unload_event)
         self.is_creating = []
+        with open("assets/profile_background.png", "rb") as f:
+            thing = io.BytesIO(f.read())
+            self.background = Image.open(thing)
+            self.background.convert("RGBA")
+        self._font = "assets/segoesc.ttf"
+
+    def font(self, size=32):
+        return ImageFont.truetype(self._font, size)
 
     def __repr__(self):
         return "<PlayerManager players=[{0}]>".format(len(self.players))
@@ -199,9 +207,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.command(hidden=True)
     async def _profile(self, ctx):
-        async with self.bot.session.get(ctx.author.avatar_url_as(format="png")) as get:
+        async with self.bot.session.get(ctx.author.avatar_url_as(format="png", size=256)) as get:
             n = io.BytesIO(await get.read())
-        profile = await self.profile_for(n)
+        profile = await self.profile_for(n, self.get_player(ctx.author._user))
         f = discord.File(profile, filename="profile.png")
         await ctx.send(file=f)
 
@@ -214,28 +222,40 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         return discord.utils.get(self.players, owner=user)
 
     @utils.async_executor()
-    def profile_for(self, avatar: io.BytesIO, player: utils.Player = None):
-        img = Image.open(avatar)
-        background = Image.new("RGBA", (854, 480), 1)
-        img.convert("RGBA")
-        pic = self.add_corners(img, 120)
-        background.paste(pic, (0, 0), mask=pic)
+    def profile_for(self, avatar: io.BytesIO, player: utils.Player):
+        image = Image.open(avatar).convert("RGBA")
+        background = self.background.copy()
+        background.paste(image, (0, 0), image)
+        draw = ImageDraw.Draw(background)
+        draw.text((10, 245), player.name, (255, 255, 255),
+                  self.font(50))
+        draw.text((10, 320), str(player.owner), (255, 255, 255),
+                  self.font(32))
+        draw.text((265, 0), f"Tier {player.level}", (255, 255, 255),
+                  self.font(64))
+        draw.text((315, 70), f"{player.exp} EXP", (255, 255, 255),
+                  self.font(), align="center")
+        if player.status is utils.Status.idle:
+            status = "Idling at"
+            pmap = str(player.map)
+        elif player.status is utils.Status.travelling:
+            status = "Travelling to"
+            pmap = str(player.next_map)
+        elif player.status is utils.Status.exploring:
+            status = "Exploring"
+            pmap = str(player.map)
+        else:
+            status = "???"
+            pmap = str(player.map)
+        draw.text((240, 125), f"{status:^{len(status)+4}}\n{pmap:^{len(status)+4}}", (255, 255, 255),
+                  self.font(), align="center")
+        created = humanize.naturaltime(player.created_at)
+        draw.text((260, 265), f"Created\n{created:^7}", (255, 255, 255),
+                  self.font(), align="center")
         n = io.BytesIO()
         background.save(n, "png")
         n.seek(0)
         return n
-
-    def add_corners(self, im: Image, rad: int) -> Image:
-        circle = Image.new('L', (rad * 2, rad * 2), 0)
-        draw = ImageDraw.Draw(circle)
-        draw.ellipse((0, 0, rad * 2, rad * 2), fill=255)
-        alpha = Image.new('L', im.size, 255)
-        w, h = im.size
-        alpha.paste(circle.crop((0, rad, rad, rad * 2)), (0, h - rad))
-        alpha.paste(circle.crop((rad, 0, rad * 2, rad)), (w - rad, 0))
-        alpha.paste(circle.crop((rad, rad, rad * 2, rad * 2)), (w - rad, h - rad))
-        im.putalpha(alpha)
-        return im
 
     # -- Events -- #
 
@@ -266,7 +286,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 created_at=created,
                 explored=list(map(self.bot.map_manager.get_map, explored)),
                 status=status,
-                exp=exp
+                exp=exp,
+                next_map=await self.bot.redis("GET", f"next_map_{user.id}")
             ))
             player.map = map_id
             self.players.append(player)

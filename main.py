@@ -15,6 +15,7 @@ if sys.platform == "win32":
 os.environ['JISHAKU_HIDE'] = "true"
 
 # -> Pip packages
+import aiohttp
 import aioredis
 import asyncpg
 import discord
@@ -59,7 +60,7 @@ class Adventure(commands.Bot):
     def __init__(self):
         super().__init__(self.getprefix)
         # noinspection PyProtectedMember
-        self.session = self.http._session
+        self.session = aiohttp.ClientSession()
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
@@ -165,4 +166,49 @@ class Adventure(commands.Bot):
 # :rooThink:
 
 
-# Adventure().run(config.TOKEN)
+if __name__ == "__main__":
+    ANSI_RESET = "\33[0m"
+
+    ANSI_COLOURS = {
+        "WARNING": "\33[93m",
+        "DEBUG": "\33[96m",
+        "ERROR": "\33[91m",
+        "CRITICAL": "\33[95m"
+    }
+
+    class ColouredFormatter(logging.Formatter):
+        def __init__(self):
+            super().__init__("[%(asctime)s %(name)s/%(levelname)s]: %(message)s", "%H:%M:%S")
+
+        def format(self, record: logging.LogRecord):
+            levelname = record.levelname
+            msg = super().format(record)
+            if levelname == "INFO":
+                return msg
+            return ANSI_COLOURS[levelname] + msg + ANSI_RESET
+
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColouredFormatter())
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
+        datefmt="%H:%M:%S",
+        handlers=[
+            logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
+            handler
+        ]
+    )
+    try:
+        logging.getLogger("discord.client").disabled = True
+        logging.getLogger("discord.http").disabled = True
+        logging.getLogger("discord.gateway").disabled = True
+        logging.getLogger("discord.state").disabled = True
+        logging.getLogger("asyncio").disabled = True
+        logging.getLogger("websockets.protocol").disabled = True
+        logging.getLogger("aioredis").disabled = True
+    finally:
+        pass
+
+    Adventure().run()
