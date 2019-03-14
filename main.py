@@ -15,6 +15,7 @@ if sys.platform == "win32":
 os.environ['JISHAKU_HIDE'] = "true"
 
 # -> Pip packages
+import aiohttp
 import aioredis
 import asyncpg
 import discord
@@ -51,7 +52,7 @@ EXTENSIONS = [
     "cogs.moderators",
     "objectmanagers.maps",
     "objectmanagers.players",
-    "objectmanagers.shop"
+    "objectmanagers.items"
 ]
 
 
@@ -59,7 +60,7 @@ class Adventure(commands.Bot):
     def __init__(self):
         super().__init__(self.getprefix)
         # noinspection PyProtectedMember
-        self.session = self.http._session
+        self.session = aiohttp.ClientSession()
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
@@ -71,6 +72,11 @@ class Adventure(commands.Bot):
         if ctx.author.id in self.blacklist:
             raise utils.Blacklisted(self.blacklist[ctx.author.id])
         return True
+
+    def dispatch(self, event, *args, **kwargs):
+        if not self.prepared.is_set() and event not in ("ready", "connect", "logout"):
+            return  # this is to prevent events like on_message, on_command etc to be sent out before im ready to start
+        return super().dispatch(event, *args, **kwargs)
 
     def prepare_extensions(self):
         for extension in EXTENSIONS:
@@ -103,7 +109,8 @@ class Adventure(commands.Bot):
         if self.prepared.is_set():
             return
 
-        self._redis = await aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS)
+        self._redis = await asyncio.wait_for(aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS),
+                                             timeout=20.0)
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         log.info("Connected to PostgreSQL server.")
@@ -118,7 +125,7 @@ class Adventure(commands.Bot):
                 self.blacklist[userid] = reason
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
 
-        self.shop_manager = self.get_cog("Shop Manager")
+        self.item_manager = self.get_cog("Item Manager")
         self.player_manager = self.get_cog("Player Manager")
         self.map_manager = self.get_cog("Map Manager")
 
@@ -159,4 +166,49 @@ class Adventure(commands.Bot):
 # :rooThink:
 
 
-# Adventure().run(config.TOKEN)
+if __name__ == "__main__":
+    ANSI_RESET = "\33[0m"
+
+    ANSI_COLOURS = {
+        "WARNING": "\33[93m",
+        "DEBUG": "\33[96m",
+        "ERROR": "\33[91m",
+        "CRITICAL": "\33[95m"
+    }
+
+    class ColouredFormatter(logging.Formatter):
+        def __init__(self):
+            super().__init__("[%(asctime)s %(name)s/%(levelname)s]: %(message)s", "%H:%M:%S")
+
+        def format(self, record: logging.LogRecord):
+            levelname = record.levelname
+            msg = super().format(record)
+            if levelname == "INFO":
+                return msg
+            return ANSI_COLOURS[levelname] + msg + ANSI_RESET
+
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColouredFormatter())
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
+        datefmt="%H:%M:%S",
+        handlers=[
+            logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
+            handler
+        ]
+    )
+    try:
+        logging.getLogger("discord.client").disabled = True
+        logging.getLogger("discord.http").disabled = True
+        logging.getLogger("discord.gateway").disabled = True
+        logging.getLogger("discord.state").disabled = True
+        logging.getLogger("asyncio").disabled = True
+        logging.getLogger("websockets.protocol").disabled = True
+        logging.getLogger("aioredis").disabled = True
+    finally:
+        pass
+
+    Adventure().run()
