@@ -22,6 +22,7 @@ except ImportError:
 
 
 class MapManager(commands.Cog, name="Map Manager"):
+    """Makes sure the maps are working properly, and some other stuff."""
     __slots__ = ("bot", "_maps")
     _ignore = (-1, 696969)
 

@@ -28,6 +28,8 @@ Invocation: %s
 
 
 class Handler(commands.Cog):
+    """Handles errors with the bot.
+    You shouldn't be seeing this."""
     def __init__(self, bot):
         self.bot = bot
 

@@ -24,6 +24,7 @@ class MapConverter(commands.Converter):
 
 
 class PlayerManager(commands.Cog, name="Player Manager"):
+    """Manages and handles everything to do with the Player."""
     def __init__(self, bot):
         self.bot = bot
         self.players = list()
@@ -44,7 +45,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if not player:
             return
         await player.update(ctx)
@@ -58,7 +59,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         Use the "delete" command for that."""
         if ctx.author.id in self.is_creating:
             return
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if player:
             return await ctx.send("{} You already own \"{}\"!".format(blobs.BLOB_ANGERY, player))
         self.is_creating.append(ctx.author.id)
@@ -75,7 +76,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         else:
             msg = await commands.clean_content().convert(ctx, msg.content)
             log.info("Player \"%s\" was created by \"%s\".", msg, ctx.author)
-            player = utils.Player(owner=ctx.author._user, name=msg, bot=self.bot, created_at=datetime.utcnow())
+            player = utils.Player(owner=ctx.author, name=msg, bot=self.bot, created_at=datetime.utcnow())
             await player.save()
             self.players.append(player)
             await ctx.send("{} Success! \"{}\" was sent to map #0 (Abel).".format(blobs.BLOB_PARTY, msg))
@@ -84,7 +85,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.command()
     async def delete(self, ctx):
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
@@ -97,7 +98,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         """Travel to another area.
         Use the "maps" command to view nearby areas.
         You must own a player to use this."""
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
                                                                                                ctx.prefix))
@@ -121,7 +122,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         """Explore the area around you.
         This will let you record what this area is and what can be found in it.
         More to come in this command soontm."""
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
@@ -137,7 +138,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     async def status(self, ctx):
         """View your current players status.
         They can be idling, exploring, or travelling."""
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
@@ -147,7 +148,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             minutes, seconds = divmod(ex, 60)
             return await ctx.send("{} {} is currently travelling to {} and will finish"
                                   " in {} hours, {} minutes and {} seconds."
-                                  .format(blobs.BLOB_PEEK, player, player._next_map, hours, minutes, seconds))
+                                  .format(blobs.BLOB_PEEK, player, player.next_map, hours, minutes, seconds))
         time = await player.explore_time()
         if time > 0:
             hours, ex = divmod(time, 3600)
@@ -158,32 +159,11 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await ctx.send("{} {} is currently idling at {}. Try exploring or travelling!".format(
                        blobs.BLOB_PEEK, player, player.map))
 
-    @commands.command()
-    async def profile(self, ctx: utils.EpicContext, *, member: discord.Member = None):
-        """View information about your, or another persons player.
-        You cannot see where they are if you have not explored that area."""
-        member = member or ctx.author
-        player = self.get_player(member._user)
-        if not player:
-            return await ctx.send("{} doesn't have a player {}".format(member, blobs.BLOB_PLSNO))
-        embed = discord.Embed(color=discord.Colour.blurple(),
-                              description=f"Currently {player.status.name}\n"
-                              f"Tier {player.level} ({player.exp} EXP)")
-        embed.set_author(name=str(member), icon_url=member.avatar_url_as(static_format="png", size=32))
-        embed.add_field(name="Name", value=player.name)
-        pl = self.get_player(ctx.author)
-        if player.owner != ctx.author._user and (not pl or player.map not in pl.explored_maps):
-            embed.add_field(name="Currently At", value="???")
-        else:
-            embed.add_field(name="Currently At", value=str(player.map))
-        embed.add_field(name="Created At", value=player.created_at.strftime("%d/%m/%y @ %H:%M"), inline=False)
-        await ctx.send(embed=embed)
-
     @commands.command(ignore_extra=False)
     async def rename(self, ctx):
         """Rename your player.
         The same rules apply, the name can only be 32 characters or less."""
-        player = self.get_player(ctx.author._user)
+        player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
@@ -205,11 +185,13 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         finally:
             await n.delete()
 
-    @commands.command(hidden=True)
-    async def _profile(self, ctx):
-        async with self.bot.session.get(ctx.author.avatar_url_as(format="png", size=256)) as get:
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.user)
+    async def profile(self, ctx, *, member: discord.Member = None):
+        member = member or ctx.author
+        async with self.bot.session.get(member.avatar_url_as(format="png", size=256)) as get:
             n = io.BytesIO(await get.read())
-        profile = await self.profile_for(n, self.get_player(ctx.author._user))
+        profile = await self.profile_for(n, self.get_player(member))
         f = discord.File(profile, filename="profile.png")
         await ctx.send(file=f)
 

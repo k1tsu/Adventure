@@ -17,6 +17,8 @@ log = logging.getLogger("Adventure.cogs.Moderator")
 
 
 class Moderator(commands.Cog):
+    """Commands for the owner.
+    You shouldn't be seeing this."""
     def __init__(self, bot):
         self.bot = bot
         self._last_result = None

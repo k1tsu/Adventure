@@ -12,6 +12,7 @@ log = logging.getLogger("Adventure.ShopManager")
 
 
 class ItemManager(commands.Cog, name="Item Manager"):
+    """<:pinkblobpeek:544693608121630721>"""
     def __init__(self, bot):
         self.bot = bot
         self.items = []

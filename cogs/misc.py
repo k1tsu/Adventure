@@ -14,6 +14,8 @@ from discord.ext import commands
 
 
 class Misc(commands.Cog, name="Miscellaneous"):
+    """Miscellaneous commands are found here.
+    Includes source and pinging."""
     def __init__(self, bot):
         self.bot = bot
         self.valid = ("py", "sql", "md", "txt", "json")
@@ -74,6 +76,10 @@ class Misc(commands.Cog, name="Miscellaneous"):
         end = time.perf_counter()
         ms = round((end-start)*1000)
         await ctx.send(f":ping_pong: **{ms}**ms")
+
+    @commands.command()
+    async def say(self, ctx, *, message: commands.clean_content):
+        await ctx.send(message)
 
     @commands.command()
     async def source(self, ctx, *, command=None):
