@@ -134,6 +134,9 @@ class Adventure(commands.Bot):
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
                                                              name=f"*help"))
 
+    async def on_error(self, event, *args, **kwargs):
+        self.dispatch("event_error", event, *args, **kwargs)
+
     async def start(self, token):
         await self.login(token, bot=True)
         await self.connect(reconnect=True)
@@ -208,6 +211,7 @@ if __name__ == "__main__":
         logging.getLogger("asyncio").disabled = True
         logging.getLogger("websockets.protocol").disabled = True
         logging.getLogger("aioredis").disabled = True
+        logging.getLogger("PIL.PngImagePlugin").disabled = True
     finally:
         pass
 

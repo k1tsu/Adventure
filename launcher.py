@@ -47,6 +47,7 @@ try:
     logging.getLogger("asyncio").disabled = True
     logging.getLogger("websockets.protocol").disabled = True
     logging.getLogger("aioredis").disabled = True
+    logging.getLogger("PIL.PngImagePlugin").disabled = True
 finally:
     pass
 
