@@ -17,7 +17,8 @@ class Help(commands.Cog):
         for cmd in i:
             if cmd.hidden and not ignore_hidden:
                 continue
-            yield "\u200b " * (stack*2) + f"►{cmd}\n"
+            line = '- ' + cmd.help.split("\n")[0] if cmd.help else ""
+            yield "\u200b " * (stack*2) + f"►**{cmd}** {line}\n"
             if isinstance(cmd, commands.Group):
                 yield from self.formatter(cmd.commands, stack+1)
 
@@ -26,24 +27,24 @@ class Help(commands.Cog):
         embed.set_footer(text="Use *help <command> for more information.")
         if isinstance(item, commands.Cog):
             embed.title = item.qualified_name
-            embed.description = type(item).__doc__
+            embed.description = type(item).__doc__ or "Nothing provided."
             embed.add_field(name="Commands", value=''.join([t for t in self.formatter(item.get_commands())]))
             return embed
         elif isinstance(item, commands.Group):
-            embed.title = item.signature
-            embed.description = item.help
+            embed.title = f"{item.qualified_name} {item.signature}"
+            embed.description = item.help or "Nothing provided."
             fmt = "".join([c for c in self.formatter(item.commands)])
             embed.add_field(name="Subcommands", value=fmt)
             return embed
         elif isinstance(item, commands.Command):
-            embed.title = item.signature
-            embed.description = item.help
+            embed.title = f"{item.qualified_name} {item.signature}"
+            embed.description = item.help or "Nothing provided."
             return embed
         else:
             raise RuntimeError("??")
 
     @commands.command(name="help")
-    async def _help(self, ctx, *, cmd: commands.clean_content=None):
+    async def _help(self, ctx, *, cmd: commands.clean_content = None):
         """The help command.
         Use this to view other commands."""
         if cmd == "all":
