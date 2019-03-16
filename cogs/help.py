@@ -28,7 +28,8 @@ class Help(commands.Cog):
         if isinstance(item, commands.Cog):
             embed.title = item.qualified_name
             embed.description = type(item).__doc__ or "Nothing provided."
-            embed.add_field(name="Commands", value=''.join([t for t in self.formatter(item.get_commands())]))
+            embed.add_field(name="Commands", value=''.join([t for t in self.formatter(item.get_commands())]) or
+                            "No visible commands.")
             return embed
         elif isinstance(item, commands.Group):
             embed.title = f"{item.qualified_name} {item.signature}"
@@ -64,8 +65,20 @@ class Help(commands.Cog):
                 n.append(f"**{cog.qualified_name}**\n")
                 for cmd in self.formatter(cog.get_commands(), ignore_hidden=_all):
                     n.append(cmd)
-            embed.description = "".join(n)
-            await ctx.send(embed=embed)
+            join = "".join(n)
+            if len(join) < 2048:
+                embed.description = join
+                await ctx.send(embed=embed)
+            else:
+                try:
+                    await ctx.author.send("")
+                except discord.Forbidden:
+                    return await ctx.send("Cannot DM you!")
+                except discord.HTTPException:
+                    pass
+                await ctx.message.add_reaction("\U0001f4ec")
+                for chunk in [n[x:x+25] for x in range(0, len(n), 25)]:
+                    await ctx.author.send("".join(chunk))
         else:
             item = self.bot.get_cog(cmd) or self.bot.get_command(cmd)
             if not item:
