@@ -20,7 +20,7 @@ class ItemManager(commands.Cog, name="Item Manager"):
         self.bot.unload_complete.append(self.unload)
 
     def __repr__(self):
-        return "<ItemManager ItemCount: {0}>".format(len(self.items))
+        return "<ItemManager total: {0}>".format(len(self.items))
 
     # -- Internal -- #
 
@@ -52,11 +52,17 @@ class ItemManager(commands.Cog, name="Item Manager"):
     async def shop(self, ctx):
         n = ["```diff"]
         for item in self.items:
-            fmt = f"+ {item.name} [{item.id}]\n  ${item.cost}G\n"
+            fmt = f"+ {item.name} [{item.id}]\n  {item.cost} G\n"
             n.append(fmt)
         n.append("```")
         await ctx.send("\n".join(n))
 
 
 def setup(bot):
-    bot.add_cog(ItemManager(bot))
+    cog = ItemManager(bot)
+    bot.add_cog(cog)
+    bot.item_manager = cog
+
+
+def teardown(bot):
+    bot.item_manager = None

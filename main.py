@@ -3,6 +3,7 @@ import asyncio
 import logging
 import os
 import sys
+import traceback
 from datetime import datetime
 
 # -> Requires Python 3.6.x - 3.7.x
@@ -44,16 +45,15 @@ log = logging.getLogger("Adventure.main")
 
 log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*20)
 
-EXTENSIONS = [
-    "jishaku",
-    "cogs.error_handler",
-    "cogs.help",
-    "cogs.misc",
-    "cogs.moderators",
-    "objectmanagers.maps",
-    "objectmanagers.players",
-    "objectmanagers.items"
-]
+
+def extensions():
+    n = ['jishaku']
+    n.extend([f'cogs.{f[:-3]}' for f in os.listdir("cogs") if not f.startswith("__")])
+    n.extend([f'objectmanagers.{f[:-3]}' for f in os.listdir("objectmanagers") if not f.startswith("__")])
+    return n
+
+
+EXTENSIONS = extensions()
 
 
 class Adventure(commands.Bot):
@@ -65,6 +65,10 @@ class Adventure(commands.Bot):
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
         self.blacklist = dict()
+        self.player_manager: commands.Cog = None
+        self.map_manager: commands.Cog = None
+        self.item_manager: commands.Cog = None
+        self.enemy_manager: commands.Cog = None
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
 
@@ -74,7 +78,7 @@ class Adventure(commands.Bot):
         return True
 
     def dispatch(self, event, *args, **kwargs):
-        if not self.prepared.is_set() and event not in ("ready", "connect", "logout"):
+        if not self.prepared.is_set() and event in ("message", "command", "command_error"):
             return  # this is to prevent events like on_message, on_command etc to be sent out before im ready to start
         return super().dispatch(event, *args, **kwargs)
 
@@ -125,17 +129,14 @@ class Adventure(commands.Bot):
                 self.blacklist[userid] = reason
                 log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
 
-        self.item_manager = self.get_cog("Item Manager")
-        self.player_manager = self.get_cog("Player Manager")
-        self.map_manager = self.get_cog("Map Manager")
-
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
                                                              name=f"*help"))
 
     async def on_error(self, event, *args, **kwargs):
-        self.dispatch("event_error", event, *args, **kwargs)
+        error = traceback.format_exc()
+        self.dispatch("event_error", event, error, *args, **kwargs)
 
     async def start(self, token):
         await self.login(token, bot=True)
@@ -151,7 +152,10 @@ class Adventure(commands.Bot):
                 await cur.execute("INSERT INTO blacklist VALUES ($1, $2);", userid, reason)
                 # update because using *blacklist should automatically add them to the db
         for event in self.unload_complete:
-            await event.wait()
+            try:
+                await asyncio.wait_for(event.wait(), timeout=60.0)
+            except asyncio.TimeoutError:
+                log.critical("Event %r failed to finish in time.", event)
         await self.db.close()
         self._redis.close()
         await self._redis.wait_closed()

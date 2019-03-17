@@ -3,6 +3,7 @@ import asyncio
 import copy
 import io
 import logging
+import random
 from datetime import datetime
 
 # -> Pip packages
@@ -41,7 +42,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         return ImageFont.truetype(self._font, size)
 
     def __repr__(self):
-        return "<PlayerManager players=[{0}]>".format(len(self.players))
+        return "<PlayerManager total: {0}>".format(len(self.players))
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
@@ -83,7 +84,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         finally:
             self.is_creating.remove(ctx.author.id)
 
-    @commands.command()
+    @commands.command(ignore_extra=False)
     async def delete(self, ctx):
         player = self.get_player(ctx.author)
         if not player:
@@ -108,7 +109,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             return await ctx.send("Unknown map {}".format(blobs.BLOB_WINK))
         if destination not in player.map.nearby:
             raise utils.NotNearby(player.map, destination)
-        time = player.map.calculate_travel_to(destination)
+        time = destination.calculate_travel_to(player)
         if time > 2.0:
             if not await ctx.warn("{} It's a long trip, are you sure you want to go?".format(blobs.BLOB_THINK)):
                 return
@@ -189,11 +190,53 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def profile(self, ctx, *, member: discord.Member = None):
         member = member or ctx.author
+        player = self.get_player(member)
+        if not player:
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+        await ctx.trigger_typing()
         async with self.bot.session.get(member.avatar_url_as(format="png", size=256)) as get:
             n = io.BytesIO(await get.read())
-        profile = await self.profile_for(n, self.get_player(member))
+        profile = await self.profile_for(n, player)
         f = discord.File(profile, filename="profile.png")
         await ctx.send(file=f)
+
+    @commands.command(ignore_extra=False)
+    @commands.cooldown(2, 60, commands.BucketType.user)
+    async def encounter(self, ctx):
+        player = self.get_player(ctx.author)
+        if not player:
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+        if not player.has_explored(player.map):
+            return await ctx.send("{} You must explore the current map first!".format(blobs.BLOB_ARMSCROSSED))
+        if player.map.id == 0:
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
+        enemies = self.bot.enemy_manager.enemies_for(player.map)
+        if not enemies:
+            log.debug("2.5")
+            raise RuntimeError(f"No enemies were discovered for map {player.map!r}")
+        strongest = max(enemies, key=lambda e: e.tier)
+        chance = 100 + ((len(enemies) - strongest.tier) - player.level)
+        # log.debug("ENCOUNTER CHANCE %s %s", ctx.author, chance)
+        if random.randint(0, 100) < chance:
+            enemy = random.choice(enemies)
+            if enemy.tier > player.level:
+                await ctx.send(f"{blobs.NOTLIKE_BLOB} You encountered a **{enemy.name}** but it's too powerful!"
+                               f"\nYou ran away to avoid injury.")
+            else:
+                if enemy.defeat(player.level):
+                    exp = random.randint(enemy.tier, enemy.tier ** 3)+1
+                    await ctx.send(f"<pink blob cheer> You encountered a **{enemy.name}** and defeated it!\n"
+                                   f"You gained **{exp}** experience points!")
+                    # TODO: gain / lose gold on win / loss
+                    player.exp += exp
+                else:
+                    player.map = 0
+                    await ctx.send(f"{blobs.BLOB_INJURED} You encountered a **{enemy.name}** and failed to defeat it!\n"
+                                   f"You were knocked out and magically sent back to Abel.")
+        else:
+            await ctx.send("{} You couldn't find anything.")
 
     # -- Player Manager stuff -- #
 
@@ -286,4 +329,10 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
 
 def setup(bot):
-    bot.add_cog(PlayerManager(bot))
+    cog = PlayerManager(bot)
+    bot.add_cog(cog)
+    bot.player_manager = cog
+
+
+def teardown(bot):
+    bot.player_manager = None

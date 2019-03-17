@@ -31,6 +31,9 @@ class MapManager(commands.Cog, name="Map Manager"):
         self._maps: List[utils.Map] = []
         self.prepare_maps()
 
+    def __repr__(self):
+        return "<MapManager total: {0}>".format(len(self._maps))
+
     def cog_unload(self):
         del self._maps[:]
 
@@ -40,7 +43,7 @@ class MapManager(commands.Cog, name="Map Manager"):
     async def maps_(self, ctx):
         """Views all maps that you can travel to.
         This wont show maps that are not nearby."""
-        player = self.bot.player_manager.get_player(ctx.author._user)
+        player = self.bot.player_manager.get_player(ctx.author)
         if not player:
             return await ctx.send(f"You don't have a player! {blobs.BLOB_PLSNO} Create one with `{ctx.prefix}create`!")
         pg = utils.EmbedPaginator()
@@ -126,4 +129,10 @@ class MapManager(commands.Cog, name="Map Manager"):
 
 
 def setup(bot):
-    bot.add_cog(MapManager(bot))
+    cog = MapManager(bot)
+    bot.add_cog(cog)
+    bot.map_manager = cog
+
+
+def teardown(bot):
+    bot.map_manager = None

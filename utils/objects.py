@@ -1,6 +1,8 @@
 # -> Builtin modules
 import asyncio
+import decimal
 import enum
+import random
 import logging
 import math
 import operator
@@ -22,6 +24,12 @@ class Status(enum.Enum):
     idle = 0
     travelling = 1
     exploring = 2
+
+
+class Dummy:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 class Map:
@@ -49,17 +57,20 @@ class Map:
         return self.id
 
     def calculate_travel_to(self, other) -> float:
-        if not isinstance(other, Map):
-            raise ValueError("Must be a Map object.")
-        return (self.density + other.density) / 1234
+        if isinstance(other, self.__class__):
+            return (self.density + other.density) / 1234
+        elif isinstance(other, Player):
+            return (self.density + other.map.density) / (1234 * (other.has_explored(self)+1))
+        else:
+            raise RuntimeError
 
     def calculate_explore(self) -> float:
         return (self.density * 1234) / (1000 ** 2)
 
     def travel_exp(self, map) -> int:
-        if not isinstance(map, self.__class__):
-            raise ValueError("'map' argument must be Map")
-        time = map.calculate_travel_to(self) * 10
+        if not isinstance(map, (self.__class__, Player)):
+            raise RuntimeError
+        time = self.calculate_travel_to(map) * 10
         return math.floor(time / 3)
 
     def explore_exp(self) -> int:
@@ -187,6 +198,9 @@ class Player:
 
     # -- Real functions -- #
 
+    def has_explored(self, map: Map):
+        return map in self.explored_maps
+
     async def travel_to(self, destination: Map):
         if await self.is_travelling():
             raise utils.AlreadyTravelling(self.name,
@@ -196,11 +210,11 @@ class Player:
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
                                                           seconds=await self.explore_time()))))
-        time = int(((datetime.now() + timedelta(hours=self.map.calculate_travel_to(destination))) - datetime.now()
+        time = int(((datetime.now() + timedelta(hours=destination.calculate_travel_to(self))) - datetime.now()
                     ).total_seconds())
         self.next_map = destination
         plylog.info("%s is adventuring to %s and will finish in %.2f hours.",
-                    self.name, destination, self.map.calculate_travel_to(destination))
+                    self.name, destination, destination.calculate_travel_to(self))
         await self._bot.redis("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))
         await self._bot.redis("SET", f"next_map_{self.owner.id}", str(destination.id))
         await self._bot.redis("SET", f"status_{self.owner.id}", "1")
@@ -255,9 +269,25 @@ WHERE players.owner_id = $1;
         del self
 
 
-
 class Item:
-    def __init__(self, *, id: int, name: str, cost: float):
+    def __init__(self, *, id: int, name: str, cost: Union[decimal.Decimal, float]):
         self.id = id
         self.name = name
         self.cost = cost
+
+    def __repr__(self):
+        return f'<Item id={self.id} name="{self.name}" cost={self.cost}>'
+
+
+class Enemy:
+    def __init__(self, *, id: int, name: str, maps: List[Map], tier: int):
+        self.id: id = id
+        self.name: str = name
+        self.maps: List[Map] = maps
+        self.tier: int = tier
+
+    def __repr__(self):
+        return '<Enemy id={0.id} name="{0.name}" maps={0.maps} tier={0.tier}>'.format(self)
+
+    def defeat(self, tier: int) -> bool:
+        return random.randint(1, 100) < ((tier - self.tier) + 1) * 100 / 6

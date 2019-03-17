@@ -29,13 +29,17 @@ class Misc(commands.Cog, name="Miscellaneous"):
                 ext = name.split(".")[-1]
                 if ext not in self.valid:
                     continue
+                if 'venv' in './' + str(pathlib.PurePath(path, name)):
+                    continue
                 with open('./' + str(pathlib.PurePath(path, name)), 'r', encoding='utf-8') as f:
                     for l in f:
-                        if l.strip().startswith("#") or len(l.strip()) == 0:
+                        if (l.strip().startswith("#") and ext == 'py') or len(l.strip()) == 0:
                             continue
                         total[ext] += 1
-        size = max([f"{x} lines of {y} code" for y, x in total.items()], key=lambda m: len(m))
-        fmt = "```\n" + "\n".join(sorted([f"{f'{x} lines of {y} code':>{size}}" for y, x in total.items()],
+        t = {a: b for a, b in sorted(total.items(), key=lambda x: x[1], reverse=True)}
+        sizea = max(len(str(x)) for x in t.values())
+        sizeb = max(len(str(x)) for x in t.keys())
+        fmt = "```\n" + "\n".join(sorted([f"{f'{x:>{sizea}} lines of {y:>{sizeb}} code'}" for y, x in t.items()],
                                          key=lambda m: len(m))) + "```"
         await ctx.send(fmt)
 

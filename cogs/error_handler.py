@@ -37,7 +37,7 @@ class Handler(commands.Cog):
     async def on_command_error(self, ctx, exc, enf=False):
         if hasattr(ctx.command, "on_error") and not enf:
             return
-        if hasattr(ctx.cog, f"_{ctx.cog.__class__.__name__}__error") and not enf:
+        if ctx.cog is not None and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
             return
         exc = getattr(exc, "original", exc)
         if isinstance(exc, (commands.CommandNotFound, commands.NoPrivateMessage, commands.DisabledCommand)):
@@ -51,7 +51,7 @@ class Handler(commands.Cog):
         if isinstance(exc, utils.AdventureBase):
             return await ctx.send(str(exc))
         if isinstance(exc, commands.BadArgument):
-            return await ctx.invoke(self.bot.get_command("help"), *ctx.command.qualified_name.split())
+            return await ctx.invoke(self.bot.get_command("help"), cmd=ctx.command.qualified_name)
         if isinstance(exc, commands.TooManyArguments):
             return await ctx.send(f"{ctx.command} doesn't take any extra arguments."
                                   f" See `{ctx.prefix}help {ctx.command}`")
@@ -67,12 +67,12 @@ class Handler(commands.Cog):
         await ctx.send(":exclamation: Something went wrong.")
 
     @commands.Cog.listener()
-    async def on_event_error(self, event, *args, **kwargs):
+    async def on_event_error(self, event, exception, *args, **kwargs):
         if event == "event_error":
-            return log.error(EVENT_ERROR_FMT, event, args, kwargs, traceback.format_exc())
+            return log.error(EVENT_ERROR_FMT, event, args, kwargs, exception)
         if not self.bot.prepared.is_set() and event == "ready":
             await self.bot.change_presence(status=discord.Status.dnd)
-        log.error(EVENT_ERROR_FMT, event, args, kwargs, traceback.format_exc())
+        log.error(EVENT_ERROR_FMT, event, args, kwargs, exception)
 
 
 def setup(bot):
