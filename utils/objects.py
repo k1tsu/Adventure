@@ -60,7 +60,7 @@ class Map:
         if isinstance(other, self.__class__):
             return (self.density + other.density) / 1234
         elif isinstance(other, Player):
-            return (self.density + other.map.density) / (1234 * (other.has_explored(self)+1))
+            return (self.density + other.map.density) / (1234 * (1 if not other.has_explored(self) else 4))
         else:
             raise RuntimeError
 
