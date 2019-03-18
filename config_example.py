@@ -8,3 +8,4 @@ ASYNCPG = {
     "host": "host address"
 }
 OWNERS = []  # list of user ids (ints)
+NOOT = "image url"

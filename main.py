@@ -108,6 +108,13 @@ class Adventure(commands.Bot):
         except aioredis.errors.PoolClosedError:
             return
 
+    async def on_message(self, message: discord.Message):
+        if self.user in message.mentions:
+            await message.channel.send(embed=discord.Embed().set_image(url=config.NOOT))
+        if message.author.bot:
+            return
+        await self.process_commands(message)
+
     # noinspection PyAttributeOutsideInit
     async def on_ready(self):
         if self.prepared.is_set():
