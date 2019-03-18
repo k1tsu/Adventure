@@ -58,14 +58,14 @@ class Map:
 
     def calculate_travel_to(self, other) -> float:
         if isinstance(other, self.__class__):
-            return (self.density + other.density) / 1234
+            return (self.density + other.density) / 2468
         elif isinstance(other, Player):
-            return (self.density + other.map.density) / (1234 * (1 if not other.has_explored(self) else 4))
+            return (self.density + other.map.density) / (2468 * (1 if not other.has_explored(self) else 4))
         else:
             raise RuntimeError
 
     def calculate_explore(self) -> float:
-        return (self.density * 1234) / (1000 ** 2)
+        return (self.density * 2468) / (1000 ** 2)
 
     def travel_exp(self, map) -> int:
         if not isinstance(map, (self.__class__, Player)):

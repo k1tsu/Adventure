@@ -14,6 +14,17 @@ class EpicContext(Context):
     def __repr__(self):
         return "<EpicContext author={0.author} channel={0.channel} guild={0.guild}>".format(self)
 
+    async def invoke(self, *args, **kwargs):
+        try:
+            ret = await super().invoke(*args, **kwargs)
+        except Exception as e:
+            self.bot.dispatch("command_error", self, e)
+        else:
+            self.bot.dispatch("command_completion", self)
+            return ret
+        finally:
+            self.bot.dispatch("command", self)
+
     async def add_reaction(self, emote):
         try:
             await self.message.add_reaction(emote)

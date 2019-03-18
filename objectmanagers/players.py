@@ -3,6 +3,7 @@ import asyncio
 import copy
 import io
 import logging
+import math
 import random
 from datetime import datetime
 
@@ -86,6 +87,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.command(ignore_extra=False)
     async def delete(self, ctx):
+        """Begins the player deletion process.
+
+        Pls no use <:pinkblobplsno:511668250313097246>"""
         player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
@@ -189,25 +193,44 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def profile(self, ctx, *, member: discord.Member = None):
+        """Generates a profile for the member you specify, or yourself if omitted.
+
+        This is a picture, so the cooldown is to prevent mass spam."""
         member = member or ctx.author
         player = self.get_player(member)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
+        nx_player = self.get_player(ctx.author)
+        if nx_player and not nx_player.has_explored(player.map):
+            hide = True
+        else:
+            hide = False
         await ctx.trigger_typing()
         async with self.bot.session.get(member.avatar_url_as(format="png", size=256)) as get:
             n = io.BytesIO(await get.read())
-        profile = await self.profile_for(n, player)
+        profile = await self.profile_for(n, player, hide=hide)
         f = discord.File(profile, filename="profile.png")
         await ctx.send(file=f)
 
     @commands.command(ignore_extra=False)
     @commands.cooldown(2, 60, commands.BucketType.user)
     async def encounter(self, ctx):
+        """Searches for an enemy to fight within the area.
+
+        Remember that there are no enemies in `Abel`.
+        You can only encounter 2 enemies every 60 seconds.
+        If you encounter an enemy you cannot fight, you will run away unharmed.
+        If you encounter an enemy and fail to defeat it, you will be knocked out
+        \u200b\tand magically teleported back to Abel by a mysterious god.
+        If you encounter an enemy and defeat it, you will gain Experience."""
         player = self.get_player(ctx.author)
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
+        if await player.is_exploring() or await player.is_travelling():
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You are busy! Wait until you are idling before you "
+                                  f"try to perform this action.")
         if not player.has_explored(player.map):
             return await ctx.send("{} You must explore the current map first!".format(blobs.BLOB_ARMSCROSSED))
         if player.map.id == 0:
@@ -238,6 +261,29 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         else:
             await ctx.send("{} You couldn't find anything.")
 
+    @commands.command(ignore_extra=False)
+    async def daily(self, ctx):
+        """Claims your daily reward.
+
+        This doesn't reset when the bot reboots, so don't even try :^)"""
+        player = self.get_player(ctx.author)
+        if not player:
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+        if player.level < 2:
+            await ctx.send(f"~~You probably won't gain any exp heads up.~~ {blobs.BLOB_INJURED}")
+        ttl = await self.bot.redis("TTL", f"daily_{ctx.author.id}")
+        if ttl < 0:
+            gain = math.ceil(random.uniform(player.exp / 16, player.exp / 2))
+            player.exp += gain
+            await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!")
+            await self.bot.redis("SET", f"daily_{ctx.author.id}", "12", "EX", "86400")
+        else:
+            hours, ex = divmod(ttl, 3600)
+            minutes, seconds = divmod(ex, 60)
+            await ctx.send(f"{blobs.BLOB_ARMSCROSSED} "
+                           f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
+
     # -- Player Manager stuff -- #
 
     def fetch_players(self):
@@ -247,7 +293,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         return discord.utils.get(self.players, owner=user)
 
     @utils.async_executor()
-    def profile_for(self, avatar: io.BytesIO, player: utils.Player):
+    def profile_for(self, avatar: io.BytesIO, player: utils.Player, hide: bool = False):
         image = Image.open(avatar).convert("RGBA")
         background = self.background.copy()
         background.paste(image, (0, 0), image)
@@ -262,16 +308,16 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                   self.font(), align="center")
         if player.status is utils.Status.idle:
             status = "Idling at"
-            pmap = str(player.map)
+            pmap = str(player.map) if not hide else "???"
         elif player.status is utils.Status.travelling:
             status = "Travelling to"
-            pmap = str(player.next_map)
+            pmap = str(player.next_map) if not hide else "???"
         elif player.status is utils.Status.exploring:
             status = "Exploring"
-            pmap = str(player.map)
+            pmap = str(player.map) if not hide else "???"
         else:
             status = "???"
-            pmap = str(player.map)
+            pmap = str(player.map) if not hide else "???"
         draw.text((240, 125), f"{status:^{len(status)+4}}\n{pmap:^{len(status)+4}}", (255, 255, 255),
                   self.font(), align="center")
         created = humanize.naturaltime(player.created_at)

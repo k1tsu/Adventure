@@ -4,13 +4,13 @@ import logging
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import Union
 
 # -> Pip packages
 import discord
 from discord.ext import commands
 
 # -> Local files
+import blobs
 import utils
 
 log = logging.getLogger("Adventure.cogs.Moderator")
@@ -39,7 +39,7 @@ class Moderator(commands.Cog):
         return content.strip('` \n')
 
     @commands.command(hidden=True)
-    async def bl(self, ctx, member: Union[discord.Member, discord.User], *, reason: str = "None provided."):
+    async def bl(self, ctx, member: discord.User, *, reason: str = "None provided."):
         if len(reason) > 255:
             return await ctx.send("Limitation: Reason too long.", delete_after=10)
         if member.id not in self.bot.blacklist:
@@ -94,7 +94,46 @@ class Moderator(commands.Cog):
             await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))
         else:
             await ctx.send(fmt)
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+        await ctx.message.add_reaction(blobs.BLOB_TICK)
+
+    @commands.command(hidden=True)
+    async def dailyreset(self, ctx, *, member: discord.User):
+        player = self.bot.player_manager.get_player(member)
+        if not player:
+            log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
+            return await ctx.message.add_reaction(blobs.BLOB_CROSS)
+        await self.bot.redis("SET", f"daily_{member.id}", "12", "EX", "1")
+        await ctx.message.add_reaction(blobs.BLOB_TICK)
+
+    @commands.command(hidden=True)
+    async def speedup(self, ctx, *, member: discord.User):
+        player = self.bot.player_manager.get_player(member)
+        if not player:
+            log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
+            return await ctx.message.add_reaction(blobs.BLOB_CROSS)
+        if await player.is_travelling():
+            await self.bot.redis("SET", f"travelling_{member.id}", "0", "EX", "1")
+        elif await player.is_exploring():
+            await self.bot.redis("SET", f"exploring_{member.id}", "0", "EX", "1")
+        await ctx.message.add_reaction(blobs.BLOB_TICK)
+
+    @commands.command(hidden=True)
+    async def teleport(self, ctx, member: discord.User, *, map: str):
+        player = self.bot.player_manager.get_player(member)
+        if not player:
+            log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
+            return await ctx.message.add_reaction(blobs.BLOB_CROSS)
+        try:
+            map = self.bot.map_manager.resolve_map(map)
+        except RuntimeError:
+            log.warning("%s / %s: No map %s", ctx.message.clean_content, ctx.author, map)
+            return await ctx.message.add_reaction(blobs.BLOB_CROSS)
+        else:  # i dont remember if it returns none or not lol
+            if map is None:
+                log.warning("%s / %s: No map %s", ctx.message.clean_content, ctx.author, map)
+                return await ctx.message.add_reaction(blobs.BLOB_CROSS)
+            player.map = map
+            await ctx.invoke(self.speedup, member=member)
 
     @commands.command(hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
@@ -132,7 +171,7 @@ class Moderator(commands.Cog):
         else:
             value = stdout.getvalue()
             try:
-                await ctx.message.add_reaction('\u2705')
+                await ctx.message.add_reaction(blobs.BLOB_TICK)
             except:
                 pass
 

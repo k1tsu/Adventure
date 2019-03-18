@@ -83,6 +83,7 @@ class Misc(commands.Cog, name="Miscellaneous"):
 
     @commands.command()
     async def say(self, ctx, *, message: commands.clean_content):
+        """Repeats the message you say."""
         await ctx.send(message)
 
     @commands.command()
@@ -114,6 +115,30 @@ class Misc(commands.Cog, name="Miscellaneous"):
 
         final = f"<{source}/{location}#L{first}-L{first + len(lines) - 1}>"
         await ctx.send(final)
+
+    @commands.command(ignore_extra=False)
+    async def invite(self, ctx):
+        """Generates an invite URL to invite me to your server.
+
+        Two options:
+        \u200b\tThe first: comes with all the recommended permissions.
+        \u200b\tThe second: minimal (0) permissions."""
+        embed = discord.Embed(title="Here's my invite links!", color=discord.Color.blurple())
+        embed.description = ("[The full experience]"
+                             "(https://discordapp.com/api/oauth2/authorize"
+                             "?client_id=482373088109920266&permissions=388160&scope=bot)\n"
+                             "[Minimalistic setup]"
+                             "(https://discordapp.com/api/oauth2/authorize"
+                             "?client_id=482373088109920266&permissions=0&scope=bot)")
+        await ctx.send(embed=embed)
+
+    @commands.command(hidden=True)
+    async def todo(self, ctx):
+        await ctx.send("`todo list`")
+
+    @commands.command(hidden=True)
+    async def levels(self, ctx):
+        await ctx.send([(x, x**3) for x in range(1, 101)])
 
 
 def setup(bot):
