@@ -344,7 +344,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         for data in await self.fetch_players():
             owner_id, name, map_id, created, explored, exp, *_ = data
             try:
-                user = self.bot.get_user(owner_id) or await self.bot.get_user_info(owner_id)
+                user = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
             except discord.NotFound:
                 log.warning("Unresolved user id %s with player %s. Skipping initialization.", owner_id, name)
                 continue

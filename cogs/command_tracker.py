@@ -30,14 +30,15 @@ class CommandLogger(commands.Cog):
             return
         table = utils.TabularData()
         table.set_columns(HEADERS)
+        clean = ctx.message.clean_content.replace("\n", "\\n")
         if ctx.guild:
             table.add_row([datetime.datetime.utcnow().strftime("%H:%M:%S"), f"({ctx.guild.id}) {ctx.guild}",
                            f"({ctx.channel.id}) #{ctx.channel}", f"({ctx.author.id}) {ctx.author}",
-                           ctx.message.clean_content, f"{type(exc).__name__}: {exc}" if exc else ""])
+                           clean, f"{type(exc).__name__}: {exc}" if exc else ""])
         else:
             table.add_row([datetime.datetime.utcnow().strftime("%H:%M:%S"), f"None",
                            f"None", f"({ctx.author.id}) {ctx.author}",
-                           ctx.message.clean_content, f"{type(exc).__name__}: {exc}" if exc else ""])
+                           clean, f"{type(exc).__name__}: {exc}" if exc else ""])
         log.error(table.render())
 
 
