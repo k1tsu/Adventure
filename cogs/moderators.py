@@ -6,6 +6,7 @@ import traceback
 from contextlib import redirect_stdout
 
 # -> Pip packages
+import aioredis
 import discord
 from discord.ext import commands
 
@@ -134,6 +135,21 @@ class Moderator(commands.Cog):
                 return await ctx.message.add_reaction(blobs.BLOB_CROSS)
             player.map = map
             await ctx.invoke(self.speedup, member=member)
+
+    @commands.command(hidden=True)
+    async def redis(self, ctx, *args):
+        try:
+            ret = await self.bot.redis(*args)
+            await ctx.send(getattr(ret, "decode", ret.__str__)())
+        except Exception as e:
+            await ctx.add_reaction(blobs.BLOB_CROSS)
+            raise e
+        else:
+            await ctx.add_reaction(blobs.BLOB_TICK)
+
+    @redis.error
+    async def redis_error(self, ctx, exc):
+        await ctx.send(f"`{exc}`")
 
     @commands.command(hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):

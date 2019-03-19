@@ -50,7 +50,10 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         player = self.get_player(ctx.author)
         if not player:
             return
-        await player.update(ctx)
+        try:
+            await player.update(ctx)
+        except TypeError:
+            pass
 
     # -- Commands -- #
 
@@ -259,7 +262,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                     await ctx.send(f"{blobs.BLOB_INJURED} You encountered a **{enemy.name}** and failed to defeat it!\n"
                                    f"You were knocked out and magically sent back to Abel.")
         else:
-            await ctx.send("{} You couldn't find anything.")
+            await ctx.send(f"{blobs.BLOB_PEEK} You couldn't find anything.")
 
     @commands.command(ignore_extra=False)
     async def daily(self, ctx):

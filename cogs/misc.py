@@ -12,6 +12,24 @@ import discord
 import jishaku
 from discord.ext import commands
 
+import blobs
+import utils
+
+
+def perm_check(**perms):
+    async def predicate(ctx):
+        if ctx.author.id in ctx.bot.config.OWNERS:
+            return True
+        permissions = ctx.channel.permissions_for(ctx.author)
+        invalid = []
+        for p, v in perms.items():
+            if not getattr(permissions, p, None) == v:
+                invalid.append(p)
+        if invalid:
+            raise commands.MissingPermissions(invalid)
+        return True
+    return commands.check(predicate)
+
 
 class Misc(commands.Cog, name="Miscellaneous"):
     """Miscellaneous commands are found here.
@@ -139,6 +157,33 @@ class Misc(commands.Cog, name="Miscellaneous"):
     @commands.command(hidden=True)
     async def levels(self, ctx):
         await ctx.send([(x, x**3) for x in range(1, 101)])
+
+    @commands.group(hidden=True, invoke_without_command=True)
+    @perm_check(manage_guild=True)
+    async def prefix(self, ctx):
+        await ctx.send("\n".join(self.bot.prefixes[ctx.guild.id]))
+
+    @prefix.command()
+    @perm_check(manage_guild=True)
+    async def add(self, ctx, *prefixes):
+        self.bot.prefixes[ctx.guild.id] |= set(prefixes)
+        await ctx.add_reaction(blobs.BLOB_TICK)
+
+    @prefix.command()
+    @perm_check(manage_guild=True)
+    async def remove(self, ctx, *prefixes):
+        for prefix in prefixes:
+            self.bot.prefixes[ctx.guild.id].remove(prefix)
+        await ctx.add_reaction(blobs.BLOB_TICK)
+
+    @prefix.error
+    @add.error
+    @remove.error
+    async def handler(self, ctx, exc):
+        if not isinstance(exc, commands.CommandInvokeError):
+            return
+        await ctx.author.send(f"```py\n{utils.format_exception(exc.original)}\n```")
+        await ctx.add_reaction(blobs.BLOB_CROSS)
 
 
 def setup(bot):

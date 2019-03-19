@@ -5,7 +5,7 @@ import logging
 from discord.ext import commands
 import discord
 
-log = logging.getLogger("Adventure.Help")
+log = logging.getLogger("Adventure.cogs.Help")
 
 
 class Help(commands.Cog):
@@ -24,7 +24,7 @@ class Help(commands.Cog):
 
     def format_help_for(self, item):
         embed = discord.Embed(colour=discord.Colour.blurple())
-        embed.set_footer(text="Use *help <command> for more information.")
+        embed.set_footer(text=f"Use {self.bot.config.PREFIX}help <command> for more information.")
         if isinstance(item, commands.Cog):
             embed.title = item.qualified_name
             embed.description = type(item).__doc__ or "Nothing provided."

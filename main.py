@@ -41,9 +41,9 @@ import utils
 
 jskshell.WINDOWS = False
 
-log = logging.getLogger("Adventure.main")
+FILE_NAME = f"logs/{datetime.utcnow().strftime('%Y-%m-%d_%H.%M.%S.%f')}.log"
 
-log.info("="*20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "="*20)
+log = logging.getLogger("Adventure.main")
 
 
 def extensions():
@@ -69,6 +69,7 @@ class Adventure(commands.Bot):
         self.map_manager: commands.Cog = None
         self.item_manager: commands.Cog = None
         self.enemy_manager: commands.Cog = None
+        self.prefixes = {}
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
 
@@ -93,11 +94,19 @@ class Adventure(commands.Bot):
     async def is_owner(self, user):
         return user.id in config.OWNERS
 
+    def prefixes_for(self, guild: discord.Guild):
+        if guild:
+            return self.prefixes[guild.id]
+        else:
+            return set(config.PREFIX)
+
     # noinspection PyUnusedLocal
-    async def getprefix(self, *args):
+    async def getprefix(self, bot, msg):
         if not self.prepared.is_set():
-            return commands.when_mentioned(*args)
-        return commands.when_mentioned_or(config.PREFIX)(*args)
+            return commands.when_mentioned(bot, msg)
+        prefixes = set(config.PREFIX)
+        prefixes |= self.prefixes_for(msg.guild)
+        return commands.when_mentioned_or(*prefixes)(bot, msg)
 
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=utils.EpicContext)
@@ -125,6 +134,12 @@ class Adventure(commands.Bot):
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         log.info("Connected to PostgreSQL server.")
+
+        for guild in self.guilds:
+            prefix = set(map(bytes.decode, await self.redis("SMEMBERS", f"prefixes_{guild.id}")))
+            if not prefix:
+                prefix = set(config.PREFIX)
+            self.prefixes[guild.id] = prefix
 
         async with self.db.acquire() as cur:
             with open("schema.sql") as f:
@@ -158,6 +173,9 @@ class Adventure(commands.Bot):
             for userid, reason in self.blacklist.items():
                 await cur.execute("INSERT INTO blacklist VALUES ($1, $2);", userid, reason)
                 # update because using *blacklist should automatically add them to the db
+        for guildid, prefixes in self.prefixes.items():
+            await self.redis("DEL", f"prefixes_{guildid}")
+            await self.redis("SADD", f"prefixes_{guildid}", *prefixes)
         for event in self.unload_complete:
             try:
                 await asyncio.wait_for(event.wait(), timeout=60.0)
@@ -180,7 +198,7 @@ class Adventure(commands.Bot):
 # :rooThink:
 
 
-if __name__ == "__main__":
+def main(run=True):
     ANSI_RESET = "\33[0m"
 
     ANSI_COLOURS = {
@@ -201,29 +219,27 @@ if __name__ == "__main__":
                 return msg
             return ANSI_COLOURS[levelname] + msg + ANSI_RESET
 
-
     handler = logging.StreamHandler()
     handler.setFormatter(ColouredFormatter())
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
-        datefmt="%H:%M:%S",
-        handlers=[
-            logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
-            handler
-        ]
-    )
-    try:
-        logging.getLogger("discord.client").disabled = True
-        logging.getLogger("discord.http").disabled = True
-        logging.getLogger("discord.gateway").disabled = True
-        logging.getLogger("discord.state").disabled = True
-        logging.getLogger("asyncio").disabled = True
-        logging.getLogger("websockets.protocol").disabled = True
-        logging.getLogger("aioredis").disabled = True
-        logging.getLogger("PIL.PngImagePlugin").disabled = True
-    finally:
-        pass
+    filehandler = logging.FileHandler(FILE_NAME, "w", encoding='UTF-8')
 
-    Adventure().run()
+    log.handlers = [filehandler, handler]
+    log.setLevel(logging.DEBUG)
+
+    for logger in [
+        "Adventure.cogs.ErrorHandler", "Adventure.cogs.Help", "Adventure.cogs.Moderator",
+        "Adventure.EnemyManager", "Adventure.ItemManager", "Adventure.MapManager", "Adventure.PlayerManager"
+    ]:
+        logg = logging.getLogger(logger)
+        logg.handlers = [filehandler, handler]
+        logg.setLevel(logging.DEBUG)
+
+    log.info("=" * 20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "=" * 20)
+
+    if run:
+        Adventure().run()
+
+
+if __name__ == "__main__":
+    main()

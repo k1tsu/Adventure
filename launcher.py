@@ -5,54 +5,11 @@ import traceback
 
 import logging
 
-ANSI_RESET = "\33[0m"
 
-ANSI_COLOURS = {
-    "WARNING": "\33[93m",
-    "DEBUG": "\33[96m",
-    "ERROR": "\33[91m",
-    "CRITICAL": "\33[95m"
-}
-
-
-class ColouredFormatter(logging.Formatter):
-    def __init__(self):
-        super().__init__("[%(asctime)s %(name)s/%(levelname)s]: %(message)s", "%H:%M:%S")
-
-    def format(self, record: logging.LogRecord):
-        levelname = record.levelname
-        msg = super().format(record)
-        if levelname == "INFO":
-            return msg
-        return ANSI_COLOURS[levelname] + msg + ANSI_RESET
-
-
-handler = logging.StreamHandler()
-handler.setFormatter(ColouredFormatter())
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="[%(asctime)s %(name)s/%(levelname)s]: %(message)s",
-    datefmt="%H:%M:%S",
-    handlers=[
-        logging.FileHandler("logs/adventure.log", "w", encoding='UTF-8'),
-        handler
-    ]
-)
-try:
-    logging.getLogger("discord.client").disabled = True
-    logging.getLogger("discord.http").disabled = True
-    logging.getLogger("discord.gateway").disabled = True
-    logging.getLogger("discord.state").disabled = True
-    logging.getLogger("asyncio").disabled = True
-    logging.getLogger("websockets.protocol").disabled = True
-    logging.getLogger("aioredis").disabled = True
-    logging.getLogger("PIL.PngImagePlugin").disabled = True
-finally:
-    pass
-
+UPDATE = not (len(sys.argv) > 1 and sys.argv[1] == "-n")
 
 log = logging.getLogger("Adventure.Launcher")
+log.setLevel(logging.DEBUG)
 
 
 if sys.platform == "win32":
@@ -93,19 +50,20 @@ async def main():
 
     silent(out.cancel, err.cancel)
 
+if UPDATE:
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        pass
+    except Exception:
+        traceback.print_exc()
+    finally:
+        loop.stop()
+        loop.close()
 
-try:
-    loop.run_until_complete(main())
-except KeyboardInterrupt:
-    pass
-except Exception:
-    traceback.print_exc()
-finally:
-    loop.stop()
-    loop.close()
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
-asyncio.set_event_loop(asyncio.new_event_loop())
+from main import Adventure, main
 
-from main import Adventure
-
+main(False)
 Adventure().run()
