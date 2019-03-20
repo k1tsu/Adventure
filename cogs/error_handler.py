@@ -53,6 +53,8 @@ class Handler(commands.Cog):
         if isinstance(exc, commands.BadArgument):
             return await ctx.invoke(self.bot.get_command("help"), cmd=ctx.command.qualified_name)
         if isinstance(exc, commands.TooManyArguments):
+            if isinstance(ctx.command, commands.Group):
+                return await ctx.send(f"Bad subcommand for {ctx.command}. See `{ctx.prefix}help {ctx.command}`")
             return await ctx.send(f"{ctx.command} doesn't take any extra arguments."
                                   f" See `{ctx.prefix}help {ctx.command}`")
         if isinstance(exc, commands.MissingRequiredArgument):
