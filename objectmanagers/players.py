@@ -253,7 +253,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             else:
                 if enemy.defeat(player.level):
                     exp = random.randint(enemy.tier, enemy.tier ** 3)+1
-                    await ctx.send(f"<pink blob cheer> You encountered a **{enemy.name}** and defeated it!\n"
+                    await ctx.send(f"{blobs.BLOB_CHEER} You encountered a **{enemy.name}** and defeated it!\n"
                                    f"You gained **{exp}** experience points!")
                     # TODO: gain / lose gold on win / loss
                     player.exp += exp
