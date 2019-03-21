@@ -19,11 +19,14 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         self.unload_event = asyncio.Event()
         self.bot.unload_complete.append(self.unload_event)
 
+    def cog_unload(self):
+        self.bot.unload_complete.remove(self.unload_event)
+
     def __repr__(self):
         return "<EnemyManager total: {0}>".format(len(self.enemies))
 
     @commands.command(ignore_extra=False)
-    @commands.cooldown(2, 60, commands.BucketType.user)
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def encounter(self, ctx):
         """Searches for an enemy to fight within the area.
 

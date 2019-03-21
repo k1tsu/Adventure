@@ -246,12 +246,23 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
 
     @commands.command()
+    async def leaderboard(self, ctx):
+        """Views the top 10 most experienced players.
+        Try to reach the top of the tower <:pinkblobwink:544628885023621126>"""
+        headers = ["Name", "Owner", "EXP", "Level"]
+        table = utils.TabularData()
+        table.set_columns(headers)
+        table.add_rows([[p.name, str(p.owner), p.exp, p.level] for p in sorted(
+            filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:10])
+        await ctx.send(f"```\n{table.render()}\n```")
+
+    @commands.command()
+    @commands.cooldown(10, 600, commands.BucketType.user)
     async def fight(self, ctx, *, member: discord.Member):
         """Fight your friends in a battle to the death!
         Not actually to the death, but the winner gets a shit load of EXP."""
         if ctx.author == member:
             self.is_fighting.pop(ctx.author.id)
-            self.is_fighting.pop(member.id)
             return await ctx.send(f"You can't fight yourself! {blobs.BLOB_INJURED}")
 
         alpha = self.bot.player_manager.get_player(ctx.author)

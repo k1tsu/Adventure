@@ -1,6 +1,7 @@
 # -> Builtin modules
 import collections
 import inspect
+import logging
 import os
 import pathlib
 import random
@@ -120,16 +121,13 @@ class Misc(commands.Cog, name="Miscellaneous"):
         lines, first = inspect.getsourcelines(src)
         module = inspect.getmodule(src).__name__
 
-        if module.startswith(self.__module__.split(".")[0]):
-            location = os.path.relpath(inspect.getfile(src)).replace('\\', '/')
-            source += "/blob/master"
-
-        elif module.startswith("jishaku"):
+        if module.startswith("jishaku"):
             source = f"https://github.com/Gorialis/jishaku/blob/{jishaku.__version__}"
             location = module.replace(".", "/") + ".py"
 
         else:
-            raise RuntimeError("*source")
+            location = os.path.relpath(inspect.getfile(src)).replace('\\', '/')
+            source += "/blob/master"
 
         final = f"<{source}/{location}#L{first}-L{first + len(lines) - 1}>"
         await ctx.send(final)

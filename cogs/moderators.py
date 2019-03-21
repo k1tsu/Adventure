@@ -81,7 +81,7 @@ class Moderator(commands.Cog):
 
         rows = len(results)
         if is_multistatement or rows == 0:
-            return await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+            return await ctx.message.add_reaction(blobs.BLOB_TICK)
 
         headers = list(results[0].keys())
         table = utils.TabularData()

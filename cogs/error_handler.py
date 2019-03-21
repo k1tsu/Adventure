@@ -1,6 +1,5 @@
 # -> Builtin modules
 import logging
-import traceback
 from datetime import datetime, timedelta
 
 # -> Pip packages
