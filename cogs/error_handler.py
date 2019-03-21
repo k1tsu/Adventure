@@ -37,7 +37,7 @@ class Handler(commands.Cog):
     async def on_command_error(self, ctx, exc, enf=False):
         if hasattr(ctx.command, "on_error") and not enf:
             return
-        if ctx.cog is not None and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
+        if (ctx.cog is not None and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None) and not enf:
             return
         exc = getattr(exc, "original", exc)
         if isinstance(exc, (commands.CommandNotFound, commands.NoPrivateMessage, commands.DisabledCommand)):

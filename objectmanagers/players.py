@@ -250,36 +250,41 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         """Fight your friends in a battle to the death!
         Not actually to the death, but the winner gets a shit load of EXP."""
         if ctx.author == member:
+            self.is_fighting.pop(ctx.author.id)
+            self.is_fighting.pop(member.id)
             return await ctx.send(f"You can't fight yourself! {blobs.BLOB_INJURED}")
+
         alpha = self.bot.player_manager.get_player(ctx.author)
         if not alpha:
+            self.is_fighting.pop(ctx.author.id)
+            self.is_fighting.pop(member.id)
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
-
         beta = self.bot.player_manager.get_player(member)
         if not beta:
+            self.is_fighting.pop(ctx.author.id)
+            self.is_fighting.pop(member.id)
             return await ctx.send(f"{member} does not have a player! {blobs.BLOB_PLSNO}")
 
         if alpha.level < 1:
+            self.is_fighting.pop(ctx.author.id)
+            self.is_fighting.pop(member.id)
             return await ctx.send(f"You aren't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
 
         if beta.level < 1:
+            self.is_fighting.pop(ctx.author.id)
+            self.is_fighting.pop(member.id)
             return await ctx.send(f"{member} isn't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
 
         if not await ctx.warn(f"{member}, do you wish to fight {ctx.author}?", waiter=member):
+            self.is_fighting.pop(ctx.author.id)
+            self.is_fighting.pop(member.id)
             return await ctx.send(f"{member} did not want to fight...")
-
-        battle_id = uuid.uuid4()
-        self.is_fighting[(member.id, ctx.author.id)] = battle_id
 
         ahp = copy.copy(alpha.healthpoints)
         bhp = copy.copy(beta.healthpoints)
         chances = [*['a'] * alpha.level, *['b'] * beta.level, *['c'] * ((alpha.level + beta.level) // 2)]
         while not (ahp <= 0 or bhp <= 0):
-            filtered = filter(lambda m: any(i in m for i in (member.id, ctx.author.id)), self.is_fighting)
-            if any(self.is_fighting[x] != battle_id for x in filtered):
-                self.is_fighting.pop((member.id, ctx.author.id))
-                return await ctx.send(f"One of you are already fighting! {blobs.BLOB_ANGERY}")
             win = random.choice(chances)
             if win == 'a':
                 hurt = random.randint(math.ceil(alpha.strength / 3), math.ceil(alpha.strength))
@@ -304,7 +309,32 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             alpha.exp += exp
             await ctx.send(f"""**{beta.name}** fainted! {blobs.BLOB_CHEER}
 **{alpha.name}** gained **{exp}** Experience Points!""")
-        self.is_fighting.pop((member.id, ctx.author.id))
+        self.is_fighting.pop(ctx.author.id)
+        self.is_fighting.pop(member.id)
+
+    @fight.error
+    async def fight_error(self, ctx, exc):
+        if isinstance(exc, commands.NotOwner):
+            return
+        await self.bot.get_cog("Handler").on_command_error(ctx, exc, enf=True)
+
+    @fight.before_invoke
+    async def fight_before_invoke(self, ctx):
+        alpha = ctx.args[-1].author
+        beta = ctx.kwargs.get("member")
+        battle_id = uuid.uuid4()
+        if alpha.id in self.is_fighting:
+            battle = self.is_fighting[alpha.id]
+            if battle != battle_id:
+                await ctx.send(f"You are already in a battle! {blobs.BLOB_ANGERY}")
+                raise commands.NotOwner
+        if beta.id in self.is_fighting:
+            battle = self.is_fighting[beta.id]
+            if battle != battle_id:
+                await ctx.send(f"{beta} is already in a battle! {blobs.BLOB_ANGERY}")
+                raise commands.NotOwner
+        self.is_fighting[alpha.id] = battle_id
+        self.is_fighting[beta.id] = battle_id
 
     # -- Player Manager stuff -- #
 
