@@ -37,9 +37,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             thing = io.BytesIO(f.read())
             self.background = Image.open(thing)
             self.background.convert("RGBA")
-        self._font = "assets/segoesc.ttf"
+        self._font = "assets/Inkfree.ttf"
 
-    def font(self, size=32):
+    def font(self, size=35):
         return ImageFont.truetype(self._font, size)
 
     def __repr__(self):
@@ -202,8 +202,11 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         member = member or ctx.author
         player = self.get_player(member)
         if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            ctx.command.reset_cooldown(ctx)
+            if member == ctx.author:
+                return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                       ctx.prefix))
+            return await ctx.send(f"{member} Doesn't have a player! {blobs.BLOB_PLSNO}")
         nx_player = self.get_player(ctx.author)
         if nx_player and not nx_player.has_explored(player.map):
             hide = True
@@ -298,17 +301,15 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     @utils.async_executor()
     def profile_for(self, avatar: io.BytesIO, player: utils.Player, hide: bool = False):
         image = Image.open(avatar).convert("RGBA")
+        image = image.resize((256, 256))
         background = self.background.copy()
         background.paste(image, (0, 0), image)
         draw = ImageDraw.Draw(background)
-        draw.text((10, 245), player.name, (255, 255, 255),
-                  self.font(50))
-        draw.text((10, 320), str(player.owner), (255, 255, 255),
-                  self.font(32))
-        draw.text((265, 0), f"Tier {player.level}", (255, 255, 255),
-                  self.font(64))
-        draw.text((315, 70), f"{player.exp} EXP", (255, 255, 255),
-                  self.font(), align="center")
+        created = humanize.naturaltime(player.created_at)
+        draw.text((5, 255), f"{player.name}\n{player.owner}\nCreated {created}", (255, 255, 255),
+                  self.font())
+        draw.text((265, 0), f"Tier {player.level}\n{player.exp} EXP", (255, 255, 255),
+                  self.font())
         if player.status is utils.Status.idle:
             status = "Idling at"
             pmap = str(player.map) if not hide else "???"
@@ -321,11 +322,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         else:
             status = "???"
             pmap = str(player.map) if not hide else "???"
-        draw.text((240, 125), f"{status:^{len(status)+4}}\n{pmap:^{len(status)+4}}", (255, 255, 255),
-                  self.font(), align="center")
-        created = humanize.naturaltime(player.created_at)
-        draw.text((260, 265), f"Created\n{created:^7}", (255, 255, 255),
-                  self.font(), align="center")
+        draw.text((265, 125), f"{status}\n{pmap}", (255, 255, 255),
+                  self.font())
         n = io.BytesIO()
         background.save(n, "png")
         n.seek(0)

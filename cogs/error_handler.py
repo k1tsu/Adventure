@@ -43,7 +43,7 @@ class Handler(commands.Cog):
         if isinstance(exc, (commands.CommandNotFound, commands.NoPrivateMessage, commands.DisabledCommand)):
             return
         if isinstance(exc, commands.CommandOnCooldown):
-            now = datetime.now()
+            now = datetime.utcnow()
             later = timedelta(seconds=exc.retry_after)
             fmt = humanize.naturaltime(now + later)
             return await ctx.send(":warning: Ratelimited. Try again in %s." % fmt)
