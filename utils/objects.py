@@ -100,6 +100,14 @@ class Player:
         return self.name
 
     @property
+    def healthpoints(self) -> float:
+        return self.strength * 2
+
+    @property
+    def strength(self) -> float:
+        return self.exp / self.level
+
+    @property
     def next_map(self) -> Map:
         return self._next_map
 
@@ -143,11 +151,11 @@ class Player:
 
     async def update(self, ctx):
         if await self.update_travelling():
-            await ctx.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, self, self.map))
+            await ctx.channel.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, self, self.map))
         elif await self.update_exploring():
-            await ctx.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, self, self.map))
+            await ctx.channel.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, self, self.map))
         if self.update_level():
-            await ctx.send("{} {} levelled to tier **{}**!".format(blobs.BLOB_PARTY, self, self.level))
+            await ctx.channel.send("{} {} levelled to tier **{}**!".format(blobs.BLOB_PARTY, self, self.level))
 
     def update_level(self) -> bool:
         if self.level >= self._next_level:

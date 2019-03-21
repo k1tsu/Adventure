@@ -5,6 +5,8 @@ import io
 import logging
 import math
 import random
+import typing
+import uuid
 from datetime import datetime
 
 # -> Pip packages
@@ -33,6 +35,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self.unload_event = asyncio.Event()
         self.bot.unload_complete.append(self.unload_event)
         self.is_creating = []
+        self.is_fighting = {}  # dict of {(player, player): uuid4}
         with open("assets/profile_background.png", "rb") as f:
             thing = io.BytesIO(f.read())
             self.background = Image.open(thing)
@@ -46,7 +49,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         return "<PlayerManager total: {0}>".format(len(self.players))
 
     @commands.Cog.listener()
-    async def on_command(self, ctx):
+    async def on_message(self, ctx):
         player = self.get_player(ctx.author)
         if not player:
             return
@@ -220,54 +223,6 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await ctx.send(file=f)
 
     @commands.command(ignore_extra=False)
-    @commands.cooldown(2, 60, commands.BucketType.user)
-    async def encounter(self, ctx):
-        """Searches for an enemy to fight within the area.
-
-        Remember that there are no enemies in `Abel`.
-        You can only encounter 2 enemies every 60 seconds.
-        If you encounter an enemy you cannot fight, you will run away unharmed.
-        If you encounter an enemy and fail to defeat it, you will be knocked out
-        \u200b\tand magically teleported back to Abel by a mysterious god.
-        If you encounter an enemy and defeat it, you will gain Experience."""
-        player = self.get_player(ctx.author)
-        if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
-        if await player.is_exploring() or await player.is_travelling():
-            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You are busy! Wait until you are idling before you "
-                                  f"try to perform this action.")
-        if not player.has_explored(player.map):
-            return await ctx.send("{} You must explore the current map first!".format(blobs.BLOB_ARMSCROSSED))
-        if player.map.id == 0:
-            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
-        enemies = self.bot.enemy_manager.enemies_for(player.map)
-        if not enemies:
-            log.debug("2.5")
-            raise RuntimeError(f"No enemies were discovered for map {player.map!r}")
-        strongest = max(enemies, key=lambda e: e.tier)
-        chance = 100 + ((len(enemies) - strongest.tier) - player.level)
-        # log.debug("ENCOUNTER CHANCE %s %s", ctx.author, chance)
-        if random.randint(0, 100) < chance:
-            enemy = random.choice(enemies)
-            if enemy.tier > player.level:
-                await ctx.send(f"{blobs.NOTLIKE_BLOB} You encountered a **{enemy.name}** but it's too powerful!"
-                               f"\nYou ran away to avoid injury.")
-            else:
-                if enemy.defeat(player.level):
-                    exp = random.randint(enemy.tier, enemy.tier ** 3)+1
-                    await ctx.send(f"{blobs.BLOB_CHEER} You encountered a **{enemy.name}** and defeated it!\n"
-                                   f"You gained **{exp}** experience points!")
-                    # TODO: gain / lose gold on win / loss
-                    player.exp += exp
-                else:
-                    player.map = 0
-                    await ctx.send(f"{blobs.BLOB_INJURED} You encountered a **{enemy.name}** and failed to defeat it!\n"
-                                   f"You were knocked out and magically sent back to Abel.")
-        else:
-            await ctx.send(f"{blobs.BLOB_PEEK} You couldn't find anything.")
-
-    @commands.command(ignore_extra=False)
     async def daily(self, ctx):
         """Claims your daily reward.
 
@@ -290,12 +245,73 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await ctx.send(f"{blobs.BLOB_ARMSCROSSED} "
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
 
+    @commands.command()
+    async def fight(self, ctx, *, member: discord.Member):
+        """Fight your friends in a battle to the death!
+        Not actually to the death, but the winner gets a shit load of EXP."""
+        if ctx.author == member:
+            return await ctx.send(f"You can't fight yourself! {blobs.BLOB_INJURED}")
+        alpha = self.bot.player_manager.get_player(ctx.author)
+        if not alpha:
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+
+        beta = self.bot.player_manager.get_player(member)
+        if not beta:
+            return await ctx.send(f"{member} does not have a player! {blobs.BLOB_PLSNO}")
+
+        if alpha.level < 1:
+            return await ctx.send(f"You aren't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
+
+        if beta.level < 1:
+            return await ctx.send(f"{member} isn't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
+
+        if not await ctx.warn(f"{member}, do you wish to fight {ctx.author}?", waiter=member):
+            return await ctx.send(f"{member} did not want to fight...")
+
+        battle_id = uuid.uuid4()
+        self.is_fighting[(member.id, ctx.author.id)] = battle_id
+
+        ahp = copy.copy(alpha.healthpoints)
+        bhp = copy.copy(beta.healthpoints)
+        chances = [*['a'] * alpha.level, *['b'] * beta.level, *['c'] * ((alpha.level + beta.level) // 2)]
+        while not (ahp <= 0 or bhp <= 0):
+            filtered = filter(lambda m: any(i in m for i in (member.id, ctx.author.id)), self.is_fighting)
+            if any(self.is_fighting[x] != battle_id for x in filtered):
+                self.is_fighting.pop((member.id, ctx.author.id))
+                return await ctx.send(f"One of you are already fighting! {blobs.BLOB_ANGERY}")
+            win = random.choice(chances)
+            if win == 'a':
+                hurt = random.randint(math.ceil(alpha.strength / 3), math.ceil(alpha.strength))
+                bhp -= hurt
+                await ctx.send(f"**{alpha.name}** damaged **{beta.name}** for **{hurt}** Hitpoints!"
+                               f" {blobs.BLOB_INJURED}")
+            elif win == 'b':
+                hurt = random.randint(math.ceil(beta.strength / 3), math.ceil(beta.strength))
+                ahp -= hurt
+                await ctx.send(f"**{beta.name}** damaged **{alpha.name}** for **{hurt}** Hitpoints!"
+                               f" {blobs.BLOB_INJURED}")
+            else:
+                await ctx.send(f"{blobs.BLOB_ANGERY} Nothing happened...")
+            await asyncio.sleep(1)
+        if ahp <= 0:
+            exp = math.ceil(random.uniform(alpha.strength / 3, alpha.strength) / 2)
+            beta.exp += exp
+            await ctx.send(f"""**{alpha.name}** fainted! {blobs.BLOB_CHEER}
+**{beta.name}** gained **{exp}** Experience Points!""")
+        elif bhp <= 0:
+            exp = math.ceil(random.uniform(beta.strength / 3, beta.strength))
+            alpha.exp += exp
+            await ctx.send(f"""**{beta.name}** fainted! {blobs.BLOB_CHEER}
+**{alpha.name}** gained **{exp}** Experience Points!""")
+        self.is_fighting.pop((member.id, ctx.author.id))
+
     # -- Player Manager stuff -- #
 
     def fetch_players(self):
         return self.bot.db.fetch("SELECT * FROM players;")
 
-    def get_player(self, user: discord.User) -> utils.Player:
+    def get_player(self, user: typing.Union[discord.Member, discord.User]) -> typing.Optional[utils.Player]:
         return discord.utils.get(self.players, owner=user)
 
     @utils.async_executor()

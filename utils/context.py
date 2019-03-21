@@ -46,13 +46,14 @@ class EpicContext(Context):
         inf = PaginatorEmbedInterface(self.bot, pg, owner=self.author, embed=embed)
         await inf.send_to(self)
 
-    async def warn(self, message):
+    async def warn(self, message, *, waiter=None):
+        waiter = waiter or self.author
         msg = await super().send(message)
         await msg.add_reaction(blobs.BLOB_TICK)
         await msg.add_reaction(blobs.BLOB_CROSS)
 
         def warn_check(r, u):
-            return str(r) in (str(blobs.BLOB_TICK), str(blobs.BLOB_CROSS)) and u == self.author
+            return str(r) in (str(blobs.BLOB_TICK), str(blobs.BLOB_CROSS)) and u == waiter
 
         try:
             reaction, user = await self.bot.wait_for("reaction_add", check=warn_check, timeout=10.0)
