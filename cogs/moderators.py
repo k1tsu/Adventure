@@ -220,6 +220,17 @@ class Moderator(commands.Cog):
                 self._last_result = ret
                 await ctx.send(f'```py\n{value}{ret}\n```')
 
+    @commands.command(hidden=True)
+    async def activejobs(self, ctx):
+        table = utils.TabularData()
+        table.set_columns(["owner", "ttl", "type"])
+        for p in self.bot.player_manager.players:
+            if await p.is_travelling():
+                table.add_row([str(p.owner), await self.bot.redis("TTL", f"travelling_{p.owner.id}"), "travelling"])
+            elif await p.is_exploring():
+                table.add_row([str(p.owner), await self.bot.redis("TTL", f"exploring_{p.owner.id}"), "exploring"])
+        await ctx.send(f"```\n{table.render()}\n```")
+
 
 def setup(bot):
     bot.add_cog(Moderator(bot))

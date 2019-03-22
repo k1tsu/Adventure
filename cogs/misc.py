@@ -98,11 +98,7 @@ class Misc(commands.Cog, name="Miscellaneous"):
     @commands.command(ignore_extra=False)
     async def ping(self, ctx):
         """Check my connection time with Discord."""
-        start = time.perf_counter()
-        await ctx.author.trigger_typing()
-        end = time.perf_counter()
-        ms = round((end-start)*1000)
-        await ctx.send(f":ping_pong: **{ms}**ms")
+        await ctx.send(f":ping_pong: **{self.bot.latency*1000:.0f}**ms")
 
     @commands.command()
     async def say(self, ctx, *, message: commands.clean_content):

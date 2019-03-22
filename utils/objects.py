@@ -92,7 +92,11 @@ class Player:
         self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
         self.status = kwg.get("status", Status.idle)
-        self.raw_compendium_data = kwg.get("compendium", [0]*188) or [0]*188
+        rd = kwg.get("compendium", None)
+        if not rd:
+            self.raw_compendium_data = [0] * 188
+        else:
+            self.raw_compendium_data = rd
         self.compendium = Compendium(self)
 
     def __repr__(self):
@@ -245,7 +249,8 @@ class Player:
                                               seconds=await self.explore_time()))))
         if self.map in self._explored_maps:
             raise utils.AlreadyExplored(self.map)
-        time = int(((datetime.utcnow() + timedelta(hours=self.map.calculate_explore())) - datetime.utcnow()).total_seconds())
+        time = int(((datetime.utcnow() + timedelta(hours=self.map.calculate_explore())
+                     ) - datetime.utcnow()).total_seconds())
         plylog.info("%s is exploring %s and will finish in %.2f hours.",
                     self.name, self.map, self.map.calculate_explore())
         await self._bot.redis("SET", f"exploring_{self.owner.id}", str(time), "EX", str(time))
@@ -329,7 +334,7 @@ class Compendium:
     def record_enemy(self, enemy: Enemy):
         if self.is_enemy_recorded(enemy):
             raise ValueError("Enemy is already in book.")
-        self.player.raw_compendium_data[enemy.id-1] = True
+        self.player.raw_compendium_data[enemy.id-1] = 1
 
     def is_enemy_recorded(self, enemy: Enemy) -> bool:
         return self.bits[enemy.id-1]
@@ -341,7 +346,6 @@ class Compendium:
         rest = fin[2:]
         table.set_columns(headers)
         if len(rest) > 0:
-            chunks = [rest[x:x+1] if len(rest[x:x+1]) == 2 else [rest[x], ''] for x in range(0, len(rest), 2)]
+            chunks = [rest[x:x+2] if len(rest[x:x+2]) == 2 else [rest[x], ''] for x in range(0, len(rest), 2)]
             table.add_rows(chunks)
         return table.render()
-
