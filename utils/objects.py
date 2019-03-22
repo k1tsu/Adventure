@@ -255,19 +255,21 @@ class Player:
 
     async def save(self, *, cursor=None):
         q = """
-INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_flags)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_data)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET name = $2, map_id = $3, explored = $5, exp = $6
+SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_data = $7
 WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
+                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
+                                       self.raw_compendium_data)
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                 list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
+                                 list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
+                                 self.raw_compendium_data)
 
     async def delete(self, *, cursor=None):
         if not cursor:
@@ -314,7 +316,11 @@ class Compendium:
         self._bot = player._bot
 
     def __repr__(self):
-        return "<Compendium owner={0.player.owner!r} flags={0.bits}>".format(self)
+        return "<Compendium owner={0.player.owner!r} flags={0.count}>".format(self)
+
+    @property
+    def count(self) -> int:
+        return sum(self.bits)
 
     @property
     def bits(self) -> List[bool]:
