@@ -256,10 +256,10 @@ class Player:
     async def save(self, *, cursor=None):
         q = """
 INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_data)
-VALUES ($1, $2, $3, $4, $5, $6, $7::bool[])
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_data = $7::bool[]
+SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_data = $7
 WHERE players.owner_id = $1;
         """
         if not cursor:
