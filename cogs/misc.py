@@ -39,6 +39,10 @@ class Misc(commands.Cog, name="Miscellaneous"):
         self.bot = bot
         self.valid = ("py", "sql", "md", "txt", "json")
 
+    @commands.command(ignore_extra=False)
+    async def info(self, ctx):
+        pass
+
     @commands.command(aliases=['loc'], hidden=True)
     @commands.is_owner()
     async def linecount(self, ctx):
@@ -62,7 +66,7 @@ class Misc(commands.Cog, name="Miscellaneous"):
                                          key=lambda m: len(m))) + "```"
         await ctx.send(fmt)
 
-    @commands.command()
+    @commands.command(ignore_extra=False)
     async def epic(self, ctx):
         """Try to find the most epic message."""
         await ctx.trigger_typing()
@@ -73,7 +77,7 @@ class Misc(commands.Cog, name="Miscellaneous"):
             return await ctx.send("Not epic.")
         await ctx.send(random.choice(messages).jump_url)
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, ignore_extra=False)
     async def git(self, ctx):
         async for message in self.bot.get_channel(544405638349062155).history(limit=10).filter(
             lambda m: len(m.embeds) > 0 and m.author.discriminator == "0000"
@@ -91,7 +95,7 @@ class Misc(commands.Cog, name="Miscellaneous"):
         embed.set_image(url=member.avatar_url_as(static_format="png"))
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(ignore_extra=False)
     async def ping(self, ctx):
         """Check my connection time with Discord."""
         start = time.perf_counter()
@@ -148,15 +152,15 @@ class Misc(commands.Cog, name="Miscellaneous"):
                              "?client_id=482373088109920266&permissions=0&scope=bot)")
         await ctx.send(embed=embed)
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, ignore_extra=False)
     async def todo(self, ctx):
         await ctx.send("`todo list`")
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, ignore_extra=False)
     async def levels(self, ctx):
         await ctx.send([(x, x**3) for x in range(1, 101)])
 
-    @commands.group(hidden=True, invoke_without_command=True)
+    @commands.group(hidden=True, invoke_without_command=True, ignore_extra=False)
     @perm_check(manage_guild=True)
     async def prefix(self, ctx):
         await ctx.send("\n".join(self.bot.prefixes[ctx.guild.id]))

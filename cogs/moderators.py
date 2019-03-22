@@ -4,9 +4,9 @@ import logging
 import textwrap
 import traceback
 from contextlib import redirect_stdout
+from typing import Union
 
 # -> Pip packages
-import aioredis
 import discord
 from discord.ext import commands
 
@@ -38,6 +38,26 @@ class Moderator(commands.Cog):
 
         # remove `foo`
         return content.strip('` \n')
+
+    @commands.command(hidden=True)
+    async def channelignore(self, ctx, *, num: int):
+        if await self.bot.redis("SISMEMBER", "channel_ignore", str(num)):
+            await self.bot.redis("SREM", "channel_ignore", str(num))
+            self.bot.player_manager.ignored_channels.remove(num)
+        else:
+            await self.bot.redis("SADD", "channel_ignore", str(num))
+            self.bot.player_manager.ignored_channels.append(num)
+        await ctx.add_reaction(blobs.BLOB_TICK)
+        
+    @commands.command(hidden=True)
+    async def guildignore(self, ctx, *, num: int):
+        if await self.bot.redis("SISMEMBER", "guild_ignore", str(num)):
+            await self.bot.redis("SREM", "guild_ignore", str(num))
+            self.bot.player_manager.ignored_guilds.remove(num)
+        else:
+            await self.bot.redis("SADD", "guild_ignore", str(num))
+            self.bot.player_manager.ignored_guilds.append(num)
+        await ctx.add_reaction(blobs.BLOB_TICK)
 
     @commands.command(hidden=True)
     async def bl(self, ctx, member: discord.User, *, reason: str = "None provided."):

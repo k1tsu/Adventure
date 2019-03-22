@@ -65,7 +65,8 @@ class Handler(commands.Cog):
         log.error(CMD_ERROR_FMT, ctx.guild.name, ctx.guild.id,
                   str(ctx.author), ctx.author.id,
                   ctx.message.content, utils.format_exception(exc))
-        await ctx.send(":exclamation: Something went wrong.")
+        await ctx.send("If you are reading this, something has gone terribly wrong."
+                       " Contact `Xua#4427` to resolve this issue.")
 
     @commands.Cog.listener()
     async def on_event_error(self, event, exception, *args, **kwargs):

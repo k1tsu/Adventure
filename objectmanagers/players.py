@@ -41,6 +41,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             self.background = Image.open(thing)
             self.background.convert("RGBA")
         self._font = "assets/Inkfree.ttf"
+        self.ignored_channels = []
+        self.ignored_guilds = []
 
     def font(self, size=35):
         return ImageFont.truetype(self._font, size)
@@ -50,6 +52,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
+        if ctx.channel.id in self.ignored_channels or ctx.guild.id in self.ignored_guilds:
+            return
         player = self.get_player(ctx.author)
         if not player:
             return
@@ -400,6 +404,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await self.bot.prepared.wait()
         if len(self.players) > 0:
             return
+        self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))
+        self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
         for data in await self.fetch_players():
             owner_id, name, map_id, created, explored, exp, compendium_flags, *_ = data
             try:
