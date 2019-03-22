@@ -407,7 +407,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))
         self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
         for data in await self.fetch_players():
-            owner_id, name, map_id, created, explored, exp, compendium_flags, *_ = data
+            owner_id, name, map_id, created, explored, exp, compendium, *_ = data
             try:
                 user = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
             except discord.NotFound:
@@ -418,7 +418,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 status = utils.Status(int(status))
             else:
                 status = utils.Status.idle
-            player = utils.Player(**dict(
+            player = utils.Player(
                 owner=user,
                 bot=self.bot,
                 name=name,
@@ -427,8 +427,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 status=status,
                 exp=exp,
                 next_map=await self.bot.redis("GET", f"next_map_{user.id}"),
-                compendium_flags=compendium_flags
-            ))
+                compendium=compendium
+            )
             player.map = map_id
             self.players.append(player)
             log.info("Player \"%s\" (%s) initialized at map \"%s\".", player.name, str(player.owner), player.map)

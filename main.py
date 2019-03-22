@@ -41,7 +41,9 @@ import utils
 
 jskshell.WINDOWS = False
 
-FILE_NAME = f"logs/{datetime.utcnow().strftime('%Y-%m-%d_%H.%M.%S.%f')}.log"
+
+INIT = datetime.utcnow()
+FILE_NAME = f"logs/{INIT.strftime('%Y-%m-%d_%H.%M.%S.%f')}.log"
 
 log = logging.getLogger("Adventure.main")
 
@@ -70,6 +72,7 @@ class Adventure(commands.Bot):
         self.item_manager: commands.Cog = None
         self.enemy_manager: commands.Cog = None
         self.prefixes = {}
+        self.init = INIT
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
 

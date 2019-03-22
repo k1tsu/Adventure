@@ -92,7 +92,7 @@ class Player:
         self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
         self.status = kwg.get("status", Status.idle)
-        self.raw_compendium_bits = kwg.get("compendium_flags", 0)
+        self.raw_compendium_data = kwg.get("compendium", [0]*188) or [0]*188
         self.compendium = Compendium(self)
 
     def __repr__(self):
@@ -256,20 +256,18 @@ class Player:
     async def save(self, *, cursor=None):
         q = """
 INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_flags)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_flags = $7
+SET name = $2, map_id = $3, explored = $5, exp = $6
 WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
-                                       self.raw_compendium_bits)
+                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                 list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
-                                 self.raw_compendium_bits)
+                                 list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
 
     async def delete(self, *, cursor=None):
         if not cursor:
@@ -319,17 +317,16 @@ class Compendium:
         return "<Compendium owner={0.player.owner!r} flags={0.bits}>".format(self)
 
     @property
-    def bits(self) -> int:
-        return self.player.raw_compendium_bits
+    def bits(self) -> List[bool]:
+        return self.player.raw_compendium_data
 
     def record_enemy(self, enemy: Enemy):
         if self.is_enemy_recorded(enemy):
             raise ValueError("Enemy is already in book.")
-        self.player.raw_compendium_bits |= enemy.id
+        self.player.raw_compendium_data[enemy.id-1] = True
 
     def is_enemy_recorded(self, enemy: Enemy) -> bool:
-        find = self.bits & enemy.id
-        return bool(find)
+        return self.bits[enemy.id-1]
 
     def format(self) -> str:
         fin = [e.name for e in self._bot.enemy_manager.enemies if self.is_enemy_recorded(e)]
