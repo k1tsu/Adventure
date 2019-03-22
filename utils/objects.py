@@ -87,7 +87,7 @@ class Player:
         self._next_map = kwg.get("next_map", None)
         if self._next_map is not None:
             self._next_map = self._bot.map_manager.resolve_map(self._next_map)
-        self.exp = kwg.get("exp", 0)
+        self.exp = kwg.get("exp", 1)
         self._next_level = self.level + 1
         self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
