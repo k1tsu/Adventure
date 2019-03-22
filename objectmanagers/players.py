@@ -249,7 +249,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await ctx.send(f"{blobs.BLOB_ARMSCROSSED} "
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
 
-    @commands.command()
+    @commands.command(ignore_extra=False, aliases=['lb'])
     async def leaderboard(self, ctx):
         """Views the top 10 most experienced players.
         Try to reach the top of the tower <:pinkblobwink:544628885023621126>"""
@@ -260,8 +260,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:10])
         await ctx.send(f"```\n{table.render()}\n```")
 
-    @commands.command()
+    @commands.command(ignore_extra=False, aliases=['cp', 'comp'])
     async def compendium(self, ctx):
+        """Views all the enemies you have currently seen."""
         await ctx.send(f"```\n{self.get_player(ctx.author).compendium.format()}\n```")
 
     @commands.command()
