@@ -71,6 +71,8 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                                    f"You gained **{exp}** experience points!")
                     # TODO: gain / lose gold on win / loss
                     player.exp += exp
+                    if not player.compendium.is_enemy_recorded(enemy):
+                        player.compendium.record_enemy(enemy)
                 else:
                     player.map = 0
                     await ctx.send(f"{blobs.BLOB_INJURED} You encountered a **{enemy.name}** and failed to defeat it!\n"

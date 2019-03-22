@@ -235,7 +235,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await ctx.send(f"~~You probably won't gain any exp heads up.~~ {blobs.BLOB_INJURED}")
         ttl = await self.bot.redis("TTL", f"daily_{ctx.author.id}")
         if ttl < 0:
-            gain = math.ceil(random.uniform(player.exp / 16, player.exp / 2))
+            gain = math.ceil(random.uniform(player.exp_to_next_level() / 4, player.exp_to_next_level() / 2))
             player.exp += gain
             await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!")
             await self.bot.redis("SET", f"daily_{ctx.author.id}", "12", "EX", "86400")
@@ -255,6 +255,10 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         table.add_rows([[p.name, str(p.owner), p.exp, p.level] for p in sorted(
             filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:10])
         await ctx.send(f"```\n{table.render()}\n```")
+
+    @commands.command()
+    async def compendium(self, ctx):
+        await ctx.send(f"```\n{self.get_player(ctx.author).compendium.format()}\n```")
 
     @commands.command()
     @commands.cooldown(10, 600, commands.BucketType.user)
@@ -397,7 +401,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if len(self.players) > 0:
             return
         for data in await self.fetch_players():
-            owner_id, name, map_id, created, explored, exp, *_ = data
+            owner_id, name, map_id, created, explored, exp, compendium_flags, *_ = data
             try:
                 user = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
             except discord.NotFound:
@@ -416,7 +420,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 explored=list(map(self.bot.map_manager.get_map, explored)),
                 status=status,
                 exp=exp,
-                next_map=await self.bot.redis("GET", f"next_map_{user.id}")
+                next_map=await self.bot.redis("GET", f"next_map_{user.id}"),
+                compendium_flags=compendium_flags
             ))
             player.map = map_id
             self.players.append(player)

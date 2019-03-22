@@ -92,6 +92,8 @@ class Player:
         self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
         self.status = kwg.get("status", Status.idle)
+        self.raw_compendium_bits = kwg.get("compendium_flags", 0)
+        self.compendium = Compendium(self)
 
     def __repr__(self):
         return "<Player name='{0.name}' owner={0.owner!r} exp={0.exp}>".format(self)
@@ -209,6 +211,10 @@ class Player:
     def has_explored(self, map: Map):
         return map in self.explored_maps
 
+    def exp_to_next_level(self) -> int:
+        next_exp = self._next_level ** 3
+        return next_exp - self.exp
+
     async def travel_to(self, destination: Map):
         if await self.is_travelling():
             raise utils.AlreadyTravelling(self.name,
@@ -239,7 +245,7 @@ class Player:
                                               seconds=await self.explore_time()))))
         if self.map in self._explored_maps:
             raise utils.AlreadyExplored(self.map)
-        time = int(((datetime.now() + timedelta(hours=self.map.calculate_explore())) - datetime.now()).total_seconds())
+        time = int(((datetime.utcnow() + timedelta(hours=self.map.calculate_explore())) - datetime.utcnow()).total_seconds())
         plylog.info("%s is exploring %s and will finish in %.2f hours.",
                     self.name, self.map, self.map.calculate_explore())
         await self._bot.redis("SET", f"exploring_{self.owner.id}", str(time), "EX", str(time))
@@ -249,19 +255,21 @@ class Player:
 
     async def save(self, *, cursor=None):
         q = """
-INSERT INTO players (owner_id, name, map_id, created_at, explored, exp)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_flags)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET name = $2, map_id = $3, explored = $5, exp = $6
+SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_flags = $7
 WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
+                                       list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
+                                       self.raw_compendium_bits)
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
-                                 list(map(operator.attrgetter("id"), self.explored_maps)), self.exp)
+                                 list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
+                                 self.raw_compendium_bits)
 
     async def delete(self, *, cursor=None):
         if not cursor:
@@ -299,3 +307,38 @@ class Enemy:
 
     def defeat(self, tier: int) -> bool:
         return random.randint(1, 100) < ((tier - self.tier) + 1) * 100 / 6
+
+
+class Compendium:
+    def __init__(self, player: Player):
+        self.player = player
+        # noinspection PyProtectedMember
+        self._bot = player._bot
+
+    def __repr__(self):
+        return "<Compendium owner={0.player.owner!r} flags={0.bits}>".format(self)
+
+    @property
+    def bits(self) -> int:
+        return self.player.raw_compendium_bits
+
+    def record_enemy(self, enemy: Enemy):
+        if self.is_enemy_recorded(enemy):
+            raise ValueError("Enemy is already in book.")
+        self.player.raw_compendium_bits |= enemy.id
+
+    def is_enemy_recorded(self, enemy: Enemy) -> bool:
+        find = self.bits & enemy.id
+        return bool(find)
+
+    def format(self) -> str:
+        fin = [e.name for e in self._bot.enemy_manager.enemies if self.is_enemy_recorded(e)]
+        table = utils.TabularData()
+        headers = fin[:2]
+        rest = fin[2:]
+        table.set_columns(headers)
+        if len(rest) > 0:
+            chunks = [rest[x:x+1] if len(rest[x:x+1]) == 2 else [rest[x], ''] for x in range(0, len(rest), 2)]
+            table.add_rows(chunks)
+        return table.render()
+
