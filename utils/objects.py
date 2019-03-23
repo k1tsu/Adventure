@@ -1,5 +1,4 @@
 # -> Builtin modules
-import asyncio
 import decimal
 import enum
 import random
@@ -64,7 +63,7 @@ class Map:
             raise RuntimeError
 
     def calculate_explore(self) -> float:
-        return (self.density * 2468) / 8642
+        return (self.density * 2468) / (1000 ** 2)
 
     def travel_exp(self, map) -> int:
         if not isinstance(map, (self.__class__, Player)):
@@ -73,7 +72,7 @@ class Map:
         return math.floor(time / 3)
 
     def explore_exp(self) -> int:
-        return math.floor(self.calculate_explore() / 12.5)
+        return math.floor(self.calculate_explore() * 15)
 
 
 class Player:
@@ -169,7 +168,6 @@ class Player:
         return False
 
     async def update_travelling(self) -> bool:
-        await asyncio.sleep(1)
         if await self.is_travelling():
             if self.next_map is None:
                 dest = await self._bot.redis("GET", f"next_map_{self.owner.id}")
@@ -191,7 +189,6 @@ class Player:
         return True
 
     async def update_exploring(self) -> bool:
-        await asyncio.sleep(1)
         if await self.is_exploring():
             return False
         if self.status == Status.exploring or await self._bot.redis("GET", f"status_{self.owner.id}") == 2:
@@ -310,7 +307,10 @@ class Enemy:
         return '<Enemy id={0.id} name="{0.name}" maps={0.maps} tier={0.tier}>'.format(self)
 
     def defeat(self, tier: int) -> bool:
-        return random.randint(1, 100) < ((tier - self.tier) + 1) * 100 / 6
+        diff = (tier ** 2) / (self.tier ** 2)
+        normalized = math.tanh(diff / 3.7)
+        ret = random.randint(1, 100) < round(normalized * 100)
+        return ret
 
 
 class Compendium:
