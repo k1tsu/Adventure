@@ -1,8 +1,8 @@
 {
           "id": 149947,
-        "name": "Eden Forest",
- "description": "A small forest nearby Abel on the outskirts of Eden.",
-      "nearby": [0],
+        "name": "Abel Woods",
+ "description": "A small forest nearby Abel on the outskirts of Stallion.",
+      "nearby": [0, 525394, 426333],
      "density": 2000,
       "colour": 3066993
 }

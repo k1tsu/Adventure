@@ -61,12 +61,12 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         if random.randint(0, 100) < chance:
             enemy = random.choice(enemies)
             if enemy.tier > player.level:
-                await ctx.send(f"{blobs.NOTLIKE_BLOB} You encountered a **{enemy.name}** but it's too powerful!"
+                await ctx.send(f"{blobs.NOTLIKE_BLOB} You encountered **{enemy.name}** but it's too powerful!"
                                f"\nYou ran away to avoid injury.")
             else:
                 if enemy.defeat(player.level):
                     exp = random.randint((enemy.tier**3)//8, (enemy.tier**3)//4) + 1
-                    await ctx.send(f"{blobs.BLOB_CHEER} You encountered a **{enemy.name}** and defeated it!\n"
+                    await ctx.send(f"{blobs.BLOB_CHEER} You encountered **{enemy.name}** and defeated it!\n"
                                    f"You gained **{exp}** experience points!")
                     # TODO: gain / lose gold on win / loss
                     player.exp += exp
@@ -74,7 +74,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                         player.compendium.record_enemy(enemy)
                 else:
                     player.map = 0
-                    await ctx.send(f"{blobs.BLOB_INJURED} You encountered a **{enemy.name}** and failed to defeat it!\n"
+                    await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!\n"
                                    f"You were knocked out and magically sent back to Abel.")
         else:
             await ctx.send(f"{blobs.BLOB_PEEK} You couldn't find anything.")

@@ -231,6 +231,11 @@ class Moderator(commands.Cog):
                 table.add_row([str(p.owner), await self.bot.redis("TTL", f"exploring_{p.owner.id}"), "exploring"])
         await ctx.send(f"```\n{table.render()}\n```")
 
+    @commands.command(hidden=True)
+    async def logs(self, ctx):
+        filename = f"logs/{self.bot.init.strftime('%Y-%m-%d_%H.%M.%S.%f')}.log"
+        await ctx.invoke(self.bot.get_command("jishaku cat"), argument=filename)
+
 
 def setup(bot):
     bot.add_cog(Moderator(bot))

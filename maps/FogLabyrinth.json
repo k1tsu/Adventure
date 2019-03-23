@@ -1,0 +1,8 @@
+{
+  "id": 418721,
+  "name":  "Fog Labyrinth",
+  "description": "A mysterious cloud of fog seperating Stallion and Eden.\nMany people have gotten lost here.",
+  "nearby": [1, 688345],
+  "density": 7500,
+  "colour": 9807270
+}

@@ -1,0 +1,8 @@
+{
+  "id": 688345,
+  "name":  "Stallion Forest",
+  "description": "Common ground for Stallion's finest lumberjacks.",
+  "nearby": [1, 418271],
+  "density": 1500,
+  "colour": 2067276
+}
