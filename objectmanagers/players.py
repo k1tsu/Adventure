@@ -141,6 +141,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
+        if player.map.is_safe:
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} {player.map.name} is already explored!")
         time = player.map.calculate_explore()
         if time > 2.0:
             if not await ctx.warn("{} It'll take a while, are you sure?".format(blobs.BLOB_THINK)):
@@ -173,6 +175,22 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                                   .format(blobs.BLOB_PEEK, player, player.map, hours, minutes, seconds))
         await ctx.send("{} {} is currently idling at {}. Try exploring or travelling!".format(
                        blobs.BLOB_PEEK, player, player.map))
+
+    @commands.command(ignore_extra=False)
+    async def levelup(self, ctx):
+        """Levels up your player, if possible.
+        This command only works if you are in a Safe Map."""
+        player = self.get_player(ctx.author)
+        if not player:
+            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
+                                                                                                   ctx.prefix))
+        if not player.map.is_safe:
+            return await ctx.send(f"{blobs.BLOB_ANGERY} {player.name} must travel to a Safe Map!")
+
+        if player.update_level():
+            await ctx.send(f"{blobs.BLOB_PARTY} {player.name} levelled up to tier **{player.level}**!")
+        else:
+            await ctx.send(f"{blobs.BLOB_SAD} {player.name} doesn't have enough experience to level up.")
 
     @commands.command(ignore_extra=False)
     async def rename(self, ctx):
@@ -241,7 +259,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if ttl < 0:
             gain = math.ceil(random.uniform(player.exp_to_next_level() / 4, player.exp_to_next_level() / 2))
             player.exp += gain
-            await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!")
+            await ctx.send(f"{blobs.BLOB_THUMB} {player.name} collected the"
+                           f" daily reward and gained **{gain}** Experience!")
             await self.bot.redis("SET", f"daily_{ctx.author.id}", "12", "EX", "86400")
         else:
             hours, ex = divmod(ttl, 3600)
@@ -289,12 +308,12 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if alpha.level < 1:
             self.is_fighting.pop(ctx.author.id)
             self.is_fighting.pop(member.id)
-            return await ctx.send(f"You aren't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
+            return await ctx.send(f"{alpha.name} isn't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
 
         if beta.level < 1:
             self.is_fighting.pop(ctx.author.id)
             self.is_fighting.pop(member.id)
-            return await ctx.send(f"{member} isn't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
+            return await ctx.send(f"{beta.name} isn't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
 
         if not await ctx.warn(f"{member}, do you wish to fight {ctx.author}?", waiter=member):
             self.is_fighting.pop(ctx.author.id)

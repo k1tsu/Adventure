@@ -1,0 +1,9 @@
+{
+          "id": 1,
+        "name": "Stallion",
+ "description": "The capital of the Stallion region.",
+      "nearby": [426333],
+     "density": 0,
+      "colour": 16777215,
+        "safe": true
+}

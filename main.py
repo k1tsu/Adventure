@@ -61,7 +61,7 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__(self.getprefix)
+        super().__init__("**")
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self.config = config
