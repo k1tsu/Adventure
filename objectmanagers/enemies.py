@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import math
 import random
 from typing import *
 
@@ -57,7 +58,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
             log.debug("2.5")
             raise RuntimeError(f"No enemies were discovered for map {player.map!r}")
         strongest = max(enemies, key=lambda e: e.tier)
-        chance = 100 + ((len(enemies) - strongest.tier) - player.level)
+        chance = round(math.tanh((abs((player.level**2)/((strongest.tier*math.log(2*len(enemies), 2))**2))+1)/3.7)*100)
         if random.randint(0, 100) < chance:
             enemy = random.choice(enemies)
             if enemy.tier > player.level:
