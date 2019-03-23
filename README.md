@@ -15,7 +15,7 @@ Encounter strange and powerful enemies.
 
 Fight to the death\* against your friends!
 
-And fill in the Compendium! There are over 150\*\* enemies to record into the compendium!
+And fill in the Compendium! There are over 200\*\* enemies to record into the compendium!
 
 ### Commands
 

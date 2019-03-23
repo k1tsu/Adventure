@@ -26,9 +26,9 @@ CREATE TABLE IF NOT EXISTS blacklist (
 
 CREATE TABLE IF NOT EXISTS encounters (
     name VARCHAR(32) NOT NULL,
-    id INT PRIMARY KEY UNIQUE NOT NULL,
     map_ids INT[] NOT NULL DEFAULT array[149947],
-    tier_requirement INT NOT NULL DEFAULT 1
+    tier_requirement INT NOT NULL DEFAULT 1,
+    id SERIAL PRIMARY KEY
 );
 -- 1 is the bare minimum you must be in order to win.
 -- if you are lower than this, it is impossible for you to win.

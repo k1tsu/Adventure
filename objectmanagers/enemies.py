@@ -84,7 +84,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         await self.bot.prepared.wait()
         if len(self.enemies) > 0:
             return
-        for name, id, maps, tier in await self.bot.db.fetch("SELECT * FROM encounters;"):
+        for name, maps, tier, id in await self.bot.db.fetch("SELECT * FROM encounters;"):
             enemy = utils.Enemy(id=id, name=name, maps=[self.bot.map_manager.resolve_map(m) for m in maps], tier=tier)
             self.enemies.append(enemy)
             log.info("Prepared enemy %r", enemy)
