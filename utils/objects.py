@@ -92,7 +92,7 @@ class Player:
         self.status = kwg.get("status", Status.idle)
         rd = kwg.get("compendium", None)
         if not rd:
-            self.raw_compendium_data = [0] * 188
+            self.raw_compendium_data = [0] * 237
         else:
             self.raw_compendium_data = rd
         self.compendium = Compendium(self)
@@ -121,7 +121,7 @@ class Player:
 
     @property
     def level(self) -> int:
-        return math.floor(self.exp ** .334)
+        return min(99, math.floor(self.exp ** .334))
 
     @property
     def explored_maps(self) -> List[Map]:
