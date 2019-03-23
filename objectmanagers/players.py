@@ -141,6 +141,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if not player:
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
+        if player.map.is_safe:
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} {player.map} is already explored!")
         time = player.map.calculate_explore()
         if time > 2.0:
             if not await ctx.warn("{} It'll take a while, are you sure?".format(blobs.BLOB_THINK)):

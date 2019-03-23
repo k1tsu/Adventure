@@ -26,7 +26,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         return "<EnemyManager total: {0}>".format(len(self.enemies))
 
     @commands.command(ignore_extra=False)
-    @commands.cooldown(2, 30, commands.BucketType.user)
+    @commands.cooldown(5, 300, commands.BucketType.user)
     async def encounter(self, ctx):
         """Searches for an enemy to fight within the area.
 
@@ -52,13 +52,12 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         if player.map.id == 0:
             ctx.command.reset_cooldown(ctx)
             return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
-        enemies = self.bot.enemy_manager.enemies_for(player.map)
+        enemies = self.enemies_for(player.map)
         if not enemies:
             log.debug("2.5")
             raise RuntimeError(f"No enemies were discovered for map {player.map!r}")
         strongest = max(enemies, key=lambda e: e.tier)
         chance = 100 + ((len(enemies) - strongest.tier) - player.level)
-        # log.debug("ENCOUNTER CHANCE %s %s", ctx.author, chance)
         if random.randint(0, 100) < chance:
             enemy = random.choice(enemies)
             if enemy.tier > player.level:
@@ -66,7 +65,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                                f"\nYou ran away to avoid injury.")
             else:
                 if enemy.defeat(player.level):
-                    exp = random.randint(enemy.tier, enemy.tier ** 3) + 1
+                    exp = random.randint((enemy.tier**3)//8, (enemy.tier**3)//4) + 1
                     await ctx.send(f"{blobs.BLOB_CHEER} You encountered a **{enemy.name}** and defeated it!\n"
                                    f"You gained **{exp}** experience points!")
                     # TODO: gain / lose gold on win / loss

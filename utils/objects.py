@@ -33,8 +33,6 @@ class Dummy:
 
 
 class Map:
-    __slots__ = ("id", "name", "nearby", "_nearby", "density", "_raw", "description")
-
     def __init__(self, **kwg):
         self._raw = kwg.copy()
         self.id = kwg.get("id")
@@ -43,6 +41,7 @@ class Map:
         self.density = kwg.get("density")
         self.description = kwg.get("description")
         self._nearby = []
+        self.is_safe = kwg.get("safe", False)
 
     def __repr__(self):
         return f"<Map id={self.id} name='{self.name}'>"
@@ -65,7 +64,7 @@ class Map:
             raise RuntimeError
 
     def calculate_explore(self) -> float:
-        return (self.density * 2468) / (1000 ** 2)
+        return (self.density * 2468) / 8642
 
     def travel_exp(self, map) -> int:
         if not isinstance(map, (self.__class__, Player)):
@@ -74,7 +73,7 @@ class Map:
         return math.floor(time / 3)
 
     def explore_exp(self) -> int:
-        return math.floor((self.calculate_explore() * 10) / 3)
+        return math.floor(self.calculate_explore() / 12.5)
 
 
 class Player:
