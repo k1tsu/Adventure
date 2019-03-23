@@ -1,15 +1,15 @@
 # -> Builtin modules
 import collections
 import inspect
-import logging
 import os
 import pathlib
 import random
-import time
 import typing
+from datetime import datetime
 
 # -> Pip packages
 import discord
+import humanize
 import jishaku
 from discord.ext import commands
 
@@ -41,7 +41,24 @@ class Misc(commands.Cog, name="Miscellaneous"):
 
     @commands.command(ignore_extra=False)
     async def info(self, ctx):
-        pass
+        """Views basic information about Adventure."""
+        embed = discord.Embed(colour=discord.Colour(0xA8C16D), title="Info about Adventure",
+                              description=f"Here is some basic information. For more, check out `{ctx.prefix}help`.")
+        embed.set_author(name=str(self.bot.user), icon_url=self.bot.user.avatar_url_as(format="png", size=32))
+        stats = f"""Guilds: {len(self.bot.guilds)}
+Members: {len(set(self.bot.get_all_members()))}
+Memory Usage: {humanize.naturalsize(self.bot.process.memory_full_info().uss)}
+Players: {len(self.bot.player_manager.players)}
+Maps: {len(self.bot.map_manager.maps)}
+Enemies: {len(self.bot.enemy_manager.enemies)}"""
+        embed.add_field(name="Statistics", value=stats, inline=False)
+        upt = humanize.naturaldelta(datetime.utcnow() - self.bot.init)
+        embed.add_field(name="Uptime", value=upt, inline=False)
+        links = (f"[Invite](https://discordapp.com/api/oauth2/authorize?"
+                 f"client_id=482373088109920266&permissions=388160&scope=bot)")
+        embed.add_field(name="Links", value=links)
+        embed.set_footer(text="Created by Xua#4427")
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['loc'], hidden=True)
     @commands.is_owner()

@@ -20,6 +20,7 @@ import aiohttp
 import aioredis
 import asyncpg
 import discord
+import psutil
 from discord.ext import commands
 from jishaku import shell as jskshell
 
@@ -72,6 +73,7 @@ class Adventure(commands.Bot):
         self.item_manager: commands.Cog = None
         self.enemy_manager: commands.Cog = None
         self.prefixes = {}
+        self.process = psutil.Process()
         self.init = INIT
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
@@ -121,10 +123,13 @@ class Adventure(commands.Bot):
             return
 
     async def on_message(self, message: discord.Message):
-        if self.user in message.mentions:
-            await message.channel.send(embed=discord.Embed().set_image(url=config.NOOT))
         if message.author.bot:
             return
+        if self.user in message.mentions:
+            try:
+                await message.add_reaction("\N{EYES}")
+            except discord.HTTPException:
+                pass
         await self.process_commands(message)
 
     # noinspection PyAttributeOutsideInit
