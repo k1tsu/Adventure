@@ -33,6 +33,8 @@ class Dummy:
 
 
 class Map:
+    __slots__ = ("id", "name", "nearby", "_nearby", "density", "_raw", "description")
+
     def __init__(self, **kwg):
         self._raw = kwg.copy()
         self.id = kwg.get("id")
@@ -41,7 +43,6 @@ class Map:
         self.density = kwg.get("density")
         self.description = kwg.get("description")
         self._nearby = []
-        self.is_safe = kwg.get("safe", False)
 
     def __repr__(self):
         return f"<Map id={self.id} name='{self.name}'>"
@@ -159,6 +160,8 @@ class Player:
             await ctx.channel.send("{} {} has arrived at {}!".format(blobs.BLOB_PARTY, self, self.map))
         elif await self.update_exploring():
             await ctx.channel.send("{} {} has finished exploring {}!".format(blobs.BLOB_PARTY, self, self.map))
+        if self.update_level():
+            await ctx.channel.send("{} {} levelled to tier **{}**!".format(blobs.BLOB_PARTY, self, self.level))
 
     def update_level(self) -> bool:
         if self.level >= self._next_level:

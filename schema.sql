@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS players (
     "name" VARCHAR(32) NOT NULL,
     map_id INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
-    explored INT[] NOT NULL DEFAULT ARRAY[]::INT[],
+    explored INT[] NOT NULL DEFAULT '{0}'::INT[],
     exp INT NOT NULL DEFAULT 0,
     compendium_data INT[188]
 );

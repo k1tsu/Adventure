@@ -49,9 +49,9 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         if not player.has_explored(player.map):
             ctx.command.reset_cooldown(ctx)
             return await ctx.send("{} You must explore the current map first!".format(blobs.BLOB_ARMSCROSSED))
-        if player.map.is_safe:
+        if player.map.id == 0:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in {player.map.name}!")
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
         enemies = self.bot.enemy_manager.enemies_for(player.map)
         if not enemies:
             log.debug("2.5")
