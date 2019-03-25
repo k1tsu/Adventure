@@ -219,7 +219,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                                                                                                        ctx.prefix))
             return await ctx.send(f"{member} Doesn't have a player! {blobs.BLOB_PLSNO}")
         nx_player = self.get_player(ctx.author)
-        if nx_player and (not nx_player.has_explored(player.map) or player.map.is_safe):
+        if nx_player and (not nx_player.has_explored(player.map) and not player.map.is_safe):
             hide = True
         else:
             hide = False
