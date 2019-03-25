@@ -123,7 +123,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             return await ctx.send(f"Unknown map. Closest matches were: {'`' + '`, `'.join(close) + '`'}")
         if _map.id in (-1, 696969):
             return await ctx.send("Unknown map {}".format(blobs.BLOB_WINK))
-        if destination not in player.map.nearby:
+        if _map not in player.map.nearby:
             raise utils.NotNearby(player.map, _map)
         time = _map.calculate_travel_to(player)
         if time > 2.0:
