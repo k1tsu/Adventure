@@ -50,7 +50,7 @@ log = logging.getLogger("Adventure.main")
 
 
 def extensions():
-    n = ['jishaku']
+    n = []
     n.extend([f'cogs.{f[:-3]}' for f in os.listdir("cogs") if not f.startswith("__")])
     n.extend([f'objectmanagers.{f[:-3]}' for f in os.listdir("objectmanagers") if not f.startswith("__")])
     return n
