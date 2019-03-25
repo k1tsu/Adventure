@@ -129,7 +129,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 return
         # noinspection PyTypeChecker
         await player.travel_to(destination)
-        await ctx.send("{} {} is now travelling to {} and will arrive in {:.0f} hours.".format(
+        await ctx.send("{} {} is now travelling to {} and will arrive in {:.0f} minutes.".format(
             blobs.BLOB_SALUTE, player.name, destination.name, time*60))
 
     @commands.command(ignore_extra=False)
