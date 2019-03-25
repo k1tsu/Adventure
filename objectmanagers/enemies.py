@@ -43,6 +43,9 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
             ctx.command.reset_cooldown(ctx)
             return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
                                                                                                    ctx.prefix))
+        if player.map.is_safe:
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
         if await player.is_exploring() or await player.is_travelling():
             ctx.command.reset_cooldown(ctx)
             return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You are busy! Wait until you are idling before you "
@@ -50,9 +53,6 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         if not player.has_explored(player.map):
             ctx.command.reset_cooldown(ctx)
             return await ctx.send("{} You must explore the current map first!".format(blobs.BLOB_ARMSCROSSED))
-        if player.map.is_safe:
-            ctx.command.reset_cooldown(ctx)
-            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
         enemies = self.enemies_for(player.map)
         if not enemies:
             raise RuntimeError(f"No enemies were discovered for map {player.map!r}")
