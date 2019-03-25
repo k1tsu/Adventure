@@ -1,9 +1,11 @@
 # -> Builtin modules
 import asyncio
 import copy
+import difflib
 import io
 import logging
 import math
+import operator
 import random
 import typing
 import uuid
@@ -118,7 +120,11 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
                                                                                                ctx.prefix))
         if not destination:
-            return await ctx.send("Unknown map. Use `{}maps` to view the available maps.".format(ctx.prefix))
+            close = difflib.get_close_matches(destination.name, list(map(operator.attrgetter("name"),
+                                                                         self.bot.map_manager.maps)))
+            if not close:
+                return await ctx.send("Unknown map. Use `{}maps` to view the available maps.".format(ctx.prefix))
+            return await ctx.send(f"Unknown map. Closest matches were: {'`' + '`, `'.join(close) + '`'}")
         if destination.id in (-1, 696969):
             return await ctx.send("Unknown map {}".format(blobs.BLOB_WINK))
         if destination not in player.map.nearby:
