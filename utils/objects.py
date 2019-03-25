@@ -339,7 +339,7 @@ class Compendium:
         return self.bits[enemy.id-1]
 
     def format(self) -> str:
-        fin = [e.name for e in self._bot.enemy_manager.enemies if self.is_enemy_recorded(e)]
+        fin = [e.name for e in sorted(self._bot.enemy_manager.enemies, key=lambda e: e.id) if self.is_enemy_recorded(e)]
         table = utils.TabularData()
         headers = fin[:2]
         rest = fin[2:]
