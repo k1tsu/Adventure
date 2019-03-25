@@ -68,10 +68,10 @@ class Adventure(commands.Bot):
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = list()
         self.blacklist = dict()
-        self.player_manager: commands.Cog = None
-        self.map_manager: commands.Cog = None
-        self.item_manager: commands.Cog = None
-        self.enemy_manager: commands.Cog = None
+        self.player_manager = None
+        self.map_manager = None
+        self.item_manager = None
+        self.enemy_manager = None
         self.prefixes = {}
         self.process = psutil.Process()
         self.init = INIT
@@ -79,8 +79,14 @@ class Adventure(commands.Bot):
         self.prepare_extensions()
 
     async def blacklist_check(self, ctx):
+        if not ctx.guild:
+            raise commands.NoPrivateMessage()
         if ctx.author.id in self.blacklist:
             raise utils.Blacklisted(self.blacklist[ctx.author.id])
+        if ctx.channel.id in self.player_manager.ignored_channels:
+            raise utils.IgnoreThis
+        if ctx.guild.id in self.player_manager.ignored_guilds:
+            raise utils.IgnoreThis
         return True
 
     def dispatch(self, event, *args, **kwargs):

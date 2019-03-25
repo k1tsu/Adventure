@@ -33,3 +33,8 @@ class NotNearby(AdventureBase):
 class Blacklisted(AdventureBase):
     def __init__(self, reason):
         super().__init__("You have been blacklisted for: {}".format(reason))
+
+
+class IgnoreThis(AdventureBase):
+    def __init__(self):
+        pass

@@ -47,6 +47,8 @@ class Handler(commands.Cog):
             fmt = humanize.naturaltime(now + later)
             return await ctx.send(":warning: Ratelimited. Try again in %s." % fmt)
         ctx.command.reset_cooldown(ctx)
+        if isinstance(exc, utils.IgnoreThis):
+            return
         if isinstance(exc, utils.AdventureBase):
             return await ctx.send(str(exc))
         if isinstance(exc, commands.BadArgument):
