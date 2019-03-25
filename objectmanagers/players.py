@@ -129,8 +129,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 return
         # noinspection PyTypeChecker
         await player.travel_to(destination)
-        await ctx.send("{} {} is now travelling to {} and will arrive in {:.1f} hours.".format(
-            blobs.BLOB_SALUTE, player.name, destination.name, time))
+        await ctx.send("{} {} is now travelling to {} and will arrive in {:.0f} hours.".format(
+            blobs.BLOB_SALUTE, player.name, destination.name, time*60))
 
     @commands.command(ignore_extra=False)
     async def explore(self, ctx):
@@ -148,8 +148,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             if not await ctx.warn("{} It'll take a while, are you sure?".format(blobs.BLOB_THINK)):
                 return
         await player.explore()
-        await ctx.send("{} {} is now exploring {} and will finish in {:.1f} hours.".format(
-            blobs.BLOB_SALUTE, player.name, player.map.name, time))
+        await ctx.send("{} {} is now exploring {} and will finish in {:.0f} minutes.".format(
+            blobs.BLOB_SALUTE, player.name, player.map.name, time*60))
 
     @commands.command(ignore_extra=False)
     async def status(self, ctx):

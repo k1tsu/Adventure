@@ -19,6 +19,13 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
     def __repr__(self):
         return "<EnemyManager total: {0}>".format(len(self.enemies))
 
+    @commands.command(hidden=True)
+    async def megami(self, ctx, *, name: str):
+        async with self.bot.session.get("https://megamitensei.fandom.com/wiki/" + name) as get:
+            if get.status == 404:
+                return await ctx.send("Couldn't find that page.")
+        await ctx.send("https://megamitensei.fandom.com/wiki/" + name)
+
     @commands.command(ignore_extra=False)
     @commands.cooldown(5, 300, commands.BucketType.user)
     async def encounter(self, ctx):
@@ -43,12 +50,11 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         if not player.has_explored(player.map):
             ctx.command.reset_cooldown(ctx)
             return await ctx.send("{} You must explore the current map first!".format(blobs.BLOB_ARMSCROSSED))
-        if player.map.id == 0:
+        if player.map.is_safe:
             ctx.command.reset_cooldown(ctx)
             return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
         enemies = self.enemies_for(player.map)
         if not enemies:
-            log.debug("2.5")
             raise RuntimeError(f"No enemies were discovered for map {player.map!r}")
         strongest = max(enemies, key=lambda e: e.tier)
         chance = 100 + ((len(enemies) - strongest.tier) - player.level)
