@@ -24,11 +24,6 @@ import blobs
 log = logging.getLogger("Adventure.PlayerManager")
 
 
-class MapConverter(commands.Converter):
-    async def convert(self, ctx, argument):
-        return ctx.bot.map_manager.resolve_map(argument)
-
-
 class PlayerManager(commands.Cog, name="Player Manager"):
     """Manages and handles everything to do with the Player."""
     def __init__(self, bot):
@@ -111,7 +106,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await ctx.send("Goodbye, {}. {}".format(player, blobs.BLOB_SALUTE))
 
     @commands.command()
-    async def travel(self, ctx, *, destination: MapConverter):
+    async def travel(self, ctx, *, destination: str):
         """Travel to another area.
         Use the "maps" command to view nearby areas.
         You must own a player to use this."""
@@ -119,9 +114,10 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if not player:
             return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
                                                                                                ctx.prefix))
-        if not destination:
-            close = difflib.get_close_matches(destination.name, list(map(operator.attrgetter("name"),
-                                                                         self.bot.map_manager.maps)))
+        _map = self.bot.map_manager.resolve_map(destination)
+        if not _map:
+            close = difflib.get_close_matches(destination, list(map(operator.attrgetter("name"),
+                                                                    self.bot.map_manager.maps)))
             if not close:
                 return await ctx.send("Unknown map. Use `{}maps` to view the available maps.".format(ctx.prefix))
             return await ctx.send(f"Unknown map. Closest matches were: {'`' + '`, `'.join(close) + '`'}")
