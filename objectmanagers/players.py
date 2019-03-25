@@ -130,7 +130,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             if not await ctx.warn("{} It's a long trip, are you sure you want to go?".format(blobs.BLOB_THINK)):
                 return
         # noinspection PyTypeChecker
-        await player.travel_to(destination)
+        await player.travel_to(_map)
         await ctx.send("{} {} is now travelling to {} and will arrive in {:.0f} minutes.".format(
             blobs.BLOB_SALUTE, player.name, _map.name, time*60))
 
