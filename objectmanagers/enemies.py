@@ -64,16 +64,31 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                 await ctx.send(f"{blobs.NOTLIKE_BLOB} You encountered **{enemy.name}** but it's too powerful!"
                                f"\nYou ran away to avoid injury.")
             else:
+                if not player.compendium.is_enemy_recorded(enemy) and \
+                        await ctx.warn(f"{blobs.BLOB_PEEK} You encountered **{enemy.name}**. Would you like to try and"
+                                       f" {blobs.BLOB_TICK} capture it, or {blobs.BLOB_CROSS} defeat it?"):
+                    capture = True
+                else:
+                    capture = False
                 if enemy.defeat(player.level):
                     exp = random.randint((enemy.tier**3)//8, (enemy.tier**3)//4) + 1
-                    await ctx.send(f"{blobs.BLOB_CHEER} You encountered **{enemy.name}** and defeated it!\n"
-                                   f"You gained **{exp}** experience points!")
-                    # TODO: gain / lose gold on win / loss
                     player.exp += exp
+                    if not capture:
+                        await ctx.send(f"{blobs.BLOB_CHEER} You encountered **{enemy.name}** and defeated it!\n"
+                                       f"You gained **{exp}** experience points!")
+                    else:
+                        await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!\n"
+                                       f"You gained **{exp}** experience points, and it's data was written in the"
+                                       f" compendium!")
+                        player.compendium.record_enemy(enemy)
+                    # TODO: gain / lose gold on win / loss
                 else:
-                    player.map = 0
-                    await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!\n"
-                                   f"You were knocked out and magically sent back to Abel.")
+                    if not capture:
+                        player.map = 0
+                        await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!"
+                                       f"\nYou were knocked out and magically sent back to Abel.")
+                    else:
+                        await ctx.send(f"{blobs.BLOB_SAD} You failed to capture **{enemy.name}**.")
         else:
             await ctx.send(f"{blobs.BLOB_PEEK} You couldn't find anything.")
 
