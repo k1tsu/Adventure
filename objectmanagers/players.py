@@ -121,18 +121,18 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             if not close:
                 return await ctx.send("Unknown map. Use `{}maps` to view the available maps.".format(ctx.prefix))
             return await ctx.send(f"Unknown map. Closest matches were: {'`' + '`, `'.join(close) + '`'}")
-        if destination.id in (-1, 696969):
+        if _map.id in (-1, 696969):
             return await ctx.send("Unknown map {}".format(blobs.BLOB_WINK))
         if destination not in player.map.nearby:
-            raise utils.NotNearby(player.map, destination)
-        time = destination.calculate_travel_to(player)
+            raise utils.NotNearby(player.map, _map)
+        time = _map.calculate_travel_to(player)
         if time > 2.0:
             if not await ctx.warn("{} It's a long trip, are you sure you want to go?".format(blobs.BLOB_THINK)):
                 return
         # noinspection PyTypeChecker
         await player.travel_to(destination)
         await ctx.send("{} {} is now travelling to {} and will arrive in {:.0f} minutes.".format(
-            blobs.BLOB_SALUTE, player.name, destination.name, time*60))
+            blobs.BLOB_SALUTE, player.name, _map.name, time*60))
 
     @commands.command(ignore_extra=False)
     async def explore(self, ctx):
