@@ -21,10 +21,13 @@ class AltReplReactor(ReplResponseReactor):
         self.raised = True
         if isinstance(exc_val, (asyncio.TimeoutError, subprocess.TimeoutExpired)):
             await attempt_add_reaction(self.message, "\N{ALARM CLOCK}")
+            await send_traceback(self.message.channel, 0, exc_type, exc_val, exc_tb)
         elif isinstance(exc_val, SyntaxError):
             await attempt_add_reaction(self.message, blobs.BLOB_CROSS)
+            await send_traceback(self.message.channel, 0, exc_type, exc_val, exc_tb)
         else:
             await attempt_add_reaction(self.message, blobs.BLOB_CROSS)
+            await send_traceback(self.message.author, 8, exc_type, exc_val, exc_tb)
 
 
 cog.JISHAKU_RETAIN = True
