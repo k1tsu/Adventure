@@ -90,6 +90,7 @@ class Player:
         self.created_at = kwg.get("created_at")
         self._explored_maps = kwg.get("explored", [self._bot.map_manager.get_map(0)])
         self.status = kwg.get("status", Status.idle)
+        self.gold = kwg.get("gold", 0)
         rd = kwg.get("compendium", None)
         if not rd:
             self.raw_compendium_data = [0] * 237
@@ -209,7 +210,7 @@ class Player:
     # -- Real functions -- #
 
     def has_explored(self, map: Map):
-        return map in self.explored_maps
+        return map.is_safe or map in self.explored_maps
 
     def exp_to_next_level(self) -> int:
         next_exp = self._next_level ** 3
