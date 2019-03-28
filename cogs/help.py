@@ -54,7 +54,10 @@ class Help(commands.Cog):
         else:
             _all = False
         if not cmd:
-            embed = discord.Embed(color=discord.Color.blurple())
+            embed = discord.Embed(color=discord.Color.blurple(),
+                                  description=(
+                                      f"You can use `{ctx.prefix}tutorial` for an example on how to begin playing."
+                                  ))
             embed.set_author(name=f"{ctx.me.display_name}'s Commands.", icon_url=ctx.me.avatar_url_as(format="png",
                                                                                                       size=32))
             embed.set_footer(text=f"Prefix: {ctx.prefix}")

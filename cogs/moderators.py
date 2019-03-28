@@ -62,7 +62,7 @@ class Moderator(commands.Cog):
             await ctx.add_reaction(blobs.BLOB_TICK)
 
     @commands.command(hidden=True)
-    async def bl(self, ctx, member: discord.User, *, reason: str = "None provided."):
+    async def bl(self, ctx, member: discord.User, *, reason: str = "None provided.", silent=False):
         if len(reason) > 255:
             return await ctx.send("Limitation: Reason too long.", delete_after=10)
         if member.id not in self.bot.blacklist:
@@ -71,7 +71,7 @@ class Moderator(commands.Cog):
         else:
             self.bot.blacklist.pop(member.id)
             log.info("%s was unblacklisted by %s." % (member, ctx.author))
-        if not await ctx.safe_delete():
+        if not await ctx.safe_delete() and not silent:
             await ctx.add_reaction("\N{OK HAND SIGN}")
 
     @commands.command(hidden=True)

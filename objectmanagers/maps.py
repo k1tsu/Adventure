@@ -1,4 +1,5 @@
 # -> Builtin modules
+import collections
 import logging
 import os
 from typing import List
@@ -71,6 +72,7 @@ class MapManager(commands.Cog, name="Map Manager"):
             pg.add_page(embed)
         inf = utils.EmbedInterface(self.bot, pg, ctx.author)
         await inf.send_to(ctx)
+
     # -- MapManager stuff -- #
 
     @property
@@ -102,6 +104,25 @@ class MapManager(commands.Cog, name="Map Manager"):
         # self._add_map_nearby(_map, *list(map(self.get_map, data['nearby'])))
         _map._nearby = data['nearby']
         self._maps.append(_map)
+
+    def walk_paths(self, start):
+        seen = [start.id]
+
+        def get_nearby(map_id):
+            l = filter(lambda x: map_id in x.nearby, self._maps)
+            return sorted(l, key=lambda x: x.density)
+
+        l = collections.deque([[start]])
+        while True:
+            try:
+                x = l.popleft()
+                yield x
+                seen.append(x[-1].id)
+                for y in get_nearby(x[-1].id):
+                    if y.id not in seen:
+                        l.append([*x, y])
+            except IndexError:
+                raise StopIteration
 
     @staticmethod
     def _add_map_nearby(map1: utils.Map, *maps: utils.Map):

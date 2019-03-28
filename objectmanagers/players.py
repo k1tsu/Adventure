@@ -49,6 +49,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
+        if not ctx.guild:
+            return
         if ctx.channel.id in self.ignored_channels or ctx.guild.id in self.ignored_guilds:
             return
         player = self.get_player(ctx.author)
@@ -412,7 +414,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))
         self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
         for data in await self.fetch_players():
-            owner_id, name, map_id, created, explored, exp, compendium, *_ = data
+            owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
             try:
                 user = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
             except discord.NotFound:
@@ -432,7 +434,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 status=status,
                 exp=exp,
                 next_map=await self.bot.redis("GET", f"next_map_{user.id}"),
-                compendium=compendium
+                compendium=compendium,
+                gold=gold
             )
             player.map = map_id
             self.players.append(player)

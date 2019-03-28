@@ -66,8 +66,9 @@ class Adventure(commands.Bot):
         self.session = aiohttp.ClientSession()
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
-        self.unload_complete = list()
-        self.blacklist = dict()
+        self.unload_complete = []
+        self.blacklist = {}
+        self.in_tutorial = []
         self.player_manager = None
         self.map_manager = None
         self.item_manager = None
@@ -168,7 +169,7 @@ class Adventure(commands.Bot):
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
-                                                             name=f"*help"))
+                                                             name=f"Use \"*tutorial\" to begin!"))
 
     async def on_error(self, event, *args, **kwargs):
         error = traceback.format_exc()

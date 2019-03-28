@@ -99,7 +99,7 @@ class Player:
         self.compendium = Compendium(self)
 
     def __repr__(self):
-        return "<Player name='{0.name}' owner={0.owner!r} exp={0.exp}>".format(self)
+        return "<Player name='{0.name}' owner={0.owner!r} exp={0.exp} coins={0.gold}>".format(self)
 
     def __str__(self):
         return self.name
@@ -257,21 +257,21 @@ class Player:
 
     async def save(self, *, cursor=None):
         q = """
-INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_data)
+INSERT INTO players (owner_id, name, map_id, created_at, explored, exp, compendium_data, gold)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (owner_id)
 DO UPDATE
-SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_data = $7
+SET name = $2, map_id = $3, explored = $5, exp = $6, compendium_data = $7, gold = $8
 WHERE players.owner_id = $1;
         """
         if not cursor:
             await self._bot.db.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
                                        list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
-                                       self.raw_compendium_data)
+                                       self.raw_compendium_data, self.gold)
         else:
             await cursor.execute(q, self.owner.id, self.name, self._map.id, self.created_at,
                                  list(map(operator.attrgetter("id"), self.explored_maps)), self.exp,
-                                 self.raw_compendium_data)
+                                 self.raw_compendium_data, self.gold)
 
     async def delete(self, *, cursor=None):
         if not cursor:

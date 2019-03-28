@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS players (
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
     explored INT[] NOT NULL DEFAULT '{0}'::INT[],
     exp INT NOT NULL DEFAULT 0,
-    compendium_data SMALLINT[237]
+    compendium_data SMALLINT[237],
+    gold INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS blacklist (

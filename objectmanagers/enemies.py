@@ -71,15 +71,15 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                 else:
                     capture = False
                 if enemy.defeat(player.level):
-                    exp = random.randint((enemy.tier**3)//8, (enemy.tier**3)//4) + 1
-                    player.exp += exp
                     if not capture:
+                        exp = random.randint((enemy.tier ** 3) // 8, (enemy.tier ** 3) // 4) + 1
+                        gold = random.randint(enemy.tier * 2, enemy.tier * 6)
+                        player.exp += exp
+                        player.gold += gold
                         await ctx.send(f"{blobs.BLOB_CHEER} You encountered **{enemy.name}** and defeated it!\n"
-                                       f"You gained **{exp}** experience points!")
+                                       f"You gained **{exp}** experience points and **{gold}** coins!")
                     else:
-                        await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!\n"
-                                       f"You gained **{exp}** experience points, and it's data was written in the"
-                                       f" compendium!")
+                        await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!\n")
                         player.compendium.record_enemy(enemy)
                     # TODO: gain / lose gold on win / loss
                 else:

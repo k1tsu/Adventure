@@ -28,6 +28,7 @@ class AltReplReactor(ReplResponseReactor):
         else:
             await attempt_add_reaction(self.message, blobs.BLOB_CROSS)
             await send_traceback(self.message.author, 8, exc_type, exc_val, exc_tb)
+        return True
 
 
 cog.JISHAKU_RETAIN = True
