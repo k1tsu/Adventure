@@ -108,7 +108,7 @@ class Adventure(commands.Bot):
 
     def prefixes_for(self, guild: discord.Guild):
         if guild:
-            return self.prefixes[guild.id]
+            return self.prefixes.get(guild.id, set())
         else:
             return set(config.PREFIX)
 
