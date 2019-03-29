@@ -80,7 +80,7 @@ class Adventure(commands.Bot):
         self.prepare_extensions()
 
     async def blacklist_check(self, ctx):
-        if not ctx.guild:
+        if not ctx.guild or ctx.author.id in self.in_tutorial:
             raise commands.NoPrivateMessage()
         if ctx.author.id in self.blacklist:
             raise utils.Blacklisted(self.blacklist[ctx.author.id])
