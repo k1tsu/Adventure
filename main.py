@@ -61,7 +61,7 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__(self.getprefix)
+        super().__init__('//')
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self.config = config
@@ -80,14 +80,8 @@ class Adventure(commands.Bot):
         self.prepare_extensions()
 
     async def blacklist_check(self, ctx):
-        if not ctx.guild:
-            raise commands.NoPrivateMessage()
-        if ctx.author.id in self.blacklist:
-            raise utils.Blacklisted(self.blacklist[ctx.author.id])
-        if ctx.channel.id in self.player_manager.ignored_channels:
-            raise utils.IgnoreThis
-        if ctx.guild.id in self.player_manager.ignored_guilds:
-            raise utils.IgnoreThis
+        if ctx.author.id not in self.config.OWNERS:
+            raise commands.NotOwner
         return True
 
     def dispatch(self, event, *args, **kwargs):

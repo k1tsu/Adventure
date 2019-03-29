@@ -45,7 +45,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                                                                                                    ctx.prefix))
         if player.map.is_safe:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in Abel!")
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} There are no enemies in {player.map.name}!")
         if await player.is_exploring() or await player.is_travelling():
             ctx.command.reset_cooldown(ctx)
             return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You are busy! Wait until you are idling before you "

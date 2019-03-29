@@ -43,3 +43,8 @@ CREATE TABLE IF NOT EXISTS shop (
     "item" item NOT NULL,
     level_requirement INT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS supporters (
+    userid BIGINT PRIMARY KEY UNIQUE NOT NULL,
+    cstmbg TEXT DEFAULT NULL
+);
