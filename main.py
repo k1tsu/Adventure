@@ -169,7 +169,7 @@ class Adventure(commands.Bot):
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
-                                                             name=f"Use \"*tutorial\" to begin!"))
+                                                             name=f"Use *tutorial to begin!"))
 
     async def on_error(self, event, *args, **kwargs):
         error = traceback.format_exc()

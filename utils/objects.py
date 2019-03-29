@@ -63,7 +63,7 @@ class Map:
             raise RuntimeError
 
     def calculate_explore(self) -> float:
-        return (self.density * 2468) / (1000 ** 2)
+        return ((self.density * 2468) / (1000 ** 2)) / 2
 
     def travel_exp(self, map) -> int:
         if not isinstance(map, (self.__class__, Player)):
