@@ -1,0 +1,9 @@
+{
+          "id": 3,
+        "name": "Lancelot",
+ "description": "Capital of the overbearing desert.",
+      "nearby": [907545],
+     "density": 0,
+      "colour": 16777215,
+        "safe": true
+}
