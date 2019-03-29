@@ -40,7 +40,6 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self._font = "assets/Inkfree.ttf"
         self.ignored_channels = []
         self.ignored_guilds = []
-        self.dump: discord.TextChannel = None
 
     def font(self, size=35):
         return ImageFont.truetype(self._font, size)
@@ -235,7 +234,12 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 bg = io.BytesIO(await get.read())
         else:
             bg = None
-        profile = await self.profile_for(n, player, hide=hide, custombg=bg)
+        colour = await self.bot.db.fetchval("SELECT textcol FROM supporters WHERE userid=$1;", ctx.author.id)
+        if colour is not None:
+            colour = discord.Colour(colour)
+        else:
+            colour = discord.Colour.from_rgb(255, 255, 255)
+        profile = await self.profile_for(n, player, hide=hide, custombg=bg, colour=colour)
         f = discord.File(profile, filename="profile.png")
         await ctx.send(file=f)
 
@@ -345,41 +349,6 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self.is_fighting.pop(ctx.author.id)
         self.is_fighting.pop(member.id)
 
-    @commands.command()
-    async def custombg(self, ctx, *, url):
-        """Upload an image to use as a custom background.
-
-        Only supporter:tm:s may use this command.
-        The image will be resized to 499x370."""
-        if not await self.bot.db.fetchval("SELECT userid FROM supporters WHERE userid=$1;", ctx.author.id):
-            return await ctx.send(f"{blobs.BLOB_ANGERY} Only supporter:tm:s may use this command.")
-        await ctx.trigger_typing()
-        async with self.bot.session.get(url) as get:
-            if get.headers['Content-Type'] != 'image/png':
-                return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You must supply a valid PNG image.\n"
-                                      f"Type given was `{get.headers['Content-Type']}`, instead of `image/png`")
-            image = io.BytesIO(await get.read())
-        res = await self.resize(image)
-        url = await self.dump_image(res)
-        await self.bot.db.execute("UPDATE supporters SET cstmbg=$2 WHERE userid=$1;", ctx.author.id, url)
-        await ctx.send(f"{blobs.BLOB_CHEER} Finished!")
-
-    async def dump_image(self, image):
-        file = discord.File(image, "dump.png")
-        msg = await self.dump.send(file=file)
-        att = msg.attachments[0]
-        return att.url
-
-    @utils.async_executor()
-    def resize(self, image: io.BytesIO):
-        pre = Image.open(image)
-        mid = pre.convert("RGBA")
-        pos = mid.resize((499, 370))
-        buf = io.BytesIO()
-        pos.save(buf, "png")
-        buf.seek(0)
-        return buf
-
     @fight.error
     async def fight_error(self, ctx, exc):
         if isinstance(exc, commands.NotOwner):
@@ -413,19 +382,21 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         return discord.utils.get(self.players, owner=user)
 
     @utils.async_executor()
-    def profile_for(self, avatar: io.BytesIO, player: utils.Player, hide: bool = False, *, custombg: io.BytesIO = None):
+    def profile_for(self, avatar: io.BytesIO, player: utils.Player, hide: bool = False, *, custombg: io.BytesIO = None,
+                    colour: discord.Colour = None):
         image = Image.open(avatar).convert("RGBA")
         image = image.resize((256, 256))
         if not custombg:
             background = self.background.copy()
         else:
             background = Image.open(custombg).convert("RGBA")
+        colour = colour.to_rgb() if colour else (255, 255, 255)
         background.paste(image, (0, 0), image)
         draw = ImageDraw.Draw(background)
         created = humanize.naturaltime(player.created_at)
-        draw.text((5, 255), f"{player.name}\n{player.owner}\nCreated {created}", (255, 255, 255),
+        draw.text((5, 255), f"{player.name}\n{player.owner}\nCreated {created}", colour,
                   self.font())
-        draw.text((265, 0), f"Tier {player.level}\n{player.exp} EXP", (255, 255, 255),
+        draw.text((265, 0), f"Tier {player.level}\n{player.exp} EXP", colour,
                   self.font())
         if player.status is utils.Status.idle:
             status = "Idling at"
@@ -439,7 +410,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         else:
             status = "???"
             pmap = str(player.map) if not hide else "???"
-        draw.text((265, 125), f"{status}\n{pmap}", (255, 255, 255),
+        draw.text((265, 125), f"{status}\n{pmap}", colour,
                   self.font())
         n = io.BytesIO()
         background.save(n, "png")
@@ -454,7 +425,6 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.bot.prepared.wait()
-        self.dump = self.bot.get_channel(561004119440097290)
         if len(self.players) > 0:
             return
         self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))

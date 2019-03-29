@@ -95,6 +95,9 @@ class Adventure(commands.Bot):
             return  # this is to prevent events like on_message, on_command etc to be sent out before im ready to start
         return super().dispatch(event, *args, **kwargs)
 
+    async def get_supporters(self):
+        return [self.get_user(u['userid']) for u in await self.db.fetch("SELECT userid FROM supporters;")]
+
     def prepare_extensions(self):
         for extension in EXTENSIONS:
             try:

@@ -38,3 +38,8 @@ class Blacklisted(AdventureBase):
 class IgnoreThis(AdventureBase):
     def __init__(self):
         pass
+
+
+class NotSupporter(AdventureBase):
+    def __init__(self):
+        super().__init__(f"{blobs.BLOB_ANGERY} You are not a supporter!")
