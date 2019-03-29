@@ -1,0 +1,8 @@
+ {
+          "id": 907057,
+        "name": "Uruyu Road",
+ "description": "A long and winding road seperating the Mountains from Lancelot.",
+      "nearby": [949509, 787383, 558143, 3],
+     "density": 1450,
+      "colour": 13334307
+}

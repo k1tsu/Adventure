@@ -30,6 +30,8 @@ class Supporter(commands.Cog):
             if get.headers['Content-Type'] != 'image/png':
                 return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You must supply a valid PNG image.\n"
                                       f"Type given was `{get.headers['Content-Type']}`, instead of `image/png`")
+            if get.headers['Content-Length'] > 8388608:
+                return await ctx.send("Image is too large! Cannot be bigger than 8 MB")
             image = io.BytesIO(await get.read())
         res = await self.resize(image)
         url = await self.dump_image(res)

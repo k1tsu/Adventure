@@ -1,0 +1,8 @@
+ {
+          "id": 449230,
+        "name": "Digayo Cave",
+ "description": "A large cave created by the monsters around.",
+      "nearby": [949509, 994226, 678185],
+     "density": 8420,
+      "colour": 16742764
+}

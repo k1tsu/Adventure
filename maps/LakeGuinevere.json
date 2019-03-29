@@ -1,0 +1,8 @@
+ {
+          "id": 907545,
+        "name": "Lake Guinevere",
+ "description": "A large lake that has recently started drying up. Residents of Lancelot have been deciding to move.",
+      "nearby": [3, 306424],
+     "density": 2100,
+      "colour": 1752220
+}

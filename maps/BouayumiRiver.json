@@ -1,0 +1,8 @@
+ {
+          "id": 306424,
+        "name": "Bouayumi River",
+ "description": "A long river that flows out from Lake Guinevere. The only reason the lake hasn't completely dried up.",
+      "nearby": [907545],
+     "density": 2350,
+      "colour": 291989
+}

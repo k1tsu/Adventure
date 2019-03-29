@@ -36,6 +36,13 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 del uvloop
 
+try:
+    from discord.ext import colours
+    # this is just a loader in case you installed `discord-ext-colours`
+except ImportError:
+    pass
+
+
 # -> Local files
 import config
 import utils
@@ -171,8 +178,7 @@ class Adventure(commands.Bot):
 
         self.prepared.set()
         log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
-        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
-                                                             name=f"Use *tutorial to begin!"))
+        await self.change_presence(activity=discord.Game(name="Use *tutorial to begin!"))
 
     async def on_error(self, event, *args, **kwargs):
         error = traceback.format_exc()
