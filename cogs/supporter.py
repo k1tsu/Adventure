@@ -64,7 +64,7 @@ class Supporter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.dump = self.bot.get_channel(561004119440097290)
+        self.dump = self.bot.get_channel(561392448232751106)
 
 
 def setup(bot):
