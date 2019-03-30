@@ -25,8 +25,7 @@ at this point.
 ![commands](https://cdn.discordapp.com/attachments/541876503814733836/558486716793487398/unknown.png)
 
 ### Support
-Currently, there is no server you can join for support. However, feel free to contact me
-`Xua#4427` and I can provide support from DMs.
+You can join the support server via [this link](https://discord.gg/hkweDCD)
 
 ### Running a clone
 Honestly, you should just invite the existing bot.
