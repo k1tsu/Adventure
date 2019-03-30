@@ -43,3 +43,9 @@ class IgnoreThis(AdventureBase):
 class NotSupporter(AdventureBase):
     def __init__(self):
         super().__init__(f"{blobs.BLOB_ANGERY} You are not a supporter!")
+
+
+class NoPlayer(AdventureBase):
+    def __init__(self):
+        super().__init__(f"{blobs.BLOB_PLSNO} You don't have a player! Use `*create` to make one!\n"
+                         f"If you did have a player, try using `*recover`. It may just not have been loaded.")

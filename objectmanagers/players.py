@@ -73,6 +73,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         player = self.get_player(ctx.author)
         if player:
             return await ctx.send("{} You already own \"{}\"!".format(blobs.BLOB_ANGERY, player))
+        if await self.bot.db.fetchval("SELECT owner_id FROM players WHERE owner_id=$1;", ctx.author.id):
+            return await ctx.send(f"You do have a player, just it has not been loaded.\n"
+                                  f"Try using `{ctx.prefix}recover` to forcibly reload it.")
         self.is_creating.append(ctx.author.id)
         await ctx.send("{} What should the name be? (Name must be 32 characters or lower in length)".format(
             blobs.BLOB_O))
@@ -101,8 +104,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         Pls no use <:pinkblobplsno:511668250313097246>"""
         player = self.get_player(ctx.author)
         if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            raise utils.NoPlayer
         if await ctx.warn("Are you sure you want to delete \"{}\"? {}".format(player, blobs.BLOB_PLSNO)):
             await player.delete()
             await ctx.send("Goodbye, {}. {}".format(player, blobs.BLOB_SALUTE))
@@ -114,8 +116,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         You must own a player to use this."""
         player = self.get_player(ctx.author)
         if not player:
-            return await ctx.send("You don't have a player! %s Create one with `%screate`!" % (blobs.BLOB_PLSNO,
-                                                                                               ctx.prefix))
+            raise utils.NoPlayer
         _map = self.bot.map_manager.resolve_map(destination)
         if not _map:
             close = difflib.get_close_matches(destination, list(map(operator.attrgetter("name"),
@@ -143,8 +144,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         More to come in this command soontm."""
         player = self.get_player(ctx.author)
         if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            raise utils.NoPlayer
         if player.map.is_safe:
             return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} {player.map} is already explored!")
         time = player.map.calculate_explore()
@@ -161,8 +161,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         They can be idling, exploring, or travelling."""
         player = self.get_player(ctx.author)
         if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            raise utils.NoPlayer
         time = await player.travel_time()
         if time > 0:
             hours, ex = divmod(time, 3600)
@@ -186,8 +185,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         The same rules apply, the name can only be 32 characters or less."""
         player = self.get_player(ctx.author)
         if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            raise utils.NoPlayer
 
         def msgcheck(m):
             return m.author.id == ctx.author.id and len(m.content) < 33
@@ -217,8 +215,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if not player:
             ctx.command.reset_cooldown(ctx)
             if member == ctx.author:
-                return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                       ctx.prefix))
+                raise utils.NoPlayer
             return await ctx.send(f"{member} Doesn't have a player! {blobs.BLOB_PLSNO}")
         nx_player = self.get_player(ctx.author)
         if nx_player and (not nx_player.has_explored(player.map) and not player.map.is_safe):
@@ -250,8 +247,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         This doesn't reset when the bot reboots, so don't even try :^)"""
         player = self.get_player(ctx.author)
         if not player:
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            raise utils.NoPlayer
         if player.level < 2:
             await ctx.send(f"~~You probably won't gain any exp heads up.~~ {blobs.BLOB_INJURED}")
         ttl = await self.bot.redis("TTL", f"daily_{ctx.author.id}")
@@ -280,7 +276,10 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     @commands.command(ignore_extra=False, aliases=['cp', 'comp'])
     async def compendium(self, ctx):
         """Views all the enemies you have currently seen."""
-        await ctx.send(f"```\n{self.get_player(ctx.author).compendium.format()}\n```")
+        player = self.get_player(ctx.author)
+        if not player:
+            raise utils.NoPlayer
+        await ctx.send(f"```\n{player.compendium.format()}\n```")
 
     @commands.command()
     @commands.cooldown(10, 600, commands.BucketType.user)
@@ -295,8 +294,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if not alpha:
             self.is_fighting.pop(ctx.author.id)
             self.is_fighting.pop(member.id)
-            return await ctx.send("You don't have a player! {} Create one with `{}create`!".format(blobs.BLOB_PLSNO,
-                                                                                                   ctx.prefix))
+            raise utils.NoPlayer
+
         beta = self.bot.player_manager.get_player(member)
         if not beta:
             self.is_fighting.pop(ctx.author.id)
@@ -431,10 +430,9 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
         for data in await self.fetch_players():
             owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
-            try:
-                user = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
-            except discord.NotFound:
-                log.warning("Unresolved user id %s with player %s. Skipping initialization.", owner_id, name)
+            user = self.bot.get_user(owner_id)
+            if not user:
+                log.warning("Unknown user id %s. Skipping initialization.", owner_id)
                 continue
             status = await self.bot.redis("GET", f"status_{user.id}")
             if status:

@@ -1,6 +1,7 @@
 # -> Builtin modules
 import collections
 import inspect
+import logging
 import os
 import pathlib
 import random
@@ -15,6 +16,9 @@ from discord.ext import commands
 
 import blobs
 import utils
+
+
+log = logging.getLogger("Adventure.PlayerManager")
 
 
 def perm_check(**perms):
@@ -202,6 +206,41 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
             return
         await ctx.author.send(f"```py\n{utils.format_exception(exc.original)}\n```")
         await ctx.add_reaction(blobs.BLOB_CROSS)
+
+    @commands.command(hidden=True, ignore_extra=False)
+    async def recover(self, ctx):
+        """Attempts to re-cache your player, if it isn't.
+        You will be alerted to use this if you do have a player, but it hasn't been loaded."""
+        pm = self.bot.player_manager
+        if pm.get_player(ctx.author):
+            return await ctx.send(f"{blobs.BLOB_ANGERY} Your player is already cached!")
+        data = await self.bot.db.fetchrow("SELECT * FROM players WHERE owner_id=$1;", ctx.author.id)
+        if not data:
+            return await ctx.send(f"{blobs.BLOB_SAD} Couldn't find any data for you."
+                                  f"\nIf you did have a player, then I'm afraid it's gone now.")
+        owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
+        user = self.bot.get_user(owner_id)
+        status = await self.bot.redis("GET", f"status_{owner_id}")
+        if status:
+            status = utils.Status(int(status))
+        else:
+            status = utils.Status.idle
+        player = utils.Player(
+            owner=user,
+            bot=self.bot,
+            name=name,
+            created_at=created,
+            explored=list(map(self.bot.map_manager.get_map, explored)),
+            status=status,
+            exp=exp,
+            next_map=await self.bot.redis("GET", f"next_map_{user.id}"),
+            compendium=compendium,
+            gold=gold
+        )
+        player.map = map_id
+        pm.players.append(player)
+        log.info("Recovered player %s (%s).", player.name, ctx.author)
+        await ctx.send(f"{blobs.BLOB_PARTY} Success! {player.name} has been revived!")
 
 
 def setup(bot):
