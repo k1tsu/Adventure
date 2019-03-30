@@ -10,7 +10,7 @@ class Support(commands.Cog):
         self.guild: discord.Guild = None
         self.dehoist_role: discord.Role = None
         self.member_role: discord.Role = None
-        self.dehoist_task: asyncio.Task = self.bot.loop.create_task()
+        self.dehoist_task: asyncio.Task = self.bot.loop.create_task(self.dehoisting())
 
     def cog_unload(self):
         try:
