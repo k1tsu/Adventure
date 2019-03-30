@@ -6,6 +6,7 @@ log.setLevel(logging.DEBUG)
 
 
 async def update_dbl(bot):
+    await bot.wait_until_ready()
     while True:
         try:
             await bot.dbl_client.post_server_count()
