@@ -231,7 +231,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                 bg = io.BytesIO(await get.read())
         else:
             bg = None
-        colour = await self.bot.db.fetchval("SELECT textcol FROM supporters WHERE userid=$1;", ctx.author.id)
+        colour = await self.bot.db.fetchval("SELECT textcol FROM supporters WHERE userid=$1;", member.id)
         if colour is not None:
             colour = discord.Colour(colour)
         else:
