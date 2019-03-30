@@ -62,7 +62,8 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
                  "client_id=482373088109920266&permissions=388160&scope=bot)\n"
                  "[DBL](https://discordbots.org/bot/482373088109920266) / "
                  "[Vote](https://discordbots.org/bot/482373088109920266/vote)\n"
-                 "[Source](https://github.com/XuaTheGrate/Adventure)")
+                 "[Source](https://github.com/XuaTheGrate/Adventure)\n"
+                 "[Support](https://discord.gg/hkweDCD)")
         embed.add_field(name="Links", value=links)
         embed.set_footer(text="Created by Xua#4427")
         await ctx.send(embed=embed)
@@ -171,6 +172,11 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
                              "(https://discordapp.com/api/oauth2/authorize"
                              "?client_id=482373088109920266&permissions=0&scope=bot)")
         await ctx.send(embed=embed)
+
+    @commands.command(ignore_extra=False)
+    async def support(self, ctx):
+        """Gives you the Instant Invite to Adventure!'s support server."""
+        await ctx.send(f"You can join the support server via this invite: https://discord.gg/hkweDCD")
 
     @commands.command(hidden=True, ignore_extra=False)
     async def todo(self, ctx):
