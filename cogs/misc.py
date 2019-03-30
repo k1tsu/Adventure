@@ -54,8 +54,11 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
         embed.add_field(name="Statistics", value=stats, inline=False)
         upt = humanize.naturaldelta(datetime.utcnow() - self.bot.init)
         embed.add_field(name="Uptime", value=upt, inline=False)
-        links = (f"[Invite](https://discordapp.com/api/oauth2/authorize?"
-                 f"client_id=482373088109920266&permissions=388160&scope=bot)")
+        links = ("[Invite](https://discordapp.com/api/oauth2/authorize?"
+                 "client_id=482373088109920266&permissions=388160&scope=bot)\n"
+                 "[DBL](https://discordbots.org/bot/482373088109920266) / "
+                 "[Vote](https://discordbots.org/bot/482373088109920266/vote)\n"
+                 "[Source](https://github.com/XuaTheGrate/Adventure)")
         embed.add_field(name="Links", value=links)
         embed.set_footer(text="Created by Xua#4427")
         await ctx.send(embed=embed)

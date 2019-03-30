@@ -10,3 +10,4 @@ ASYNCPG = {
 }
 OWNERS = []  # list of user ids (ints)
 NOOT = "image url"
+DBL = "dbl token"

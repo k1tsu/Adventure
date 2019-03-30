@@ -19,6 +19,7 @@ os.environ['JISHAKU_HIDE'] = "true"
 import aiohttp
 import aioredis
 import asyncpg
+import dbl
 import discord
 import psutil
 from discord.ext import commands
@@ -80,6 +81,7 @@ class Adventure(commands.Bot):
         self.map_manager = None
         self.item_manager = None
         self.enemy_manager = None
+        self.dbl_client = dbl.Client(self, self.config.DBL)
         self.prefixes = {}
         self.process = psutil.Process()
         self.init = INIT
