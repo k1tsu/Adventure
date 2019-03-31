@@ -48,6 +48,10 @@ except ImportError:
 import config
 import utils
 
+# Webhook mini server
+
+import dblvote
+
 jskshell.WINDOWS = False
 
 
@@ -69,7 +73,7 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__(self.getprefix)
+        super().__init__('//')
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self.config = config
@@ -85,6 +89,7 @@ class Adventure(commands.Bot):
         self.prefixes = {}
         self.process = psutil.Process()
         self.init = INIT
+        self.internal_webhook_handler = None
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
 
@@ -144,6 +149,8 @@ class Adventure(commands.Bot):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
+        if message.author.id not in self.config.OWNERS:
+            return
         if self.user in message.mentions:
             try:
                 await message.add_reaction("\N{EYES}")
@@ -161,6 +168,9 @@ class Adventure(commands.Bot):
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         log.info("Connected to PostgreSQL server.")
+
+        dblvote.g.redis = self._redis
+        self.internal_webhook_handler = self.loop.create_task(dblvote.run())
 
         for guild in self.guilds:
             prefix = set(map(bytes.decode, await self.redis("SMEMBERS", f"prefixes_{guild.id}")))
@@ -207,6 +217,13 @@ class Adventure(commands.Bot):
                 await asyncio.wait_for(event.wait(), timeout=60.0)
             except asyncio.TimeoutError:
                 log.critical("Event %r failed to finish in time.", event)
+        await self._redis.execute_pubsub("UNSUBSCRIBE", "vote-channel")
+        try:
+            self.internal_webhook_handler.cancel()
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            log.critical("Fatal error when closing hook server| %s: %s", type(e).__name__, e)
         await self.db.close()
         self._redis.close()
         await self._redis.wait_closed()
