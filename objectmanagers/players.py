@@ -255,7 +255,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         if ttl < 0:
             gain = math.ceil(random.uniform(player.exp_to_next_level() / 4, player.exp_to_next_level() / 2))
             player.exp += gain
-            await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!")
+            await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!\n"
+                           "Did you know that you can vote for more free rewards? See `*info` for the vote link!")
             await self.bot.redis("SET", f"daily_{ctx.author.id}", "12", "EX", "86400")
         else:
             hours, ex = divmod(ttl, 3600)
