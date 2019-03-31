@@ -40,6 +40,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         self._font = "assets/Inkfree.ttf"
         self.ignored_channels = []
         self.ignored_guilds = []
+        self._player_flush_task = self.bot.loop.create_task(self.flush_players())
 
     def font(self, size=35):
         return ImageFont.truetype(self._font, size)
@@ -416,9 +417,21 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         n.seek(0)
         return n
 
+    async def flush_players(self):
+        await self.bot.prepared.wait()
+        while await asyncio.sleep(3600, True):
+            async with self.bot.db.acquire() as cursor:
+                for p in self.players:
+                    await p.save(cursor=cursor)
+            log.info("Flushed players.")
+
     # -- Events -- #
 
     def cog_unload(self):
+        try:
+            self._player_flush_task.cancel()
+        except asyncio.CancelledError:
+            pass
         self.bot.unload_complete.remove(self.unload_event)
 
     @commands.Cog.listener()
