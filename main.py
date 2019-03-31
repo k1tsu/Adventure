@@ -94,13 +94,15 @@ class Adventure(commands.Bot):
         self.prepare_extensions()
 
     async def blacklist_check(self, ctx):
-        if not ctx.guild or ctx.author.id in self.in_tutorial:
+        if not ctx.guild:
             raise commands.NoPrivateMessage()
         if ctx.author.id in self.blacklist:
             raise utils.Blacklisted(self.blacklist[ctx.author.id])
         if ctx.channel.id in self.player_manager.ignored_channels:
             raise utils.IgnoreThis
         if ctx.guild.id in self.player_manager.ignored_guilds:
+            raise utils.IgnoreThis
+        if ctx.author.id in self.in_tutorial:
             raise utils.IgnoreThis
         return True
 

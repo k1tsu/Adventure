@@ -39,7 +39,7 @@ class Handler(commands.Cog):
         if (ctx.cog is not None and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None) and not enf:
             return
         exc = getattr(exc, "original", exc)
-        if isinstance(exc, (commands.CommandNotFound, commands.NoPrivateMessage, commands.DisabledCommand)):
+        if isinstance(exc, commands.CommandNotFound):
             return
         if isinstance(exc, commands.CommandOnCooldown):
             now = datetime.utcnow()
@@ -47,6 +47,10 @@ class Handler(commands.Cog):
             fmt = humanize.naturaltime(now + later)
             return await ctx.send(":warning: Ratelimited. Try again in %s." % fmt)
         ctx.command.reset_cooldown(ctx)
+        if isinstance(exc, commands.NoPrivateMessage):
+            return await ctx.send("I do not listen to commands in DMs.")
+        if isinstance(exc, commands.DisabledCommand):
+            return await ctx.send("This command is disabled!")
         if isinstance(exc, utils.IgnoreThis):
             return
         if isinstance(exc, utils.AdventureBase):
