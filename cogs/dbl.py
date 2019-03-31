@@ -52,7 +52,7 @@ async def dbl_hook(bot):
                                  f"(I don't listen to DMs, so youll need to invite me to a guild.)")
         else:
             exp = random.randint(player.exp // 4, player.exp // 2)
-            gold = random.randint(player.gold / 2, player.gold)
+            gold = random.randint(player.gold // 2, player.gold)
             player.exp += exp
             player.gold += gold
             embed = discord.Embed(colour=discord.Colour(11059565))
