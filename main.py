@@ -97,7 +97,8 @@ class Adventure(commands.Bot):
         if not ctx.guild:
             raise commands.NoPrivateMessage()
         if ctx.author.id in self.blacklist:
-            raise utils.Blacklisted(self.blacklist[ctx.author.id])
+            #raise utils.Blacklisted(self.blacklist[ctx.author.id])
+            raise utils.IgnoreThis
         if ctx.channel.id in self.player_manager.ignored_channels:
             raise utils.IgnoreThis
         if ctx.guild.id in self.player_manager.ignored_guilds:
