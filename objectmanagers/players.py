@@ -206,7 +206,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await n.delete()
 
     @commands.command()
-    @commands.cooldown(1, 60, commands.BucketType.user)
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def profile(self, ctx, *, member: discord.Member = None):
         """Generates a profile for the member you specify, or yourself if omitted.
 
@@ -284,7 +284,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await ctx.send(f"```\n{player.compendium.format()}\n```")
 
     @commands.command()
-    @commands.cooldown(10, 600, commands.BucketType.user)
+    @commands.cooldown(10, 3600, commands.BucketType.user)
     async def fight(self, ctx, *, member: discord.Member):
         """Fight your friends in a battle to the death!
         Not actually to the death, but the winner gets a shit load of EXP."""

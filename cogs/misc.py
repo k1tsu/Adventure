@@ -158,6 +158,12 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
         await ctx.send(final)
 
     @commands.command(ignore_extra=False)
+    async def tip(self, ctx):
+        """Gives you a random hint about something."""
+        hint, id = await self.bot.db.fetchrow("SELECT * FROM tips ORDER BY random() LIMIT 1;")
+        await ctx.send(f"#{id}. {hint}")
+
+    @commands.command(ignore_extra=False)
     async def invite(self, ctx):
         """Generates an invite URL to invite me to your server.
 

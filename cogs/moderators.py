@@ -85,6 +85,11 @@ class Moderator(commands.Cog):
         await ctx.send("\n".join(n) or "Nothing found.")
 
     @commands.command(hidden=True)
+    async def forcevote(self, ctx, user: int):
+        async with self.bot.session.post("http://localhost:8080/vote", data=f"{{\"user\":\"{user}\"}}".encode()) as req:
+            await ctx.send(f"{req.status}: {req.reason}")
+
+    @commands.command(hidden=True)
     async def sql(self, ctx, *, query):
 
         query = self.cleanup_code(query)

@@ -37,6 +37,7 @@ async def dbl_hook(bot):
         user = bot.get_user(int(payload['user']))
         if not user:
             continue
+        await ch.send(f"{user.mention} ({user} {user.id}) voted for Adventure!")
         try:
             await user.send("")
         except discord.Forbidden:
@@ -51,14 +52,20 @@ async def dbl_hook(bot):
                                  f"If you like, you can create one with `*create`.\n\n"
                                  f"(I don't listen to DMs, so youll need to invite me to a guild.)")
         else:
-            exp = random.randint(player.exp // 4, player.exp // 2)
-            gold = random.randint(player.gold // 2, player.gold)
+            if not payload['isWeekend']:
+                exp = random.randint(player.exp // 4, player.exp // 2)
+                gold = random.randint(player.gold // 2, player.gold)
+            else:
+                exp = random.randint(player.exp // 2, player.exp)
+                gold = random.randint(player.gold, player.gold * 2)
             player.exp += exp
             player.gold += gold
             embed = discord.Embed(colour=discord.Colour(11059565))
             embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
             embed.description = (f"As a thank you gift, you've been awared with **{exp}** Experience Points\n"
                                  f"and **{gold}** Coins!")
+            if payload['isWeekend']:
+                embed.set_footer(text="Since you voted on the weekend, you gained double points!")
         await user.send(embed=embed)
 
 

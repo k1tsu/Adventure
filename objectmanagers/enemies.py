@@ -27,7 +27,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         await ctx.send("https://megamitensei.fandom.com/wiki/" + name)
 
     @commands.command(ignore_extra=False)
-    @commands.cooldown(5, 300, commands.BucketType.user)
+    @commands.cooldown(10, 60, commands.BucketType.user)
     async def encounter(self, ctx):
         """Searches for an enemy to fight within the area.
 
