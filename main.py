@@ -48,10 +48,6 @@ except ImportError:
 import config
 import utils
 
-# Webhook mini server
-
-import dblvote
-
 jskshell.WINDOWS = False
 
 
@@ -73,7 +69,7 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__(self.getprefix)
+        super().__init__('//')
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self.config = config
@@ -152,6 +148,8 @@ class Adventure(commands.Bot):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
+        if message.author.id not in self.config.OWNERS:
+            return
         if self.user in message.mentions:
             try:
                 await message.add_reaction("\N{EYES}")
@@ -169,9 +167,6 @@ class Adventure(commands.Bot):
         log.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         log.info("Connected to PostgreSQL server.")
-
-        dblvote.g.redis = self._redis
-        self.internal_webhook_handler = self.loop.create_task(dblvote.run())
 
         for guild in self.guilds:
             prefix = set(map(bytes.decode, await self.redis("SMEMBERS", f"prefixes_{guild.id}")))

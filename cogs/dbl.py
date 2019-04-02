@@ -23,16 +23,20 @@ async def update_dbl(bot):
 
 async def dbl_hook(bot):
     await bot.prepared.wait()
-    channel = bot._redis.pubsub_channels[b"vote-channel"]
+    key = "vote-channel"
     ch = bot.get_channel(561390634863165450)
     pm = bot.player_manager
-    log.debug("init %s %s", channel, ch)
-    while await channel.wait_message():
+    log.debug("init %s %s", key, ch)
+    while True:
         try:
-            payload = await channel.get_json(encoding='utf-8')
+            key, stuff = await bot.redis("BLPOP", key, "0")
+            payload = json.loads(stuff)
             log.debug("recieved payload %s", payload)
-        except json.decoder.JSONDecodeError:
-            log.warning("bad payload recieved")
+        except IndexError as e:
+            log.warning("bad payload recieved\n%s", e)
+            continue
+        except json.decoder.JSONDecodeError as e:
+            log.warning("bad payload recieved\n%s\n%s", stuff, e)
             continue
         user = bot.get_user(int(payload['user']))
         if not user:

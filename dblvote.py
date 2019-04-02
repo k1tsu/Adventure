@@ -26,12 +26,13 @@ async def home(request):
 
 @routes.post('/vote')
 async def vote(request):
-    await g.redis.execute("PUBLISH", g.channel, json.dumps(await request.json()))
+    await g.redis.execute("LPUSH", g.channel, json.dumps(await request.json()))
+    # await g.redis.execute("PUBLISH", g.channel, json.dumps(await request.json()))
     return web.Response(status=200)
 
 
 async def run():
-    await g.redis.execute_pubsub("SUBSCRIBE", g.channel)
+    g.redis = await asyncio.wait_for(aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS), timeout=10)
     app = web.Application()
     app.add_routes(routes)
     print("init")
@@ -39,7 +40,6 @@ async def run():
 
 
 async def exit():
-    await g.redis.execute_pubsub("UNSUBSCRIBE", g.channel)
     g.redis.close()
     await g.redis.wait_closed()
 
