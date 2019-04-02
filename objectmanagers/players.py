@@ -156,7 +156,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await ctx.send("{} {} is now exploring {} and will finish in {:.0f} minutes.".format(
             blobs.BLOB_SALUTE, player.name, player.map.name, time*60))
 
-    @commands.command(ignore_extra=False)
+    @commands.command(ignore_extra=False, aliases=['s'])
     async def status(self, ctx):
         """View your current players status.
         They can be idling, exploring, or travelling."""
@@ -205,7 +205,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         finally:
             await n.delete()
 
-    @commands.command()
+    @commands.command(aliases=['p'])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def profile(self, ctx, *, member: discord.Member = None):
         """Generates a profile for the member you specify, or yourself if omitted.
@@ -265,15 +265,18 @@ class PlayerManager(commands.Cog, name="Player Manager"):
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
 
     @commands.command(ignore_extra=False, aliases=['lb'])
-    async def leaderboard(self, ctx):
+    async def leaderboard(self, ctx, count: int = 20):
         """Views the top 10 most experienced players.
         Try to reach the top of the tower <:pinkblobwink:544628885023621126>"""
         headers = ["Name", "Owner", "EXP", "Level"]
         table = utils.TabularData()
         table.set_columns(headers)
         table.add_rows([[p.name, str(p.owner), p.exp, p.level] for p in sorted(
-            filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:10])
-        await ctx.send(f"```\n{table.render()}\n```")
+            filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:count])
+        try:
+            await ctx.send(f"```\n{table.render()}\n```")
+        except discord.HTTPException:
+            await ctx.send("Count too large.")
 
     @commands.command(ignore_extra=False, aliases=['cp', 'comp'])
     async def compendium(self, ctx):
@@ -283,7 +286,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             raise utils.NoPlayer
         await ctx.send(f"```\n{player.compendium.format()}\n```")
 
-    @commands.command()
+    @commands.command(aliases=['battle'])
     @commands.cooldown(10, 3600, commands.BucketType.user)
     async def fight(self, ctx, *, member: discord.Member):
         """Fight your friends in a battle to the death!
