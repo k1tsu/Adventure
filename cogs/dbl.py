@@ -29,7 +29,8 @@ async def dbl_hook(bot):
     log.debug("init %s %s", key, ch)
     while True:
         try:
-            key, stuff = await bot.redis("BLPOP", key, "0")
+            with await bot._redis as pool:
+                key, stuff = await pool.execute("BLPOP", key, "0")
             payload = json.loads(stuff)
             log.debug("recieved payload %s", payload)
         except IndexError as e:

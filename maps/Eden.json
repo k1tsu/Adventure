@@ -2,7 +2,7 @@
           "id": 2,
         "name": "Kingdom of Eden",
  "description": "A largely inhabited kingdom on the border of the Lancelot region.",
-      "nearby": [],
+      "nearby": [418721],
      "density": 0,
       "colour": 16777215,
         "safe": true
