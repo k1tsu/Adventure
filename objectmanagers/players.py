@@ -440,10 +440,12 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await self.bot.prepared.wait()
         if len(self.players) > 0:
             return
+        log.debug("INIT")
         self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))
         self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
         for data in await self.fetch_players():
             owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
+            log.debug("DATA %s", data)
             user = self.bot.get_user(owner_id)
             if not user:
                 log.warning("Unknown user id %s. Skipping initialization.", owner_id)
