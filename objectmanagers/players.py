@@ -268,11 +268,11 @@ class PlayerManager(commands.Cog, name="Player Manager"):
     async def leaderboard(self, ctx, count: int = 20):
         """Views the top 10 most experienced players.
         Try to reach the top of the tower <:pinkblobwink:544628885023621126>"""
-        headers = ["Name", "Owner", "EXP", "Level"]
+        headers = ["Name", "Owner", "Level", "Total Caught"]
         table = utils.TabularData()
         table.set_columns(headers)
-        table.add_rows([[p.name, str(p.owner), p.exp, p.level] for p in sorted(
-            filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:count])
+        table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
+                        for p in sorted(self.players, key=lambda m: sum(m.raw_compendium_data), reverse=True)][:count])
         try:
             await ctx.send(f"```\n{table.render()}\n```")
         except discord.HTTPException:
