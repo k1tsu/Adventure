@@ -47,6 +47,7 @@ class EpicContext(Context):
         await inf.send_to(self)
 
     async def warn(self, message, *, waiter=None):
+        self.bot.confirmation_invocation.append(self.author.id)
         waiter = waiter or self.author
         msg = await super().send(message)
         await msg.add_reaction(blobs.BLOB_TICK)
@@ -63,3 +64,4 @@ class EpicContext(Context):
             return str(reaction) == str(blobs.BLOB_TICK)
         finally:
             await msg.delete()
+            self.bot.confirmation_invocation.remove(self.author.id)

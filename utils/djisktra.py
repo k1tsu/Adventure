@@ -14,7 +14,7 @@ class Graph:
         self.weights = {}
 
     def add_map(self, from_node, to_node, weight):
-        # Note: assumes edges are bi-directional
+        # noinspection PyUnresolvedReferences
         self.edges[from_node].append(to_node)
         self.edges[to_node].append(from_node)
         self.weights[(from_node, to_node)] = weight
@@ -44,7 +44,7 @@ def djisktra(graph, initial, end):
 
         next_destinations = {node: shortest_paths[node] for node in shortest_paths if node not in visited}
         if not next_destinations:
-            return "Route Not Possible"
+            raise IndexError("Path not possible")
         # next node is the destination with the lowest weight
         current_node = min(next_destinations, key=lambda k: next_destinations[k][1])
 

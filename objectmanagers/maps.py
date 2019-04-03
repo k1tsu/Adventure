@@ -31,6 +31,11 @@ class MapManager(commands.Cog, name="Map Manager"):
         self.bot = bot
         self._maps: List[utils.Map] = []
         self.prepare_maps()
+        self._graph = utils.Graph()
+        for map in self.maps:
+            for m in map.nearby:
+                self._graph.add_map(map.id, m.id, map.density + m.density)
+        self.dj = utils.djisktra
 
     def __repr__(self):
         return "<MapManager total: {0}>".format(len(self._maps))
@@ -46,7 +51,7 @@ class MapManager(commands.Cog, name="Map Manager"):
         This wont show maps that are not nearby."""
         player = self.bot.player_manager.get_player(ctx.author)
         if not player:
-            return await ctx.send(f"You don't have a player! {blobs.BLOB_PLSNO} Create one with `{ctx.prefix}create`!")
+            return await ctx.invoke(self.all_)
         pg = utils.EmbedPaginator()
         for _map in player.map.nearby:
             embed = discord.Embed(color=_map._raw['colour'], description=_map.description)
@@ -72,6 +77,65 @@ class MapManager(commands.Cog, name="Map Manager"):
             pg.add_page(embed)
         inf = utils.EmbedInterface(self.bot, pg, ctx.author)
         await inf.send_to(ctx)
+
+    @maps_.command(ignore_extra=False)
+    async def explored(self, ctx):
+        """Views all the maps you have explored."""
+        player = self.bot.player_manager.get_player(ctx.author)
+        if not player:
+            return await ctx.send(f"You don't have a player! {blobs.BLOB_PLSNO} Create one with `{ctx.prefix}create`!")
+        pg = utils.EmbedPaginator()
+        for map in player.explored_maps:
+            embed = discord.Embed(colour=map._raw['colour'], description=map.description)
+            embed.set_author(name=map.name + (' (Safe)' if map.is_safe else ''))
+            embed.add_field(name="ID", value=str(map.id))
+            embed.add_field(name="Density", value=str(map.density))
+            embed.add_field(name="Nearby Maps", value="`" + "`, `".join(map(str, map.nearby)) + "`", inline=False)
+            pg.add_page(embed)
+        inf = utils.EmbedInterface(self.bot, pg, ctx.author)
+        await inf.send_to(ctx)
+
+    @commands.command(aliases=['qt'])
+    @commands.cooldown(2, 3600, commands.BucketType.user)
+    async def quicktravel(self, ctx, *, map):
+        """Quickly travels your player to a map.
+        This is quite expensive, so beware."""
+        player = self.bot.player_manager.get_player(ctx.author)
+        if not player:
+            raise utils.NoPlayer()
+        if await player.is_travelling() or await player.is_exploring():
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You are busy!"
+                                  f" Wait until you are idling before you use this command.")
+        map = self.resolve_map(map)
+        if not map:
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.send(f"Unknown map. See `{ctx.prefix}maps explored` to view your explored maps.")
+        if not player.has_explored(map):
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.send(f"{blobs.BLOB_ANGERY} You haven't explored {map}!")
+        start = player.map
+        path = self.dj(self._graph, start.id, map.id)
+        cost = sum(self.get_map(p).density for p in path)
+        if player.gold < cost:
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.send(f"{blobs.BLOB_SAD} You are too poor!"
+                                  f" You need **{cost} G**, but only have **{player.gold} G**.")
+        if not await ctx.warn(f"{blobs.BLOB_THINK} This will cost **{cost} G**,"
+                              f" and you have **{player.gold} G**. Are you sure?"):
+            ctx.command.reset_cooldown(ctx)
+            return
+        player.map = map
+        await ctx.send(f"{blobs.BLOB_SALUTE} {player.name} quick travelled to {map}!")
+
+
+    @quicktravel.error
+    async def quicktravel_error(self, ctx, exc):
+        if isinstance(exc, commands.CommandOnCooldown):
+            await ctx.send("You can only quick travel twice every hour!")
+        else:
+            await self.bot.get_cog("Handler").on_command_error(ctx, exc, enf=True)
+
 
     # -- MapManager stuff -- #
 
