@@ -126,8 +126,8 @@ class MapManager(commands.Cog, name="Map Manager"):
             ctx.command.reset_cooldown(ctx)
             return
         player.map = map
+        player.gold -= cost
         await ctx.send(f"{blobs.BLOB_SALUTE} {player.name} quick travelled to {map}!")
-
 
     @quicktravel.error
     async def quicktravel_error(self, ctx, exc):
@@ -135,7 +135,6 @@ class MapManager(commands.Cog, name="Map Manager"):
             await ctx.send("You can only quick travel twice every hour!")
         else:
             await self.bot.get_cog("Handler").on_command_error(ctx, exc, enf=True)
-
 
     # -- MapManager stuff -- #
 
