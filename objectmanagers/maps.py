@@ -85,12 +85,12 @@ class MapManager(commands.Cog, name="Map Manager"):
         if not player:
             return await ctx.send(f"You don't have a player! {blobs.BLOB_PLSNO} Create one with `{ctx.prefix}create`!")
         pg = utils.EmbedPaginator()
-        for map in player.explored_maps:
-            embed = discord.Embed(colour=map._raw['colour'], description=map.description)
-            embed.set_author(name=map.name + (' (Safe)' if map.is_safe else ''))
-            embed.add_field(name="ID", value=str(map.id))
-            embed.add_field(name="Density", value=str(map.density))
-            embed.add_field(name="Nearby Maps", value="`" + "`, `".join(map(str, map.nearby)) + "`", inline=False)
+        for _map in player.explored_maps:
+            embed = discord.Embed(colour=_map._raw['colour'], description=_map.description)
+            embed.set_author(name=_map.name + (' (Safe)' if _map.is_safe else ''))
+            embed.add_field(name="ID", value=str(_map.id))
+            embed.add_field(name="Density", value=str(_map.density))
+            embed.add_field(name="Nearby Maps", value="`" + "`, `".join(map(str, _map.nearby)) + "`", inline=False)
             pg.add_page(embed)
         inf = utils.EmbedInterface(self.bot, pg, ctx.author)
         await inf.send_to(ctx)
