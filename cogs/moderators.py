@@ -85,8 +85,11 @@ class Moderator(commands.Cog):
         await ctx.send("\n".join(n) or "Nothing found.")
 
     @commands.command(hidden=True)
-    async def forcevote(self, ctx, user: int):
-        async with self.bot.session.post("http://localhost:8080/vote", data=f"{{\"user\":\"{user}\"}}".encode()) as req:
+    async def forcevote(self, ctx, user: int, weekend: bool = False):
+        async with self.bot.session.post(
+                "http://localhost:8080/vote",
+                data=f"{{\"user\":\"{user}\", \"isWeekend\": {str(weekend).lower()}}}".encode()
+        ) as req:
             await ctx.send(f"{req.status}: {req.reason}")
 
     @commands.command(hidden=True)

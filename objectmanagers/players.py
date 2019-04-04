@@ -264,10 +264,25 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await ctx.send(f"{blobs.BLOB_ARMSCROSSED} "
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
 
-    @commands.command(ignore_extra=False, aliases=['lb'])
+    @commands.group(aliases=['lb'], invoke_without_command=True)
     async def leaderboard(self, ctx, count: int = 20):
-        """Views the top 10 most experienced players.
-        Try to reach the top of the tower <:pinkblobwink:544628885023621126>"""
+        """Views the top 20 players in your server.
+        Try to reach the top of the leaderboard!"""
+        headers = ["Name", "Owner", "Level", "Total Caught"]
+        table = utils.TabularData()
+        table.set_columns(headers)
+        table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
+                        for p in sorted(
+                filter(lambda m: m.owner in ctx.guild.members, self.players),
+                key=lambda m: sum(m.raw_compendium_data), reverse=True)][:count])
+        try:
+            await ctx.send(f"```\n{table.render()}\n```")
+        except discord.HTTPException:
+            await ctx.send("Count too large.")
+
+    @leaderboard.command(ignore_extra=False, name="global", aliases=['g'])
+    async def _global(self, ctx, count: int = 20):
+        """Same as the regular command, but shows the global leaderboard."""
         headers = ["Name", "Owner", "Level", "Total Caught"]
         table = utils.TabularData()
         table.set_columns(headers)
