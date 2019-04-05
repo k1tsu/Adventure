@@ -34,7 +34,7 @@ class Help2(commands.Cog):
         yield i.name
 
     @commands.command()
-    async def help2(self, ctx, *, item: CommandOrCog = None):
+    async def help(self, ctx, *, item: CommandOrCog = None):
         show = await self.bot.is_owner(ctx.author)
         embed = discord.Embed(colour=discord.Colour(11059565), description="")
         embed.set_author(name="Adventure!'s Commands", icon_url=ctx.me.avatar_url_as(format="png", size=32))
@@ -60,4 +60,8 @@ class Help2(commands.Cog):
 
 
 def setup(bot):
+    bot.old_help = bot.remove_command("help")
     bot.add_cog(Help2(bot))
+
+def teardown(bot):
+    bot.add_command(bot.old_help)

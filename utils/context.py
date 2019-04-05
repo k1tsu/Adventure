@@ -16,7 +16,7 @@ class EpicContext(commands.Context):
 
     async def send(self, content=None, **kwargs):
         try:
-            await super().send(content, **kwargs)
+            return await super().send(content, **kwargs)
         except discord.HTTPException as e:
             if e.code == 400:
                 pass
