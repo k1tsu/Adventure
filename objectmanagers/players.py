@@ -273,7 +273,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         table.set_columns(headers)
         table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
                         for p in sorted(
-                filter(lambda m: m.owner in ctx.guild.members, self.players),
+                filter(lambda m: m.owner in ctx.guild.members and p.owner.id != 455289384187592704, self.players),
                 key=lambda m: sum(m.raw_compendium_data), reverse=True)][:count])
         try:
             await ctx.send(f"```\n{table.render()}\n```")
@@ -287,7 +287,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         table = utils.TabularData()
         table.set_columns(headers)
         table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
-                        for p in sorted(self.players, key=lambda m: sum(m.raw_compendium_data), reverse=True)][:count])
+                        for p in sorted(self.players, key=lambda m: sum(m.raw_compendium_data), reverse=True)
+                        if p.owner.id != 455289384187592704][:count])
         try:
             await ctx.send(f"```\n{table.render()}\n```")
         except discord.HTTPException:
