@@ -1,96 +1,63 @@
-# -> Builtin modules
-import logging
-
-# -> Pip packages
-from discord.ext import commands
 import discord
+from discord.ext import commands
 
-log = logging.getLogger("Adventure.cogs.Help")
+import utils
 
 
-class Help(commands.Cog):
-    """Cog to handle the *super awesome* ***HELP COMMAND***."""
+class CommandOrCog(commands.Converter):
+    async def convert(self, ctx, argument):
+        arg = ctx.bot.get_cog(argument) or ctx.bot.get_command(argument)
+        if not arg:
+            raise commands.BadArgument(f"Couldn't find a command / module named {argument}.")
+        return arg
+
+
+class Help2(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def formatter(self, i, stack=1, ignore_hidden=False):
-        for cmd in i:
-            if cmd.hidden and not ignore_hidden:
+    def formatter(self, i, *, stack=0, show=False):
+        for command in i:
+            if command.hidden and not show:
                 continue
-            line = '- ' + cmd.help.split("\n")[0] if cmd.help else ""
-            yield "\u200b " * (stack*2) + f"►**{cmd}** {line}\n"
-            if isinstance(cmd, commands.Group):
-                yield from self.formatter(cmd.commands, stack+1)
-
-    def format_help_for(self, item):
-        embed = discord.Embed(colour=discord.Colour.blurple())
-        embed.set_footer(text=f"Use {self.bot.config.PREFIX}help <command> for more information.")
-        if isinstance(item, commands.Cog):
-            embed.title = item.qualified_name
-            embed.description = type(item).__doc__ or "Nothing provided."
-            embed.add_field(name="Commands", value=''.join([t for t in self.formatter(item.get_commands())]) or
-                            "No visible commands.")
-            return embed
-        elif isinstance(item, commands.Group):
-            embed.title = f"{item.qualified_name} {item.signature}"
-            embed.description = item.help or "Nothing provided."
-            fmt = "".join([c for c in self.formatter(item.commands)])
-            embed.add_field(name="Subcommands", value=fmt)
-            return embed
-        elif isinstance(item, commands.Command):
-            embed.title = f"{item.qualified_name} {item.signature}"
-            embed.description = item.help or "Nothing provided."
-            return embed
-        else:
-            raise RuntimeError("??")
-
-    @commands.command(name="help")
-    async def _help(self, ctx, *, cmd: commands.clean_content = None):
-        """The help command.
-        Use this to view other commands."""
-        if cmd == "all":
-            _all = True
-            cmd = None
-        else:
-            _all = False
-        if not cmd:
-            embed = discord.Embed(color=discord.Color.blurple())
-            embed.set_author(name=f"{ctx.me.display_name}'s Commands."
-                                  f" | Use {ctx.prefix}tutorial for a quick start guide!",
-                             icon_url=ctx.me.avatar_url_as(format="png", size=32))
-            embed.set_footer(text=f"Prefix: {ctx.prefix}")
-            n = []
-            for cog in self.bot.cogs.values():
-                if sum(1 for n in cog.get_commands() if not (n.hidden and not _all)) == 0:
-                    continue
-                n.append(f"**{cog.qualified_name}**\n")
-                for cmd in self.formatter(cog.get_commands(), ignore_hidden=_all):
-                    n.append(cmd)
-            join = "".join(n)
-            if len(join) < 2048:
-                embed.description = join
-                await ctx.send(embed=embed)
+            if command.help:
+                line = f"- " + command.help.split("\n")[0]
             else:
-                try:
-                    await ctx.author.send("")
-                except discord.Forbidden:
-                    return await ctx.send("Cannot DM you!")
-                except discord.HTTPException:
-                    pass
-                await ctx.message.add_reaction("\U0001f4ec")
-                for chunk in [n[x:x+25] for x in range(0, len(n), 25)]:
-                    await ctx.author.send("".join(chunk))
+                line = ""
+            yield "\u200b " * (stack*2) + f"►**{command}** " + line
+            if isinstance(command, commands.Group):
+                yield from self.formatter(command.commands, stack=stack+1, show=show)
+
+    def parents(self, i):
+        if i.parent:
+            yield from self.parents(i.parent)
+        yield i.name
+
+    @commands.command()
+    async def help2(self, ctx, *, item: CommandOrCog = None):
+        show = await self.bot.is_owner(ctx.author)
+        embed = discord.Embed(colour=discord.Colour(11059565), description="")
+        embed.set_author(name="Adventure!'s Commands", icon_url=ctx.me.avatar_url_as(format="png", size=32))
+        embed.set_footer(text=f"Use {ctx.prefix}help <command/module> for more help!")
+        if not item:
+            # no item, we show all cogs
+            for cog in self.bot.cogs.values():
+                if sum(1 for c in cog.get_commands() if not (not show and c.hidden)) == 0:
+                    continue
+                doc = cog.__doc__.split('\n')[0] if cog.__doc__ else 'No help provided'
+                embed.description += f"►**{cog.qualified_name}**\n\u200b\t\u200b\t{doc}\n"
         else:
-            item = self.bot.get_cog(cmd) or self.bot.get_command(cmd)
-            if not item:
-                return await ctx.send(f"Couldn't find any cog/command named '{cmd}'.")
-            await ctx.send(embed=self.format_help_for(item))
+            if isinstance(item, commands.Cog):
+                embed.title = item.qualified_name
+                embed.description += item.__doc__ + '\n\n'
+                embed.description += "\n".join(self.formatter(item.get_commands(), show=show))
+            else:
+                embed.title = " ".join(self.parents(item))
+                embed.description += item.help + '\n\n'
+                if isinstance(item, commands.Group):
+                    embed.description += '\n'.join(self.formatter(item.commands, show=show))
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
-    bot.old_help = bot.remove_command("help")
-    bot.add_cog(Help(bot))
-
-
-def teardown(bot):
-    bot.add_command(bot.old_help)
+    bot.add_cog(Help2(bot))

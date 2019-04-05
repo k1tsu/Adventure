@@ -115,7 +115,7 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
     async def avatar(self, ctx, *, member: typing.Union[discord.Member, discord.User] = None):
         """Views your, or someone elses avatar."""
         member = member or ctx.author
-        embed = discord.Embed(color=discord.Colour.blurple())
+        embed = discord.Embed(color=discord.Colour(11059565))
         embed.set_author(name=str(member), icon_url=member.avatar_url_as(format="png", size=32))
         embed.set_image(url=member.avatar_url_as(static_format="png"))
         await ctx.send(embed=embed)
