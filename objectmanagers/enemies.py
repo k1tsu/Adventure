@@ -13,6 +13,9 @@ log = logging.getLogger("Adventure.EnemyManager")
 
 
 class EnemyManager(commands.Cog, name="Enemy Manager"):
+    """
+    Handles all enemy related actions.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.enemies: List[utils.Enemy] = []
