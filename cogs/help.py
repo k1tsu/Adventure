@@ -13,6 +13,9 @@ class CommandOrCog(commands.Converter):
 
 
 class Help2(commands.Cog):
+    """
+    Provides information on how to use a command.
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -49,11 +52,14 @@ class Help2(commands.Cog):
         else:
             if isinstance(item, commands.Cog):
                 embed.title = item.qualified_name
-                embed.description += item.__doc__ + '\n\n'
+                embed.description += f"{item.__doc__}\n\n"
                 embed.description += "\n".join(self.formatter(item.get_commands(), show=show))
             else:
                 embed.title = " ".join(self.parents(item))
-                embed.description += item.help + '\n\n'
+                if item.help:
+                    embed.description += item.help + '\n\n'
+                else:
+                    embed.description = += "No help provided.\n\n"
                 if isinstance(item, commands.Group):
                     embed.description += '\n'.join(self.formatter(item.commands, show=show))
         await ctx.send(embed=embed)
