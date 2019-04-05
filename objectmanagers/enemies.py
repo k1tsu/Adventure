@@ -74,7 +74,8 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                 if enemy.defeat(player.level):
                     if not capture:
                         exp = math.ceil(random.randint((enemy.tier ** 3) // 32, (enemy.tier ** 3) // 8) *
-                              (1.5 if player.compendium.is_enemy_recorded(enemy) else 1))
+                              (1.5 if player.compendium.is_enemy_recorded(enemy) else 1)) + 1
+                        # remind me to improve this calculation
                         gold = random.randint(enemy.tier * 2, enemy.tier * 6)
                         player.exp += exp
                         player.gold += gold
