@@ -273,7 +273,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         table.set_columns(headers)
         table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
                         for p in sorted(
-                filter(lambda m: m.owner in ctx.guild.members and p.owner.id != 455289384187592704, self.players),
+                filter(lambda m: m.owner in ctx.guild.members and m.owner.id != 455289384187592704, self.players),
                 key=lambda m: sum(m.raw_compendium_data), reverse=True)][:count])
         try:
             await ctx.send(f"```\n{table.render()}\n```")
