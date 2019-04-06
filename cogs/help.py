@@ -59,7 +59,7 @@ class Help2(commands.Cog):
                 if item.help:
                     embed.description += item.help + '\n\n'
                 else:
-                    embed.description = += "No help provided.\n\n"
+                    embed.description += "No help provided.\n\n"
                 if isinstance(item, commands.Group):
                     embed.description += '\n'.join(self.formatter(item.commands, show=show))
         await ctx.send(embed=embed)
