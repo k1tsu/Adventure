@@ -2,7 +2,7 @@ from discord import PartialEmoji
 
 
 BLOB_SALUTE = PartialEmoji(animated=False, name="pinkblobsalute", id=544625129997598733)
-BLOB_THINK = PartialEmoji(animated=False, name="pinkblobthinks", 5id=11626506049683458)
+BLOB_THINK = PartialEmoji(animated=False, name="pinkblobthinks", id=511626506049683458)
 BLOB_TICK = PartialEmoji(animated=False, name="pinkblobyes", id=544628885153906698)
 BLOB_CROSS = PartialEmoji(animated=False, name="pinkblobdeny", id=544628885258633216)
 BLOB_PLSNO = PartialEmoji(animated=False, name="pinkblobplsno", id=511668250313097246)
