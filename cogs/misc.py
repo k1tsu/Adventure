@@ -48,7 +48,7 @@ class Misc(commands.Cog, name="Miscellaneous"):
         """Views basic information about Adventure."""
         embed = discord.Embed(colour=discord.Colour(0xA8C16D), title="Info about Adventure",
                               description=f"Here is some basic information. For more, check out `{ctx.prefix}help`.")
-        embed.set_author(name=str(self.bot.user), icon_url=self.bot.user.avatar_url_as(format="png", size=32))
+        embed.set_author(name=str(self.bot.user), icon_url=str(self.bot.user.avatar_url_as(format="png", size=32)))
         stats = f"""Guilds: {len(self.bot.guilds)}
 Members: {len(set(self.bot.get_all_members()))}
 Memory Usage: {humanize.naturalsize(self.bot.process.memory_full_info().uss)}
@@ -116,8 +116,8 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
         """Views your, or someone elses avatar."""
         member = member or ctx.author
         embed = discord.Embed(color=discord.Colour(11059565))
-        embed.set_author(name=str(member), icon_url=member.avatar_url_as(format="png", size=32))
-        embed.set_image(url=member.avatar_url_as(static_format="png"))
+        embed.set_author(name=str(member), icon_url=str(member.avatar_url_as(format="png", size=32)))
+        embed.set_image(url=str(member.avatar_url_as(static_format="png")))
         await ctx.send(embed=embed)
 
     @commands.command(ignore_extra=False)

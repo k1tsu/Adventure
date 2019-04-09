@@ -40,7 +40,7 @@ class Help2(commands.Cog):
     async def help(self, ctx, *, item: CommandOrCog = None):
         show = await self.bot.is_owner(ctx.author)
         embed = discord.Embed(colour=discord.Colour(11059565), description="")
-        embed.set_author(name="Adventure!'s Commands", icon_url=ctx.me.avatar_url_as(format="png", size=32))
+        embed.set_author(name="Adventure!'s Commands", icon_url=str(ctx.me.avatar_url_as(format="png", size=32)))
         embed.set_footer(text=f"Use {ctx.prefix}help <command/module> for more help!")
         if not item:
             # no item, we show all cogs

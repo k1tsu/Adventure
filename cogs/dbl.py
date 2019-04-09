@@ -46,7 +46,7 @@ async def dbl_hook(bot):
         player = pm.get_player(user)
         if player:
             embed = discord.Embed(colour=discord.Colour(11059565))
-            embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
+            embed.set_author(name="Thanks for voting!", icon_url=str(bot.user.avatar_url_as(format="png", size=32)))
             if not payload['isWeekend']:
                 exp = random.randint(player.exp_to_next_level() // 16, player.exp_to_next_level() // 2)
                 gold = random.randint(player.gold // 2, player.gold)
@@ -60,7 +60,7 @@ async def dbl_hook(bot):
                                  f"**{exp}** Experience Points and **{gold}** Coins!")
         else:
             embed = discord.Embed(colour=discord.Colour(11059565))
-            embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
+            embed.set_author(name="Thanks for voting!", icon_url=str(bot.user.avatar_url_as(format="png", size=32)))
             embed.description = (f"Unfortunately, you don't have a player! {blobs.BLOB_PLSNO}\n"
                                  f"If you like, you can create one with `*create`.\n\n"
                                  f"(I don't listen to DMs, so youll need to invite me to a guild.)")
