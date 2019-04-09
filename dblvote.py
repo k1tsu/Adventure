@@ -39,7 +39,7 @@ async def run():
     app = web.Application()
     app.add_routes(routes)
     print("init")
-    await web._run_app(app, port=8080)
+    await web._run_app(app, port=80)
 
 
 async def exit():
