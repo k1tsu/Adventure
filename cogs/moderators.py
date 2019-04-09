@@ -4,7 +4,6 @@ import logging
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import Union
 
 # -> Pip packages
 import discord
@@ -87,8 +86,9 @@ class Moderator(commands.Cog):
     @commands.command(hidden=True)
     async def forcevote(self, ctx, user: int, weekend: bool = False):
         async with self.bot.session.post(
-                "http://localhost:8080/vote",
-                data=f"{{\"user\":\"{user}\", \"isWeekend\": {str(weekend).lower()}}}".encode()
+                "http://xuathegrate.xyz/vote",
+                data=f"{{\"user\":\"{user}\", \"isWeekend\": {str(weekend).lower()}}}".encode(),
+                headers={"Authorization": self.bot.config.DBL_AUTH}
         ) as req:
             await ctx.send(f"{req.status}: {req.reason}")
 

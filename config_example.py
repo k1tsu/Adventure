@@ -11,3 +11,4 @@ ASYNCPG = {
 OWNERS = []  # list of user ids (ints)
 NOOT = "image url"
 DBL = "dbl token"
+DBL_AUTH = "p much whatever you want"
