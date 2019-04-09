@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py
+discord.py==1.0.0
 ujson>=1.35 ; sys_platform=='linux'
 git+https://github.com/XuaTheGrate/humanize
 jishaku>=1.7.0

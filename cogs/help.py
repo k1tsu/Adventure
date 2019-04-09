@@ -8,7 +8,7 @@ class CommandOrCog(commands.Converter):
     async def convert(self, ctx, argument):
         arg = ctx.bot.get_cog(argument) or ctx.bot.get_command(argument)
         if not arg:
-            raise commands.BadArgument(f"Couldn't find a command / module named {argument}.")
+            raise utils.AdventureBase(f"Couldn't find a command / module named {argument}.")
         return arg
 
 
@@ -24,9 +24,9 @@ class Help2(commands.Cog):
             if command.hidden and not show:
                 continue
             if command.help:
-                line = f"- " + command.help.split("\n")[0]
+                line = f"- " + command.help.split("\n")[0].strip()
             else:
-                line = ""
+                line = "- No help provided."
             yield "\u200b " * (stack*2) + f"►**{command}** " + line
             if isinstance(command, commands.Group):
                 yield from self.formatter(command.commands, stack=stack+1, show=show)
@@ -47,7 +47,8 @@ class Help2(commands.Cog):
             for cog in self.bot.cogs.values():
                 if sum(1 for c in cog.get_commands() if not (not show and c.hidden)) == 0:
                     continue
-                doc = cog.__doc__.split('\n')[0] if cog.__doc__ else 'No help provided'
+                doc = cog.__doc__.strip().split("\n")[0] if cog.__doc__ else "No help provided."
+                # print(doc, len(doc))
                 embed.description += f"►**{cog.qualified_name}**\n\u200b\t\u200b\t{doc}\n"
         else:
             if isinstance(item, commands.Cog):
@@ -55,6 +56,7 @@ class Help2(commands.Cog):
                 embed.description += f"{item.__doc__}\n\n"
                 embed.description += "\n".join(self.formatter(item.get_commands(), show=show))
             else:
+                # noinspection PyTypeChecker
                 embed.title = " ".join(self.parents(item))
                 if item.help:
                     embed.description += item.help + '\n\n'
@@ -68,6 +70,7 @@ class Help2(commands.Cog):
 def setup(bot):
     bot.old_help = bot.remove_command("help")
     bot.add_cog(Help2(bot))
+
 
 def teardown(bot):
     bot.add_command(bot.old_help)

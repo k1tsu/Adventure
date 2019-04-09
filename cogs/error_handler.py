@@ -55,8 +55,6 @@ class Handler(commands.Cog):
             return
         if isinstance(exc, utils.AdventureBase):
             return await ctx.send(str(exc))
-        if isinstance(exc, commands.BadArgument):
-            return await ctx.invoke(self.bot.get_command("help"), cmd=ctx.command.qualified_name)
         if isinstance(exc, commands.TooManyArguments):
             if isinstance(ctx.command, commands.Group):
                 return await ctx.send(f"Bad subcommand for {ctx.command}. See `{ctx.prefix}help {ctx.command}`")
@@ -64,6 +62,8 @@ class Handler(commands.Cog):
                                   f" See `{ctx.prefix}help {ctx.command}`")
         if isinstance(exc, commands.MissingRequiredArgument):
             return await ctx.send(f"You must fill in the \"{exc.param.name}\" parameter.")
+        if isinstance(exc, commands.UserInputError):
+            return await ctx.invoke(self.bot.get_command("help"), item=ctx.command)
         if isinstance(exc, (commands.NotOwner, commands.MissingPermissions)):
             return await ctx.send("You don't have permission to use this command.")
         if isinstance(exc, commands.BotMissingPermissions):
