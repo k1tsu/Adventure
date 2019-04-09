@@ -1,5 +1,6 @@
 import asyncio
 import json
+import pprint
 
 from aiohttp import web
 import aioredis
@@ -26,7 +27,9 @@ async def home(request):
 
 @routes.post('/vote')
 async def vote(request):
-    await g.redis.execute("LPUSH", g.channel, json.dumps(await request.json()))
+    js = await request.json()
+    await g.redis.execute("LPUSH", g.channel, json.dumps(js))
+    pprint.pprint(js)
     # await g.redis.execute("PUBLISH", g.channel, json.dumps(await request.json()))
     return web.Response(status=200)
 
