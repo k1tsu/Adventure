@@ -224,7 +224,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         else:
             hide = False
         await ctx.trigger_typing()
-        async with self.bot.session.get(member.avatar_url_as(format="png", size=256)) as get:
+        async with self.bot.session.get(str(member.avatar_url_as(format="png", size=256))) as get:
             n = io.BytesIO(await get.read())
         url = await self.bot.db.fetchval("SELECT cstmbg FROM supporters WHERE userid=$1;", member.id)
         if url:

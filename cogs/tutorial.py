@@ -170,7 +170,7 @@ async def tutorial(ctx: utils.EpicContext):
     await ctx.send(f"Side note, you can use `{ctx.prefix}profile` to view your current profile.")
     await bot.wait_for("message", check=seventh_check(ctx))
     await ctx.trigger_typing()
-    async with bot.session.get(ctx.author.avatar_url_as(format="png", size=256)) as get:
+    async with bot.session.get(str(ctx.author.avatar_url_as(format="png", size=256))) as get:
         avy = io.BytesIO(await get.read())
     profile = await bot.player_manager.profile_for(avy, player)
     file = discord.File(profile, "profile.png")
