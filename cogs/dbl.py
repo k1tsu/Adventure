@@ -23,42 +23,53 @@ async def update_dbl(bot):
 
 async def dbl_hook(bot):
     await bot.prepared.wait()
-    channel = bot._redis.pubsub_channels[b"vote-channel"]
+    key = "vote-channel"
     ch = bot.get_channel(561390634863165450)
     pm = bot.player_manager
-    log.debug("init %s %s", channel, ch)
-    while await channel.wait_message():
+    log.debug("init %s %s", key, ch)
+    while True:
         try:
-            payload = await channel.get_json(encoding='utf-8')
+            with await bot._redis as pool:
+                key, stuff = await pool.execute("BLPOP", key, "0")
+            payload = json.loads(stuff)
             log.debug("recieved payload %s", payload)
-        except json.decoder.JSONDecodeError:
-            log.warning("bad payload recieved")
+        except IndexError as e:
+            log.warning("bad payload recieved\n%s", e)
+            continue
+        except json.decoder.JSONDecodeError as e:
+            log.warning("bad payload recieved\n%s\n%s", stuff, e)
             continue
         user = bot.get_user(int(payload['user']))
         if not user:
             continue
+        await ch.send(f"{user.mention} ({user} {user.id}) voted for Adventure!")
+        player = pm.get_player(user)
+        if player:
+            embed = discord.Embed(colour=discord.Colour(11059565))
+            embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
+            if not payload['isWeekend']:
+                exp = random.randint(player.exp_to_next_level() // 16, player.exp_to_next_level() // 2)
+                gold = random.randint(player.gold // 2, player.gold)
+            else:
+                exp = random.randint(player.exp_to_next_level() // 8, player.exp_to_next_level())
+                gold = random.randint(player.gold, player.gold * 2)
+                embed.set_footer(text="Since you voted on the weekend, you gained bonus points!")
+            player.exp += exp
+            player.gold += gold
+            embed.description = (f"As a thank you gift, you've been awarded with\n"
+                                 f"**{exp}** Experience Points and **{gold}** Coins!")
+        else:
+            embed = discord.Embed(colour=discord.Colour(11059565))
+            embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
+            embed.description = (f"Unfortunately, you don't have a player! {blobs.BLOB_PLSNO}\n"
+                                 f"If you like, you can create one with `*create`.\n\n"
+                                 f"(I don't listen to DMs, so youll need to invite me to a guild.)")
         try:
             await user.send("")
         except discord.Forbidden:
             continue
         except discord.HTTPException:
             pass
-        player = pm.get_player(user)
-        if not player:
-            embed = discord.Embed(colour=discord.Colour(11059565))
-            embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
-            embed.description = (f"Unfortunately, you don't have a player! {blobs.BLOB_PLSNO}\n"
-                                 f"If you like, you can create one with `*create`.\n\n"
-                                 f"(I don't listen to DMs, so youll need to invite me to a guild.)")
-        else:
-            exp = random.randint(player.exp // 4, player.exp // 2)
-            gold = random.randint(player.gold // 2, player.gold)
-            player.exp += exp
-            player.gold += gold
-            embed = discord.Embed(colour=discord.Colour(11059565))
-            embed.set_author(name="Thanks for voting!", icon_url=bot.user.avatar_url_as(format="png", size=32))
-            embed.description = (f"As a thank you gift, you've been awared with **{exp}** Experience Points\n"
-                                 f"and **{gold}** Coins!")
         await user.send(embed=embed)
 
 

@@ -22,7 +22,7 @@ And fill in the Compendium! There are over 200\*\* enemies to record into the co
 You can access the commands via `*help`, but here's a reference picture of the commands available
 at this point.
 
-![commands](https://cdn.discordapp.com/attachments/541876503814733836/558486716793487398/unknown.png)
+![commands](https://cdn.discordapp.com/attachments/561390634863165450/562114031637364758/unknown.png)
 
 ### Support
 You can join the support server via [this link](https://discord.gg/hkweDCD)

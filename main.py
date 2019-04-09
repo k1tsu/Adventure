@@ -48,10 +48,6 @@ except ImportError:
 import config
 import utils
 
-# Webhook mini server
-
-import dblvote
-
 jskshell.WINDOWS = False
 
 
@@ -89,7 +85,8 @@ class Adventure(commands.Bot):
         self.prefixes = {}
         self.process = psutil.Process()
         self.init = INIT
-        self.internal_webhook_handler = None
+        self.confirmation_invocation = []
+        # lol
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
 
@@ -97,12 +94,15 @@ class Adventure(commands.Bot):
         if not ctx.guild:
             raise commands.NoPrivateMessage()
         if ctx.author.id in self.blacklist:
-            raise utils.Blacklisted(self.blacklist[ctx.author.id])
+            # raise utils.Blacklisted(self.blacklist[ctx.author.id])
+            raise utils.IgnoreThis
         if ctx.channel.id in self.player_manager.ignored_channels:
             raise utils.IgnoreThis
         if ctx.guild.id in self.player_manager.ignored_guilds:
             raise utils.IgnoreThis
         if ctx.author.id in self.in_tutorial:
+            raise utils.IgnoreThis
+        if ctx.author.id in self.confirmation_invocation:
             raise utils.IgnoreThis
         return True
 
@@ -169,9 +169,6 @@ class Adventure(commands.Bot):
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         log.info("Connected to PostgreSQL server.")
 
-        dblvote.g.redis = self._redis
-        self.internal_webhook_handler = self.loop.create_task(dblvote.run())
-
         for guild in self.guilds:
             prefix = set(map(bytes.decode, await self.redis("SMEMBERS", f"prefixes_{guild.id}")))
             if not prefix:
@@ -218,12 +215,6 @@ class Adventure(commands.Bot):
             except asyncio.TimeoutError:
                 log.critical("Event %r failed to finish in time.", event)
         await self._redis.execute_pubsub("UNSUBSCRIBE", "vote-channel")
-        try:
-            self.internal_webhook_handler.cancel()
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            log.critical("Fatal error when closing hook server| %s: %s", type(e).__name__, e)
         await self.db.close()
         self._redis.close()
         await self._redis.wait_closed()

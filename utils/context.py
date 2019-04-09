@@ -2,17 +2,25 @@
 import asyncio
 
 # -> Pip packages
-from discord import Colour, Embed, Forbidden
-from discord.ext.commands import Context
+import discord
+from discord.ext import commands
 from jishaku.paginators import PaginatorEmbedInterface, WrappedPaginator
 
 # -> Local files
 import blobs
 
 
-class EpicContext(Context):
+class EpicContext(commands.Context):
     def __repr__(self):
         return "<EpicContext author={0.author} channel={0.channel} guild={0.guild}>".format(self)
+
+    async def send(self, content=None, **kwargs):
+        try:
+            return await super().send(content, **kwargs)
+        except discord.HTTPException as e:
+            if e.code == 400:
+                pass
+            raise
 
     async def invoke(self, *args, **kwargs):
         try:
@@ -28,18 +36,18 @@ class EpicContext(Context):
     async def add_reaction(self, emote):
         try:
             await self.message.add_reaction(emote)
-        except Forbidden:
+        except discord.Forbidden:
             pass
 
     async def safe_delete(self):
         try:
             await self.message.delete()
             return True
-        except Forbidden:
+        except discord.Forbidden:
             return False
 
     async def paginate(self, *words):
-        embed = Embed(color=Colour.blurple())
+        embed = discord.Embed(color=discord.Colour.blurple())
         pg = WrappedPaginator(prefix="", suffix="", max_size=2048)
         for line in words:
             pg.add_line(line)
@@ -47,6 +55,7 @@ class EpicContext(Context):
         await inf.send_to(self)
 
     async def warn(self, message, *, waiter=None):
+        self.bot.confirmation_invocation.append(self.author.id)
         waiter = waiter or self.author
         msg = await super().send(message)
         await msg.add_reaction(blobs.BLOB_TICK)
@@ -63,3 +72,4 @@ class EpicContext(Context):
             return str(reaction) == str(blobs.BLOB_TICK)
         finally:
             await msg.delete()
+            self.bot.confirmation_invocation.remove(self.author.id)

@@ -156,7 +156,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await ctx.send("{} {} is now exploring {} and will finish in {:.0f} minutes.".format(
             blobs.BLOB_SALUTE, player.name, player.map.name, time*60))
 
-    @commands.command(ignore_extra=False)
+    @commands.command(ignore_extra=False, aliases=['s'])
     async def status(self, ctx):
         """View your current players status.
         They can be idling, exploring, or travelling."""
@@ -205,8 +205,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         finally:
             await n.delete()
 
-    @commands.command()
-    @commands.cooldown(1, 60, commands.BucketType.user)
+    @commands.command(aliases=['p'])
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def profile(self, ctx, *, member: discord.Member = None):
         """Generates a profile for the member you specify, or yourself if omitted.
 
@@ -264,16 +264,35 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             await ctx.send(f"{blobs.BLOB_ARMSCROSSED} "
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
 
-    @commands.command(ignore_extra=False, aliases=['lb'])
-    async def leaderboard(self, ctx):
-        """Views the top 10 most experienced players.
-        Try to reach the top of the tower <:pinkblobwink:544628885023621126>"""
-        headers = ["Name", "Owner", "EXP", "Level"]
+    @commands.group(aliases=['lb'], invoke_without_command=True)
+    async def leaderboard(self, ctx, count: int = 20):
+        """Views the top 20 players in your server.
+        Try to reach the top of the leaderboard!"""
+        headers = ["Name", "Owner", "Level", "Total Caught"]
         table = utils.TabularData()
         table.set_columns(headers)
-        table.add_rows([[p.name, str(p.owner), p.exp, p.level] for p in sorted(
-            filter(lambda m: m.exp > 0, self.players), key=lambda m: m.exp, reverse=True)][:10])
-        await ctx.send(f"```\n{table.render()}\n```")
+        table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
+                        for p in sorted(
+                filter(lambda m: m.owner in ctx.guild.members and m.owner.id != 455289384187592704, self.players),
+                key=lambda m: sum(m.raw_compendium_data), reverse=True)][:count])
+        try:
+            await ctx.send(f"```\n{table.render()}\n```")
+        except discord.HTTPException:
+            await ctx.send("Count too large.")
+
+    @leaderboard.command(ignore_extra=False, name="global", aliases=['g'])
+    async def _global(self, ctx, count: int = 20):
+        """Same as the regular command, but shows the global leaderboard."""
+        headers = ["Name", "Owner", "Level", "Total Caught"]
+        table = utils.TabularData()
+        table.set_columns(headers)
+        table.add_rows([[p.name, str(p.owner), p.level, sum(p.raw_compendium_data)]
+                        for p in sorted(self.players, key=lambda m: sum(m.raw_compendium_data), reverse=True)
+                        if p.owner.id != 455289384187592704][:count])
+        try:
+            await ctx.send(f"```\n{table.render()}\n```")
+        except discord.HTTPException:
+            await ctx.send("Count too large.")
 
     @commands.command(ignore_extra=False, aliases=['cp', 'comp'])
     async def compendium(self, ctx):
@@ -283,8 +302,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             raise utils.NoPlayer
         await ctx.send(f"```\n{player.compendium.format()}\n```")
 
-    @commands.command()
-    @commands.cooldown(10, 600, commands.BucketType.user)
+    @commands.command(aliases=['battle'])
+    @commands.cooldown(10, 3600, commands.BucketType.user)
     async def fight(self, ctx, *, member: discord.Member):
         """Fight your friends in a battle to the death!
         Not actually to the death, but the winner gets a shit load of EXP."""
@@ -413,6 +432,8 @@ class PlayerManager(commands.Cog, name="Player Manager"):
             pmap = str(player.map) if not hide else "???"
         draw.text((265, 125), f"{status}\n{pmap}", colour,
                   self.font())
+        draw.text((265, 205), f"{player.gold:,} G", colour,
+                  self.font())
         n = io.BytesIO()
         background.save(n, "png")
         n.seek(0)
@@ -440,10 +461,12 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         await self.bot.prepared.wait()
         if len(self.players) > 0:
             return
+        # log.debug("INIT")
         self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))
         self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
         for data in await self.fetch_players():
             owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
+            # log.debug("DATA %s", data)
             user = self.bot.get_user(owner_id)
             if not user:
                 log.warning("Unknown user id %s. Skipping initialization.", owner_id)

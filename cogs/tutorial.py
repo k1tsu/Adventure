@@ -167,7 +167,7 @@ async def tutorial(ctx: utils.EpicContext):
     await asyncio.sleep(2)
     await ctx.send(f"{blobs.BLOB_PARTY} {player.name} has finished exploring Abel Woods!")
     await asyncio.sleep(2)
-    await ctx.send(f"Side note, you can you `{ctx.prefix}profile` to view your current profile.")
+    await ctx.send(f"Side note, you can use `{ctx.prefix}profile` to view your current profile.")
     await bot.wait_for("message", check=seventh_check(ctx))
     await ctx.trigger_typing()
     async with bot.session.get(ctx.author.avatar_url_as(format="png", size=256)) as get:

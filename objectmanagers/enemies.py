@@ -1,4 +1,5 @@
 import logging
+import math
 import random
 from typing import *
 
@@ -12,6 +13,9 @@ log = logging.getLogger("Adventure.EnemyManager")
 
 
 class EnemyManager(commands.Cog, name="Enemy Manager"):
+    """
+    Handles all enemy related actions.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.enemies: List[utils.Enemy] = []
@@ -27,7 +31,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
         await ctx.send("https://megamitensei.fandom.com/wiki/" + name)
 
     @commands.command(ignore_extra=False)
-    @commands.cooldown(5, 300, commands.BucketType.user)
+    @commands.cooldown(5, 120, commands.BucketType.user)
     async def encounter(self, ctx):
         """Searches for an enemy to fight within the area.
 
@@ -72,7 +76,9 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
                     capture = False
                 if enemy.defeat(player.level):
                     if not capture:
-                        exp = random.randint((enemy.tier ** 3) // 8, (enemy.tier ** 3) // 4) + 1
+                        exp = math.ceil(random.randint((enemy.tier ** 3) // 32, (enemy.tier ** 3) // 8) *
+                              (1.5 if player.compendium.is_enemy_recorded(enemy) else 1)) + 1
+                        # remind me to improve this calculation
                         gold = random.randint(enemy.tier * 2, enemy.tier * 6)
                         player.exp += exp
                         player.gold += gold
