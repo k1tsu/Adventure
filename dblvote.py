@@ -30,6 +30,7 @@ async def vote(request):
     js = await request.json()
     await g.redis.execute("LPUSH", g.channel, json.dumps(js))
     pprint.pprint(js)
+    print(repr(request.headers))
     # await g.redis.execute("PUBLISH", g.channel, json.dumps(await request.json()))
     return web.Response(status=200)
 
