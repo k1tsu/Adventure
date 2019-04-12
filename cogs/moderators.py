@@ -87,7 +87,7 @@ class Moderator(commands.Cog):
     async def forcevote(self, ctx, user: int, weekend: bool = False):
         async with self.bot.session.post(
                 "http://xuathegrate.xyz/vote",
-                data=f"{{\"user\":\"{user}\", \"isWeekend\": {str(weekend).lower()}}}".encode(),
+                json={"user": str(user), "isWeekend": True},
                 headers={"Authorization": self.bot.config.DBL_AUTH}
         ) as req:
             await ctx.send(f"{req.status}: {req.reason}")
