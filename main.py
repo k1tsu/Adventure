@@ -69,7 +69,7 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__('//')
+        super().__init__(self.getprefix)
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self.config = config
@@ -149,7 +149,7 @@ class Adventure(commands.Bot):
             return
 
     async def on_message(self, message: discord.Message):
-        if message.author.id not in self.config.OWNERS:
+        if message.author.bot:
             return
         if self.user in message.mentions:
             try:
