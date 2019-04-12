@@ -11,7 +11,7 @@ import utils
 log = logging.getLogger("Adventure.ShopManager")
 
 
-class ItemManager(commands.Cog, name="Item Manager"):
+class ItemManager(commands.Cog, name="Items"):
     """<:pinkblobpeek:544693608121630721>"""
     def __init__(self, bot):
         self.bot = bot

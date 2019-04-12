@@ -42,10 +42,19 @@ class Handler(commands.Cog):
         if isinstance(exc, commands.CommandNotFound):
             return
         if isinstance(exc, commands.CommandOnCooldown):
-            now = datetime.utcnow()
-            later = timedelta(seconds=exc.retry_after)
-            fmt = humanize.naturaltime(now + later)
-            return await ctx.send(":warning: Ratelimited. Try again in %s." % fmt)
+            hou, rem = divmod(exc.retry_after, 3600)
+            min, sec = divmod(rem, 60)
+            day, hou = divmod(hou, 24)
+            s = ""
+            if day:
+                s += f" {day:.0f} days"
+            if hou:
+                s += f" {hou:.0f} hours"
+            if min:
+                s += f" {min:.0f} minutes"
+            if sec:
+                s += f" {sec:.0f} seconds"
+            return await ctx.send(f":warning: Ratelimited. Try again in {s or 'now'}")
         ctx.command.reset_cooldown(ctx)
         if isinstance(exc, commands.NoPrivateMessage):
             return await ctx.send("I do not listen to commands in DMs.")

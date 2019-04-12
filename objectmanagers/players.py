@@ -24,7 +24,7 @@ import blobs
 log = logging.getLogger("Adventure.PlayerManager")
 
 
-class PlayerManager(commands.Cog, name="Player Manager"):
+class PlayerManager(commands.Cog, name="Players"):
     """Manages and handles everything to do with the Player."""
     def __init__(self, bot):
         self.bot = bot
@@ -207,7 +207,7 @@ class PlayerManager(commands.Cog, name="Player Manager"):
 
     @commands.command(aliases=['p'])
     @commands.cooldown(2, 30, commands.BucketType.user)
-    async def profile(self, ctx, *, member: discord.Member = None):
+    async def profile(self, ctx, *, member: typing.Union[discord.Member, discord.User] = None):
         """Generates a profile for the member you specify, or yourself if omitted.
 
         This is a picture, so the cooldown is to prevent mass spam."""
@@ -294,9 +294,23 @@ class PlayerManager(commands.Cog, name="Player Manager"):
         except discord.HTTPException:
             await ctx.send("Count too large.")
 
+    @leaderboard.command(ignore_extra=False, aliases=['xp'])
+    async def experience(self, ctx, count: int = 20):
+        """Same as the regular command, but sorted by Experience points."""
+        headers = ["Name", "Owner", "Experience", "Level"]
+        table = utils.TabularData()
+        table.set_columns(headers)
+        table.add_rows([[p.name, str(p.owner), p.exp, p.level]
+                        for p in sorted(self.players, key=lambda m: m.exp, reverse=True)
+                        if p.owner.id != 455289384187592704][:count])
+        try:
+            await ctx.send(f"```\n{table.render()}```")
+        except discord.HTTPException:
+            await ctx.send("Count too large.")
+
     @commands.command(ignore_extra=False, aliases=['cp', 'comp'])
     async def compendium(self, ctx):
-        """Views all the enemies you have currently seen."""
+        """Views all the enemies you have captured."""
         player = self.get_player(ctx.author)
         if not player:
             raise utils.NoPlayer

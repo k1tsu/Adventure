@@ -6,7 +6,8 @@ import utils
 
 class CommandOrCog(commands.Converter):
     async def convert(self, ctx, argument):
-        arg = ctx.bot.get_cog(argument) or ctx.bot.get_command(argument)
+        cogs = {k.lower(): d for k, d in ctx.bot.cogs.items()}
+        arg = cogs.get(argument.lower(), None) or ctx.bot.get_command(argument)
         if not arg:
             raise utils.AdventureBase(f"Couldn't find a command / module named {argument}.")
         return arg

@@ -22,7 +22,7 @@ except ImportError:
     import json
 
 
-class MapManager(commands.Cog, name="Map Manager"):
+class MapManager(commands.Cog, name="Maps"):
     """Makes sure the maps are working properly, and some other stuff."""
     __slots__ = ("bot", "_maps")
     _ignore = (-1, 696969)
@@ -116,6 +116,10 @@ class MapManager(commands.Cog, name="Map Manager"):
             return await ctx.send(f"{blobs.BLOB_ANGERY} You haven't explored {map}!")
         start = player.map
         path = self.dj(self._graph, start.id, map.id)
+        for mid in path:
+            mm = self.get_map(mid)
+            if not player.has_explored(mm):
+                return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You must explore {mm} first!")
         cost = sum(self.get_map(p).density for p in path)
         if player.gold < cost:
             ctx.command.reset_cooldown(ctx)

@@ -9,6 +9,10 @@ import utils
 
 
 class Supporter(commands.Cog):
+    """
+    Commands that may only be used by supporters.
+    You can't become a supporter currently, they are just my beta testers.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.dump: discord.TextChannel = None

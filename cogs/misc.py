@@ -36,7 +36,7 @@ def perm_check(**perms):
     return commands.check(predicate)
 
 
-class Misc(commands.Cog, name="Miscellaneous"):
+class Misc(commands.Cog):
     """Miscellaneous commands are found here.
     Includes source and pinging."""
     def __init__(self, bot):
@@ -218,6 +218,11 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
             return
         await ctx.author.send(f"```py\n{utils.format_exception(exc.original)}\n```")
         await ctx.add_reaction(blobs.BLOB_CROSS)
+
+    @commands.command()
+    async def vote(self, ctx):
+        await ctx.send("You can vote for Adventure! by using this link!\n"
+                       "<https://discordbots.org/bot/482373088109920266/vote>")
 
     @commands.command(hidden=True, ignore_extra=False)
     async def recover(self, ctx):

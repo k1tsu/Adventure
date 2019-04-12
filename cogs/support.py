@@ -5,10 +5,6 @@ from discord.ext import commands
 
 
 class Support(commands.Cog):
-    """
-    Commands that may only be used by supporters.
-    You can't become a supporter currently, they are just my beta testers.
-    """
     def __init__(self, bot):
         self.bot = bot
         self.guild = self.bot.get_guild(561390061963182132)

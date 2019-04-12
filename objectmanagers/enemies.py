@@ -12,7 +12,7 @@ import utils
 log = logging.getLogger("Adventure.EnemyManager")
 
 
-class EnemyManager(commands.Cog, name="Enemy Manager"):
+class EnemyManager(commands.Cog, name="Enemies"):
     """
     Handles all enemy related actions.
     """
@@ -25,6 +25,7 @@ class EnemyManager(commands.Cog, name="Enemy Manager"):
 
     @commands.command(hidden=True)
     async def megami(self, ctx, *, name: str):
+        name = name.title().replace(" ", "_")
         async with self.bot.session.get("https://megamitensei.fandom.com/wiki/" + name) as get:
             if get.status == 404:
                 return await ctx.send("Couldn't find that page.")
