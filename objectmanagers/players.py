@@ -249,10 +249,10 @@ class PlayerManager(commands.Cog, name="Players"):
         player = self.get_player(ctx.author)
         if not player:
             raise utils.NoPlayer
-        if player.level < 2:
-            await ctx.send(f"~~You probably won't gain any exp heads up.~~ {blobs.BLOB_INJURED}")
         ttl = await self.bot.redis("TTL", f"daily_{ctx.author.id}")
         if ttl < 0:
+            if player.level < 2:
+                await ctx.send(f"~~You probably won't gain any exp heads up.~~ {blobs.BLOB_INJURED}")
             gain = math.ceil(random.uniform(player.exp_to_next_level() / 4, player.exp_to_next_level() / 2))
             player.exp += gain
             await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!\n"
@@ -263,6 +263,33 @@ class PlayerManager(commands.Cog, name="Players"):
             minutes, seconds = divmod(ex, 60)
             await ctx.send(f"{blobs.BLOB_ARMSCROSSED} "
                            f"The daily will reset in {hours} hours. {minutes} minutes and {seconds} seconds.")
+
+    @commands.command(aliases=['sp'], ignore_extra=False)
+    @commands.cooldown(2, 3600, commands.BucketType.user)
+    async def speedup(self, ctx):
+        """Pay some cash to speed up your travel/exploration.
+        This is quite expensive, so make sure you collected a lot of money."""
+        player = self.get_player(ctx.author)
+
+        if not player:
+            raise utils.NoPlayer
+        if await player.is_travelling():
+            cost = await player.travel_time()
+        elif await player.is_exploring():
+            cost = await player.explore_time()
+        else:
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You aren't doing anything to speed up!")
+
+        total = cost * 100
+
+        if player.gold < cost:
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} This costs {total:,} G, but you only have {player.gold:,} G!")
+
+        if await ctx.warn(f"{blobs.BLOB_THINK} This will cost {total:,} G, are you sure?"):
+            player.gold -= total
+            await ctx.invoke(self.bot.get_command("modspeedup"), member=ctx.author, ignore_reaction=True)
+            await ctx.send(f"{blobs.BLOB_THUMB} Done! Try sending a message.")
+
 
     @commands.group(aliases=['lb'], invoke_without_command=True)
     async def leaderboard(self, ctx, count: int = 20):

@@ -158,7 +158,7 @@ class Moderator(commands.Cog):
         await ctx.message.add_reaction(blobs.BLOB_TICK)
 
     @commands.command(hidden=True)
-    async def speedup(self, ctx, *, member: discord.User):
+    async def modspeedup(self, ctx, *, member: discord.User, ignore_reaction=False):
         player = self.bot.player_manager.get_player(member)
         if not player:
             log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
@@ -167,7 +167,8 @@ class Moderator(commands.Cog):
             await self.bot.redis("SET", f"travelling_{member.id}", "0", "EX", "1")
         elif await player.is_exploring():
             await self.bot.redis("SET", f"exploring_{member.id}", "0", "EX", "1")
-        await ctx.message.add_reaction(blobs.BLOB_TICK)
+        if not ignore_reaction:
+            await ctx.message.add_reaction(blobs.BLOB_TICK)
 
     @commands.command(hidden=True)
     async def teleport(self, ctx, member: discord.User, *, map: str):
@@ -185,7 +186,7 @@ class Moderator(commands.Cog):
                 log.warning("%s / %s: No map %s", ctx.message.clean_content, ctx.author, map)
                 return await ctx.message.add_reaction(blobs.BLOB_CROSS)
             player.map = map
-            await ctx.invoke(self.speedup, member=member)
+            await ctx.invoke(self.modspeedup, member=member)
 
     @commands.command(hidden=True)
     async def redis(self, ctx, *args):
