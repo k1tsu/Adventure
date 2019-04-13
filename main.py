@@ -28,6 +28,7 @@ del colours
 import config
 import utils
 
+"""
 try:
     import uvloop
 except ImportError:
@@ -39,7 +40,7 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 del uvloop
-
+"""
 
 jskshell.WINDOWS = False
 
