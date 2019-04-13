@@ -6,24 +6,27 @@ import sys
 import traceback
 from datetime import datetime
 
-# -> Requires Python 3.6.x - 3.7.x
-if sys.version_info[0] < 3 or not (6 <= sys.version_info[1] <= 7):
-    raise RuntimeError("Only usable with Python 3.6.x or Python 3.7.x")
-
-# -> This is required prior to importing "jishaku"
-if sys.platform == "win32":
-    os.environ['SHELL'] = r"C:\Windows\System32\bash.exe"
-os.environ['JISHAKU_HIDE'] = "true"
-
 # -> Pip packages
 import aiohttp
 import aioredis
 import asyncpg
 import dbl
-import discord
 import psutil
-from discord.ext import commands
 from jishaku import shell as jskshell
+
+import discord
+from discord.ext import commands
+try:
+    from discord.ext import colours
+    # this is just a loader in case you installed `discord-ext-colours`
+except ImportError:
+    colours = None
+del colours
+
+
+# -> Local files
+import config
+import utils
 
 try:
     import uvloop
@@ -37,16 +40,6 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 del uvloop
 
-try:
-    from discord.ext import colours
-    # this is just a loader in case you installed `discord-ext-colours`
-except ImportError:
-    pass
-
-
-# -> Local files
-import config
-import utils
 
 jskshell.WINDOWS = False
 
@@ -54,14 +47,15 @@ jskshell.WINDOWS = False
 INIT = datetime.utcnow()
 FILE_NAME = f"logs/{INIT.strftime('%Y-%m-%d_%H.%M.%S.%f')}.log"
 
-log = logging.getLogger("Adventure.main")
+LOG = logging.getLogger("Adventure.main")
 
 
 def extensions():
-    n = []
-    n.extend([f'cogs.{f[:-3]}' for f in os.listdir("cogs") if not f.startswith("__")])
-    n.extend([f'objectmanagers.{f[:-3]}' for f in os.listdir("objectmanagers") if not f.startswith("__")])
-    return n
+    ext = []
+    ext.extend([f'cogs.{f[:-3]}' for f in os.listdir("cogs") if not f.startswith("__")])
+    ext.extend([f'objectmanagers.{f[:-3]}' for f in os.listdir("objectmanagers")
+                if not f.startswith("__")])
+    return ext
 
 
 EXTENSIONS = extensions()
@@ -69,9 +63,12 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__(self.getprefix)
+        super().__init__('//')
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
+        self._redis = None
+        #pylint: disable=invalid-name
+        self.db = None
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
         self.unload_complete = []
@@ -108,19 +105,22 @@ class Adventure(commands.Bot):
 
     def dispatch(self, event, *args, **kwargs):
         if not self.prepared.is_set() and event in ("message", "command", "command_error"):
-            return  # this is to prevent events like on_message, on_command etc to be sent out before im ready to start
+            return  # this is to prevent events like on_message, on_command etc
+                    # to be sent out before im ready to start
         return super().dispatch(event, *args, **kwargs)
 
     async def get_supporters(self):
-        return [self.get_user(u['userid']) for u in await self.db.fetch("SELECT userid FROM supporters;")]
+        return [self.get_user(u['userid']) for u in
+                await self.db.fetch("SELECT userid FROM supporters;")]
 
     def prepare_extensions(self):
         for extension in EXTENSIONS:
             try:
                 self.load_extension(extension)
-                log.info("%s loaded successfully.", extension)
-            except Exception as e:
-                log.critical("%s failed to load [%s: %s]", extension, type(e).__name__, str(e))
+                LOG.info("%s loaded successfully.", extension)
+            #pylint: disable=broad-except
+            except Exception as exc:
+                LOG.critical("%s failed to load [%s: %s]", extension, type(exc).__name__, str(exc))
 
     async def is_owner(self, user):
         return user.id in config.OWNERS
@@ -128,8 +128,7 @@ class Adventure(commands.Bot):
     def prefixes_for(self, guild: discord.Guild):
         if guild:
             return self.prefixes.get(guild.id, set())
-        else:
-            return set(config.PREFIX)
+        return set(config.PREFIX)
 
     # noinspection PyUnusedLocal
     async def getprefix(self, bot, msg):
@@ -140,7 +139,7 @@ class Adventure(commands.Bot):
         return commands.when_mentioned_or(*prefixes)(bot, msg)
 
     async def get_context(self, message, *, cls=None):
-        return await super().get_context(message, cls=utils.EpicContext)
+        return await super().get_context(message, cls=cls or utils.EpicContext)
 
     async def redis(self, *args, **kw):
         try:
@@ -149,7 +148,7 @@ class Adventure(commands.Bot):
             return
 
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.id not in self.config.OWNERS:
             return
         if self.user in message.mentions:
             try:
@@ -163,11 +162,12 @@ class Adventure(commands.Bot):
         if self.prepared.is_set():
             return
 
-        self._redis = await asyncio.wait_for(aioredis.create_pool(config.REDIS_ADDRESS, password=config.REDIS_PASS),
+        self._redis = await asyncio.wait_for(aioredis.create_pool(config.REDIS_ADDRESS,
+                                                                  password=config.REDIS_PASS),
                                              timeout=20.0)
-        log.info("Connected to Redis server.")
-        self.db = await asyncpg.create_pool(**config.ASYNCPG)
-        log.info("Connected to PostgreSQL server.")
+        LOG.info("Connected to Redis server.")
+        self.db = await asyncpg.create_pool(**config.ASYNCPG) #pylint: disable=invalid-name
+        LOG.info("Connected to PostgreSQL server.")
 
         for guild in self.guilds:
             prefix = set(map(bytes.decode, await self.redis("SMEMBERS", f"prefixes_{guild.id}")))
@@ -176,17 +176,17 @@ class Adventure(commands.Bot):
             self.prefixes[guild.id] = prefix
 
         async with self.db.acquire() as cur:
-            with open("schema.sql") as f:
-                await cur.execute(f.read())
+            with open("schema.sql") as file:
+                await cur.execute(file.read())
             for userid, reason in await cur.fetch("SELECT user_id, reason FROM blacklist;"):
                 if not self.get_user(userid):
-                    log.warning("Blacklisted ID \"%s\" is unknown.", userid)
+                    LOG.warning("Blacklisted ID \"%s\" is unknown.", userid)
                     # await cur.execute("DELETE FROM blacklist WHERE userid=$1;", userid)
                 self.blacklist[userid] = reason
-                log.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
+                LOG.info("User %s (%s) is blacklisted.", self.get_user(userid), userid)
 
         self.prepared.set()
-        log.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
+        LOG.info("Setup complete. Listening to commands on prefix \"%s\".", config.PREFIX)
         await self.change_presence(activity=discord.Game(name="Use *tutorial to begin!"))
 
     async def on_error(self, event, *args, **kwargs):
@@ -198,7 +198,7 @@ class Adventure(commands.Bot):
         await self.connect(reconnect=True)
 
     async def logout(self):
-        log.info("logout() called. Closing down.")
+        LOG.info("logout() called. Closing down.")
         self.dispatch("logout")
         self.prepared.clear()
         async with self.db.acquire() as cur:
@@ -213,7 +213,7 @@ class Adventure(commands.Bot):
             try:
                 await asyncio.wait_for(event.wait(), timeout=60.0)
             except asyncio.TimeoutError:
-                log.critical("Event %r failed to finish in time.", event)
+                LOG.critical("Event %r failed to finish in time.", event)
         await self._redis.execute_pubsub("UNSUBSCRIBE", "vote-channel")
         await self.db.close()
         self._redis.close()
@@ -233,9 +233,9 @@ class Adventure(commands.Bot):
 
 
 def main(run=True):
-    ANSI_RESET = "\33[0m"
+    ansi_reset = "\33[0m"
 
-    ANSI_COLOURS = {
+    ansi_colours = {
         "WARNING": "\33[93m",
         "DEBUG": "\33[96m",
         "ERROR": "\33[91m",
@@ -251,25 +251,29 @@ def main(run=True):
             msg = super().format(record)
             if levelname == "INFO":
                 return msg
-            return ANSI_COLOURS[levelname] + msg + ANSI_RESET
+            return ansi_colours[levelname] + msg + ansi_reset
 
     handler = logging.StreamHandler()
     handler.setFormatter(ColouredFormatter())
 
     filehandler = logging.FileHandler(FILE_NAME, "w", encoding='UTF-8')
 
-    log.handlers = [filehandler, handler]
-    log.setLevel(logging.DEBUG)
+    LOG.handlers = [filehandler, handler]
+    LOG.setLevel(logging.DEBUG)
 
     for logger in [
-        "Adventure.cogs.ErrorHandler", "Adventure.cogs.Help", "Adventure.cogs.Moderator",
-        "Adventure.EnemyManager", "Adventure.ItemManager", "Adventure.MapManager", "Adventure.PlayerManager"
+            "Adventure.cogs.ErrorHandler", "Adventure.cogs.Help", "Adventure.cogs.Moderator",
+            "Adventure.EnemyManager", "Adventure.ItemManager", "Adventure.MapManager",
+            "Adventure.PlayerManager"
     ]:
         logg = logging.getLogger(logger)
         logg.handlers = [filehandler, handler]
         logg.setLevel(logging.DEBUG)
 
-    log.info("=" * 20 + "BOOT @ " + datetime.utcnow().strftime("%d/%m/%y %H:%M") + "=" * 20)
+    lonq = "=" * 20
+
+    LOG.info("%s BOOT @ %s %s", lonq,
+             datetime.utcnow().strftime("%d/%m/%y %H:%M"), lonq)
 
     if run:
         Adventure().run()
