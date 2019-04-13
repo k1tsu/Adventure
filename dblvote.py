@@ -20,11 +20,6 @@ g.channel = "vote-channel"
 routes = web.RouteTableDef()
 
 
-@routes.get('/')
-async def home(request):
-    return web.Response(status=200, text="Online!")
-
-
 @routes.post('/vote')
 async def vote(request):
     if request.headers.get("Authorization", None) != config.DBL_AUTH:
