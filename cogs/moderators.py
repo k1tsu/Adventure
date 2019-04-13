@@ -39,6 +39,27 @@ class Moderator(commands.Cog):
         return content.strip('` \n')
 
     @commands.command(hidden=True)
+    async def addsupporter(self, ctx, *, user: discord.User):
+        if not await self.bot.db.fetchrow("SELECT * FROM supporters WHERE userid=$1;", user.id):
+            await self.bot.db.execute("INSERT INTO supporters VALUES ($1);", user.id)
+            g = self.bot.get_guild(561390061963182132)
+            m = g.get_member(user.id)
+            if m:
+                await self.bot.http.add_role(g.id, m.id, 561404670778802193)
+            await ctx.send(f"{user} is now a supporter.")
+        else:
+            await ctx.send("User is already a supporter.")
+
+    @commands.command(hidden=True)
+    async def supporters(self, ctx):
+        n = []
+        for user in await self.bot.db.fetch("SELECT userid FROM supporters;"):
+            uid = user['userid']
+            u = self.bot.get_user(uid)
+            n.append(f"{u or 'uncached'}")
+        await ctx.send(", ".join(n))
+
+    @commands.command(hidden=True)
     async def channelignore(self, ctx, *, num: int):
         if await self.bot.redis("SISMEMBER", "channel_ignore", str(num)):
             await self.bot.redis("SREM", "channel_ignore", str(num))

@@ -63,7 +63,8 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
                  "[DBL](https://discordbots.org/bot/482373088109920266) / "
                  "[Vote](https://discordbots.org/bot/482373088109920266/vote)\n"
                  "[Source](https://github.com/XuaTheGrate/Adventure)\n"
-                 "[Support](https://discord.gg/hkweDCD)")
+                 "[Support](https://discord.gg/hkweDCD)\n"
+                 "[Donate](https://www.patreon.com/xua_yraili)")
         embed.add_field(name="Links", value=links)
         embed.set_footer(text="Created by Xua#4427")
         await ctx.send(embed=embed)
@@ -221,8 +222,19 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
 
     @commands.command()
     async def vote(self, ctx):
+        """Gives you the DBL voting link."""
         await ctx.send("You can vote for Adventure! by using this link!\n"
                        "<https://discordbots.org/bot/482373088109920266/vote>")
+
+    @commands.command()
+    async def patreon(self, ctx):
+        """Gives you the Patreon link to support me.
+        If you do donate to me, please contact me and I'll arrange adding you to the supporters list."""
+        if await self.bot.db.fetchval("SELECT userid FROM supporters WHERE userid=$1;", ctx.author.id):
+            return await ctx.send("Thank you for donating! If you don't have access to the supporter only functions,"
+                                  " please contact me (Xua#4427) and I will fix it.")
+        await ctx.send("I've set up a Patreon! You can donate to me via this link: <https://www.patreon.com/xua_yraili>"
+                       "\nIf you do donate, please contact me (Xua#4427) and I'll add you to my supporters.")
 
     @commands.command(hidden=True, ignore_extra=False)
     async def recover(self, ctx):
