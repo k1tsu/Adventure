@@ -1,4 +1,5 @@
 # -> Builtin modules
+import collections
 import decimal
 import enum
 import random
@@ -220,11 +221,11 @@ class Player:
         if await self.is_travelling():
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
-                                                          seconds=await self.travel_time()))))
+                                              seconds=await self.travel_time()))))
         elif await self.is_exploring():
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
-                                                          seconds=await self.explore_time()))))
+                                              seconds=await self.explore_time()))))
         time = int(((datetime.now() + timedelta(hours=destination.calculate_travel_to(self))) - datetime.now()
                     ).total_seconds())
         self.next_map = destination
@@ -240,7 +241,7 @@ class Player:
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
                                               seconds=await self.travel_time()))))
-        elif await self.is_exploring():
+        if await self.is_exploring():
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
                                               seconds=await self.explore_time()))))
@@ -299,7 +300,7 @@ class Item:
 
 class Enemy:
     def __init__(self, *, id: int, name: str, maps: List[Map], tier: int):
-        self.id: id = id
+        self.id: int = id
         self.name: str = name
         self.maps: List[Map] = maps
         self.tier: int = tier
@@ -345,7 +346,10 @@ class Compendium:
         headers = fin[:2]
         rest = fin[2:]
         table.set_columns(headers)
-        if len(rest) > 0:
+        if rest:
             chunks = [rest[x:x+2] if len(rest[x:x+2]) == 2 else [rest[x], ''] for x in range(0, len(rest), 2)]
             table.add_rows(chunks)
         return table.render()
+
+
+Quest = collections.namedtuple("Quest", "qid find exp gold")

@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import os
-import sys
 import traceback
 from datetime import datetime
 
@@ -68,7 +67,6 @@ class Adventure(commands.Bot):
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self._redis = None
-        #pylint: disable=invalid-name
         self.db = None
         self.config = config
         self.prepared = asyncio.Event(loop=self.loop)
@@ -92,8 +90,8 @@ class Adventure(commands.Bot):
         if not ctx.guild:
             raise commands.NoPrivateMessage()
         if ctx.author.id in self.blacklist:
-            # raise utils.Blacklisted(self.blacklist[ctx.author.id])
-            raise utils.IgnoreThis
+            raise utils.Blacklisted(self.blacklist[ctx.author.id])
+            # raise utils.IgnoreThis
         if ctx.channel.id in self.player_manager.ignored_channels:
             raise utils.IgnoreThis
         if ctx.guild.id in self.player_manager.ignored_guilds:
@@ -106,8 +104,9 @@ class Adventure(commands.Bot):
 
     def dispatch(self, event, *args, **kwargs):
         if not self.prepared.is_set() and event in ("message", "command", "command_error"):
-            return  # this is to prevent events like on_message, on_command etc
-                    # to be sent out before im ready to start
+            return
+            # this is to prevent events like on_message, on_command etc
+            # to be sent out before im ready to start
         return super().dispatch(event, *args, **kwargs)
 
     async def get_supporters(self):
@@ -119,7 +118,6 @@ class Adventure(commands.Bot):
             try:
                 self.load_extension(extension)
                 LOG.info("%s loaded successfully.", extension)
-            #pylint: disable=broad-except
             except Exception as exc:
                 LOG.critical("%s failed to load [%s: %s]", extension, type(exc).__name__, str(exc))
 
@@ -167,7 +165,7 @@ class Adventure(commands.Bot):
                                                                   password=config.REDIS_PASS),
                                              timeout=20.0)
         LOG.info("Connected to Redis server.")
-        self.db = await asyncpg.create_pool(**config.ASYNCPG) #pylint: disable=invalid-name
+        self.db = await asyncpg.create_pool(**config.ASYNCPG)
         LOG.info("Connected to PostgreSQL server.")
 
         for guild in self.guilds:
