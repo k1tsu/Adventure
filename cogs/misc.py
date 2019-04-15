@@ -43,7 +43,7 @@ class Misc(commands.Cog):
         self.bot = bot
         self.valid = ("py", "sql", "md", "txt", "json")
 
-    @commands.command(ignore_extra=False)
+    @commands.command(ignore_extra=False, aliases=['about'])
     async def info(self, ctx):
         """Views basic information about Adventure."""
         embed = discord.Embed(colour=discord.Colour(0xA8C16D), title="Info about Adventure",
