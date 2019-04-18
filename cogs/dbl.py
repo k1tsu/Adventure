@@ -48,11 +48,11 @@ async def dbl_hook(bot):
             embed = discord.Embed(colour=discord.Colour(11059565))
             embed.set_author(name="Thanks for voting!", icon_url=str(bot.user.avatar_url_as(format="png", size=32)))
             if not payload['isWeekend']:
-                exp = random.randint(player.exp_to_next_level() // 16, player.exp_to_next_level() // 2)
-                gold = random.randint(player.gold // 2, player.gold)
+                exp = random.randint(player.exp_to_next_level() // 16, player.exp_to_next_level() // 4)
+                gold = random.randint(1000, 2000)
             else:
-                exp = random.randint(player.exp_to_next_level() // 8, player.exp_to_next_level())
-                gold = random.randint(player.gold, player.gold * 2)
+                exp = random.randint(player.exp_to_next_level() // 8, player.exp_to_next_level() // 2)
+                gold = random.randint(2000, 4000)
                 embed.set_footer(text="Since you voted on the weekend, you gained bonus points!")
             player.exp += exp
             player.gold += gold
