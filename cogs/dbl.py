@@ -65,12 +65,9 @@ async def dbl_hook(bot):
                                  f"If you like, you can create one with `*create`.\n\n"
                                  f"(I don't listen to DMs, so youll need to invite me to a guild.)")
         try:
-            await user.send("")
+            await user.send(embed=embed)
         except discord.Forbidden:
             continue
-        except discord.HTTPException:
-            pass
-        await user.send(embed=embed)
 
 
 def setup(bot):

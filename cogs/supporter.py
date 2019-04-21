@@ -24,6 +24,12 @@ class Supporter(commands.Cog):
         raise utils.NotSupporter
 
     @commands.command()
+    async def customreset(self, ctx):
+        """Resets your custom background and colour to the defaults."""
+        await self.bot.db.execute("UPDATE supporters SET cstmbg=NULL, textcol=16777215 WHERE userid=$1;", ctx.author.id)
+        await ctx.send(f"Done! {blobs.BLOB_THUMB}")
+
+    @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def custombg(self, ctx, *, url):
         """Upload an image to use as a custom background.

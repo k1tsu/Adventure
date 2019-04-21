@@ -205,6 +205,22 @@ class PlayerManager(commands.Cog, name="Players"):
         finally:
             await n.delete()
 
+    @commands.command(aliases=['g'])
+    @commands.cooldown(5, 60, commands.BucketType.user)
+    async def give(self, ctx, user: discord.User, amount: int):
+        """Allows you to give money to another player."""
+        player = self.get_player(ctx.author)
+        if not player:
+            raise utils.NoPlayer
+        transfer = self.get_player(user)
+        if not transfer:
+            return await ctx.send(f"{blobs.BLOB_PLSNO} {user} does not have a player!")
+        if amount > player.gold:
+            return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You don't have enough gold for this action!")
+        player.gold -= amount
+        transfer.gold += amount
+        await ctx.send(f"{blobs.BLOB_O} {transfer} was given {amount} G!")
+
     @commands.command(aliases=['p'])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def profile(self, ctx, *, member: typing.Union[discord.Member, discord.User] = None):
