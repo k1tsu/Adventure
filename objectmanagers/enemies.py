@@ -36,7 +36,7 @@ class EnemyManager(commands.Cog, name="Enemies"):
     async def encounter(self, ctx):
         """Searches for an enemy to fight within the area.
 
-        Remember that there are no enemies in `Abel`.
+        Remember that there are no enemies in the safe maps.
         You can only encounter 2 enemies every 60 seconds.
         If you encounter an enemy you cannot fight, you will run away unharmed.
         If you encounter an enemy and fail to defeat it, you will be knocked out
@@ -77,8 +77,7 @@ class EnemyManager(commands.Cog, name="Enemies"):
                     capture = False
                 if enemy.defeat(player.level):
                     if not capture:
-                        exp = math.ceil(random.randint((enemy.tier ** 3) // 32, (enemy.tier ** 3) // 8) *
-                              (1.5 if player.compendium.is_enemy_recorded(enemy) else 1)) + 1
+                        exp = math.ceil(enemy.tier ** 2 / 2.5)
                         # remind me to improve this calculation
                         gold = random.randint(enemy.tier * 2, enemy.tier * 6)
                         player.exp += exp
