@@ -65,36 +65,32 @@ class EnemyManager(commands.Cog, name="Enemies"):
         chance = 100 + ((len(enemies) - strongest.tier) - player.level)
         if random.randint(0, 100) < chance:
             enemy = random.choice(enemies)
-            if enemy.tier > player.level:
-                await ctx.send(f"{blobs.NOTLIKE_BLOB} You encountered **{enemy.name}** but it's too powerful!"
-                               f"\nYou ran away to avoid injury.")
+            if not player.compendium.is_enemy_recorded(enemy) and \
+                    await ctx.warn(f"{blobs.BLOB_PEEK} You encountered **{enemy.name}**. Would you like to try and"
+                                   f" {blobs.BLOB_TICK} capture it, or {blobs.BLOB_CROSS} defeat it?"):
+                capture = True
             else:
-                if not player.compendium.is_enemy_recorded(enemy) and \
-                        await ctx.warn(f"{blobs.BLOB_PEEK} You encountered **{enemy.name}**. Would you like to try and"
-                                       f" {blobs.BLOB_TICK} capture it, or {blobs.BLOB_CROSS} defeat it?"):
-                    capture = True
+                capture = False
+            if enemy.defeat(player.level):
+                if not capture:
+                    exp = math.ceil(enemy.tier ** 2 / 2.5)
+                    gold = random.randint(enemy.tier * 2, enemy.tier * 6)
+                    player.exp += exp
+                    player.gold += gold
+                    await ctx.send(f"{blobs.BLOB_CHEER} You encountered **{enemy.name}** and defeated it!\n"
+                                   f"You gained **{exp}** experience points and **{gold}** coins!")
                 else:
-                    capture = False
-                if enemy.defeat(player.level):
-                    if not capture:
-                        exp = math.ceil(enemy.tier ** 2 / 2.5)
-                        gold = random.randint(enemy.tier * 2, enemy.tier * 6)
-                        player.exp += exp
-                        player.gold += gold
-                        await ctx.send(f"{blobs.BLOB_CHEER} You encountered **{enemy.name}** and defeated it!\n"
-                                       f"You gained **{exp}** experience points and **{gold}** coins!")
-                    else:
-                        await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!\n")
-                        player.compendium.record_enemy(enemy)
+                    await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!\n")
+                    player.compendium.record_enemy(enemy)
+            else:
+                if not capture:
+                    player.map = 0
+                    gold = random.randint(enemy.tier * 2, enemy.tier * 6)
+                    player.gold -= gold
+                    await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!"
+                                   f"\nYou were knocked out, lost {gold} coins and was magically sent back to Abel.")
                 else:
-                    if not capture:
-                        player.map = 0
-                        gold = random.randint(enemy.tier * 2, enemy.tier * 6)
-                        player.gold -= gold
-                        await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!"
-                                       f"\nYou were knocked out, lost {gold} coins and was magically sent back to Abel.")
-                    else:
-                        await ctx.send(f"{blobs.BLOB_SAD} You failed to capture **{enemy.name}**.")
+                    await ctx.send(f"{blobs.BLOB_SAD} You failed to capture **{enemy.name}**.")
         else:
             await ctx.send(f"{blobs.BLOB_PEEK} You couldn't find anything.")
 

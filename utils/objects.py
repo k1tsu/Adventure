@@ -310,7 +310,7 @@ class Enemy:
 
     def defeat(self, tier: int) -> bool:
         diff = (tier ** 2) / (self.tier ** 2)
-        normalized = math.tanh(diff / 3.7)
+        normalized = math.tanh(diff / 4.6)
         ret = random.randint(1, 100) < round(normalized * 100)
         return ret
 
