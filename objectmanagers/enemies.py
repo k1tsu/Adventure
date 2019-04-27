@@ -78,7 +78,6 @@ class EnemyManager(commands.Cog, name="Enemies"):
                 if enemy.defeat(player.level):
                     if not capture:
                         exp = math.ceil(enemy.tier ** 2 / 2.5)
-                        # remind me to improve this calculation
                         gold = random.randint(enemy.tier * 2, enemy.tier * 6)
                         player.exp += exp
                         player.gold += gold
@@ -87,12 +86,13 @@ class EnemyManager(commands.Cog, name="Enemies"):
                     else:
                         await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!\n")
                         player.compendium.record_enemy(enemy)
-                    # TODO: gain / lose gold on win / loss
                 else:
                     if not capture:
                         player.map = 0
+                        gold = random.randint(enemy.tier * 2, enemy.tier * 6)
+                        player.gold -= gold
                         await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!"
-                                       f"\nYou were knocked out and magically sent back to Abel.")
+                                       f"\nYou were knocked out, lost {gold} coins and was magically sent back to Abel.")
                     else:
                         await ctx.send(f"{blobs.BLOB_SAD} You failed to capture **{enemy.name}**.")
         else:
