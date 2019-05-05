@@ -105,7 +105,7 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
 
     @commands.command(hidden=True, ignore_extra=False)
     async def git(self, ctx):
-        async for message in self.bot.get_channel(544405638349062155).history(limit=10).filter(
+        async for message in self.bot.get_channel(561394007238770688).history(limit=10).filter(
             lambda m: len(m.embeds) > 0 and m.author.discriminator == "0000"
         ):
             return await ctx.send(embed=message.embeds[0])
