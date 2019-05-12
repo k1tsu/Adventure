@@ -31,13 +31,6 @@ CREATE TABLE IF NOT EXISTS encounters (
     tier_requirement INT NOT NULL DEFAULT 1,
     id SERIAL PRIMARY KEY
 );
--- 1 is the bare minimum you must be in order to win.
--- if you are lower than this, it is impossible for you to win.
--- as your level increases, your likeliness to win also does
--- eg if you are level 1, you have a 16% chance to win
--- level 2: 33%, level 3: 50% and so on
--- exp is determined on the tier requirement.
--- eg req 1 will give you like 7 exp or smth idk
 
 CREATE TABLE IF NOT EXISTS shop (
     "item" item NOT NULL,
@@ -53,4 +46,16 @@ CREATE TABLE IF NOT EXISTS supporters (
 CREATE TABLE IF NOT EXISTS tips (
     tip TEXT NOT NULL,
     id SERIAL PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS bosses (
+    name VARCHAR(32) NOT NULL,
+    tier SMALLINT NOT NULL,
+    id SERIAL PRIMARY KEY UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS persona_lookup (
+    stats SMALLINT[] NOT NULL,
+    name VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
+    moves JSON NOT NULL -- {"movename": ["damage type", "severity"], ...}
 );
