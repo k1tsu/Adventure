@@ -41,7 +41,7 @@ def fourth_check(ctx, rmsg):
 def fifth_check(ctx):
     def check(m):
         return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id and \
-               m.content.lower() == f"{ctx.prefix}travel abel woods"
+               m.content.lower() == f"{ctx.prefix}travel abel beach"
     return check
 
 
@@ -90,7 +90,7 @@ async def maps_(ctx, player):
 
 async def encounter(ctx, player):
     em = ctx.bot.enemy_manager
-    enemies = em.enemies_for(ctx.bot.map_manager.resolve_map("abel woods"))
+    enemies = em.enemies_for(ctx.bot.map_manager.resolve_map("abel beach"))
     enemy = random.choice(enemies)
     exp = random.randint((enemy.tier ** 3) // 8, (enemy.tier ** 3) // 4) + 1
     gold = random.randint(enemy.tier * 2, enemy.tier * 6)
@@ -103,7 +103,7 @@ async def encounter(ctx, player):
 
 async def capture(ctx):
     em = ctx.bot.enemy_manager
-    enemies = em.enemies_for(ctx.bot.map_manager.resolve_map("abel woods"))
+    enemies = em.enemies_for(ctx.bot.map_manager.resolve_map("abel beach"))
     enemy = random.choice(enemies)
     await ctx.send(f"{blobs.BLOB_CHEER} You captured **{enemy.name}**!")
     return enemy
@@ -141,31 +141,31 @@ async def tutorial(ctx: utils.EpicContext):
     await bot.wait_for("reaction_add", check=fourth_check(ctx, msg))
     await ctx.send("Good. Now you know where you are, it's time to do some exploring.")
     await asyncio.sleep(2)
-    await ctx.send(f"Let's head on over to the woods. We can explore around there.\nUse `{ctx.prefix}travel abel woods`"
+    await ctx.send(f"Let's head on over to the beach. We can explore around there.\nUse `{ctx.prefix}travel abel beach`"
                    f" to head over there.")
     await bot.wait_for("message", check=fifth_check(ctx))
-    _map = bot.map_manager.resolve_map("abel woods")
+    _map = bot.map_manager.resolve_map("abel beach")
     time = _map.calculate_travel_to(player)
-    await ctx.send(f"{blobs.BLOB_SALUTE} {player.name} is now travelling to Abel Woods and "
+    await ctx.send(f"{blobs.BLOB_SALUTE} {player.name} is now travelling to Abel Beach and "
                    f"will arrive in {time*60:.0f} minutes.")
     await asyncio.sleep(2)
     await ctx.send(f"Since this is a tutorial, you don't actually have to wait {time*60:.0f} minutes."
                    f" I'll speed you up.")
     await asyncio.sleep(2)
     player.map = _map
-    await ctx.send(f"{blobs.BLOB_PARTY} {player.name} has arrived at Abel Woods!")
+    await ctx.send(f"{blobs.BLOB_PARTY} {player.name} has arrived at Abel Beach!")
     await asyncio.sleep(2)
     await ctx.send(f"Now that we have arrived, it's time to explore the area. Use `{ctx.prefix}explore` to begin.")
     await bot.wait_for("message", check=sixth_check(ctx))
     time = _map.calculate_explore()
-    await ctx.send(f"{blobs.BLOB_SALUTE} {player.name} is now exploring Abel Woods and"
+    await ctx.send(f"{blobs.BLOB_SALUTE} {player.name} is now exploring Abel Beach and"
                    f" will finish in {time*60:.0f} minutes.")
     await asyncio.sleep(2)
     await ctx.send("Exploring tends to take a lot longer than travelling."
                    " I'll speed you up again for the sake of this tutorial.")
     player.explored_maps.append(player.map)
     await asyncio.sleep(2)
-    await ctx.send(f"{blobs.BLOB_PARTY} {player.name} has finished exploring Abel Woods!")
+    await ctx.send(f"{blobs.BLOB_PARTY} {player.name} has finished exploring Abel Beach!")
     await asyncio.sleep(2)
     await ctx.send(f"Side note, you can use `{ctx.prefix}profile` to view your current profile.")
     await bot.wait_for("message", check=seventh_check(ctx))
