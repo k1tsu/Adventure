@@ -57,5 +57,6 @@ CREATE TABLE IF NOT EXISTS bosses (
 CREATE TABLE IF NOT EXISTS persona_lookup (
     stats SMALLINT[] NOT NULL,
     name VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
+    hp INT NOT NULL,
     moves JSON NOT NULL -- {"movename": ["damage type", "severity"], ...}
 );

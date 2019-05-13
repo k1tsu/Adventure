@@ -219,8 +219,5 @@ class MapManager(commands.Cog, name="Maps"):
 def setup(bot):
     cog = MapManager(bot)
     bot.add_cog(cog)
-    bot.map_manager = cog
+    # bot.map_manager = cog
 
-
-def teardown(bot):
-    bot.map_manager = None

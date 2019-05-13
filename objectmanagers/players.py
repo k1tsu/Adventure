@@ -526,7 +526,7 @@ class PlayerManager(commands.Cog, name="Players"):
             # log.debug("DATA %s", data)
             user = self.bot.get_user(owner_id)
             if not user:
-                log.warning("Unknown user id %s. Skipping initialization.", owner_id)
+                log.warning("Unknown user id %s. Skipping initialization. (%s)", owner_id, len(self.bot.users))
                 continue
             status = await self.bot.redis("GET", f"status_{user.id}")
             if status:
@@ -562,8 +562,5 @@ class PlayerManager(commands.Cog, name="Players"):
 def setup(bot):
     cog = PlayerManager(bot)
     bot.add_cog(cog)
-    bot.player_manager = cog
+    # bot.player_manager = cog
 
-
-def teardown(bot):
-    bot.player_manager = None

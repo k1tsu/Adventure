@@ -63,7 +63,7 @@ EXTENSIONS = extensions()
 
 class Adventure(commands.Bot):
     def __init__(self):
-        super().__init__(self.getprefix)
+        super().__init__('adv ')
         # noinspection PyProtectedMember
         self.session = aiohttp.ClientSession()
         self._redis = None
@@ -73,10 +73,6 @@ class Adventure(commands.Bot):
         self.unload_complete = []
         self.blacklist = {}
         self.in_tutorial = []
-        self.player_manager = None
-        self.map_manager = None
-        self.item_manager = None
-        self.enemy_manager = None
         self.dbl_client = dbl.Client(self, self.config.DBL)
         self.prefixes = {}
         self.process = psutil.Process()
@@ -85,6 +81,18 @@ class Adventure(commands.Bot):
         # lol
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
+
+    @property
+    def player_manager(self):
+        return self.get_cog("Players")
+
+    @property
+    def map_manager(self):
+        return self.get_cog("Maps")
+
+    @property
+    def enemy_manager(self):
+        return self.get_cog("Enemies")
 
     async def blacklist_check(self, ctx):
         if not ctx.guild:

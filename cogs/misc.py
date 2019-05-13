@@ -271,6 +271,31 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
         log.info("Recovered player %s (%s).", player.name, ctx.author)
         await ctx.send(f"{blobs.BLOB_PARTY} Success! {player.name} has been revived!")
 
+    @staticmethod
+    def advanced_strat(bot):
+        def inner(message):
+            return message.content.startswith('*') or message.author == bot.user
+        return inner
+
+    @staticmethod
+    def basic_strat(bot):
+        def inner(message):
+            return message.author == bot.user
+        return inner
+
+    @commands.command()
+    async def cleanup(self, ctx):
+        if not ctx.guild:
+            async for message in ctx.history(limit=50):
+                if message.author == self.bot.user:
+                    await message.delete()
+        else:
+            if ctx.guild.me.guild_permissions.manage_messages:
+                strat = self.advanced_strat(self.bot)
+            else:
+                strat = self.basic_strat(self.bot)
+            await ctx.channel.purge(limit=50, check=strat, bulk=ctx.guild.me.guild_permissions.manage_messages)
+
 
 def setup(bot):
     bot.add_cog(Misc(bot))

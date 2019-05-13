@@ -352,4 +352,35 @@ class Compendium:
         return table.render()
 
 
+class BattleDemon:
+    __slots__ = ("name", "_owner", "_hp", "_moves", "_strength", "_magic", "_endurance", "_agility", "_luck")
+
+    def __init__(self, name: str, owner: Player, hp: int,
+                 moves: Dict[str, str], stats: Tuple[int, int, int, int, int]):
+        self.name = name
+        self._owner = owner
+        self._hp = hp
+        self._moves = moves
+        self._strength, self._magic, self._endurance, self._agility, self._luck = stats
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @property
+    def hp(self):
+        return self._hp
+
+    def evade_chance(self, other):
+        bp = self._agility + self._luck
+        ep = other.agility + other.luck
+        return 100 - (max(bp, ep) - min(bp, ep))
+
+    def try_evade(self, other):
+        return random.randint(1, 100) > self.evade_chance(other)
+
+    def is_fainted(self):
+        return self._hp <= 0
+
+
 Quest = collections.namedtuple("Quest", "qid find exp gold")
