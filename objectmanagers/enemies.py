@@ -111,8 +111,3 @@ class EnemyManager(commands.Cog, name="Enemies"):
 def setup(bot):
     cog = EnemyManager(bot)
     bot.add_cog(cog)
-    bot.enemy_manager = cog
-
-
-def teardown(bot):
-    bot.enemy_manager = None
