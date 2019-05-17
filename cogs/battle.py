@@ -84,6 +84,9 @@ async def surrender(demon, bot):
 
     rs = [str(blobs.BLOB_TICK), str(blobs.BLOB_CROSS)]
 
+    for r in rs:
+        await msg.add_reaction(r)
+
     def r_check(r, u):
         return u == user and \
             str(r) in rs and \
