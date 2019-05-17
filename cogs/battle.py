@@ -82,12 +82,19 @@ async def surrender(demon, bot):
     user = demon.owner.owner
     msg = await user.send("Are you sure you want to surrender the battle?")
 
+    rs = [str(blobs.BLOB_TICK), str(blobs.BLOB_CROSS)]
+
+    def r_check(r, u):
+        return u == user and \
+            str(r) in rs and \
+            type(u) is discord.User
+
     try:
-        m = await bot.wait_for("message", check=lambda m: m.author == user and not m.guild, timeout=30)
+        r, _ = await bot.wait_for("reaction_add", check=r_check, timeout=30)
     except asyncio.TimeoutError:
         raise UserSurrended(user)
     else:
-        if m.content.lower() in ('yes', '1', 'on', 'true', 'y'):
+        if str(r) == rs[0]:
             raise UserSurrended(user)
     finally:
         await msg.delete()
@@ -149,10 +156,9 @@ async def send_action(demon, bot):
     while ret is None:
         msg = await user.send(content)
 
-        print("a")
         for a in range(1, 4):
             await msg.add_reaction(f'{a}\u20e3')
-        print("b")
+
         def wait_check(r, u):
             return len(str(r)) > 1 and \
                 str(r)[1] == '\u20e3' and \
@@ -167,11 +173,11 @@ async def send_action(demon, bot):
             await msg.delete()
             # noinspection PyUnboundLocalVariable
             choice = str(choice)
-        print("c")
+
         func = _CHOICES[choice]
 
         ret = await func(demon, bot)
-    print("d")
+
     return ret
 
 
@@ -180,13 +186,13 @@ async def battle_loop(ctx, alpha, beta):
         ((t_alpha, t_beta), _) = await asyncio.wait([send_action(alpha, ctx.bot), send_action(beta, ctx.bot)],
                                                     return_when=asyncio.ALL_COMPLETED)
         if isinstance(t_alpha.exception(), UserSurrended):
-            return await ctx.send(f"{alpha.owner} surrendered! {beta.owner} won!")
+            return await ctx.send(f"{beta.owner} surrendered! {alpha.owner} won!")
             # TODO: free gold
         elif isinstance(t_beta.exception(), UserSurrended):
-            return await ctx.send(f"{beta.owner} surrendered! {alpha.owner} won!")
+            return await ctx.send(f"{alpha.owner} surrendered! {beta.owner} won!")
 
-        await ctx.send(t_alpha.result())
-        await ctx.send(t_beta.result())
+        await ctx.send(f"ALPHA {alpha.owner}: {t_alpha.result()}")
+        await ctx.send(f"BETA {beta.owner}: {t_beta.result()}")
         break
 
 
