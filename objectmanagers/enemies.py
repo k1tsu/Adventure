@@ -86,7 +86,7 @@ class EnemyManager(commands.Cog, name="Enemies"):
                 if not capture:
                     player.map = 0
                     gold = random.randint(enemy.tier * 2, enemy.tier * 6)
-                    player.gold -= gold
+                    player.gold = max(0, player.gold - gold)
                     await ctx.send(f"{blobs.BLOB_INJURED} You encountered **{enemy.name}** and failed to defeat it!"
                                    f"\nYou were knocked out, lost {gold} coins and was magically sent back to Abel.")
                 else:
