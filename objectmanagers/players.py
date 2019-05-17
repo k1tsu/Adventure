@@ -217,6 +217,8 @@ class PlayerManager(commands.Cog, name="Players"):
             return await ctx.send(f"{blobs.BLOB_PLSNO} {user} does not have a player!")
         if amount > player.gold:
             return await ctx.send(f"{blobs.BLOB_ARMSCROSSED} You don't have enough gold for this action!")
+        if amount < 0:
+            return await ctx.send(f"{blobs.BLOB_WINK} You cannot give an negative amount to a player")
         player.gold -= amount
         transfer.gold += amount
         await ctx.send(f"{blobs.BLOB_O} {transfer} was given {amount} G!")
