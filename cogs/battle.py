@@ -190,9 +190,9 @@ async def battle_loop(ctx, alpha, beta):
                                                     return_when=asyncio.ALL_COMPLETED)
         surr = t_alpha.exception() or t_beta.exception()
         if isinstance(surr, UserSurrended):
-            dee = alpha.owner if surr.user == beta.owner else beta.owner
-            der = alpha.owner if surr.user != beta.owner else beta.owner
-            return await ctx.send(f"{dee} surrendered! {der} won!")
+            if surr.user == alpha.owner:
+                return await ctx.send(f"{alpha.owner} surrendered! {beta.owner} won!")
+            return await ctx.send(f"{beta.owner} surrendered! {alpha.owner} won!")
             # TODO: free gold
 
         await ctx.send(f"ALPHA {alpha.owner}: {t_alpha.result()}")
