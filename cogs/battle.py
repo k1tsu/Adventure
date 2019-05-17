@@ -188,11 +188,12 @@ async def battle_loop(ctx, alpha, beta):
     while not alpha.is_fainted() and not beta.is_fainted():
         ((t_alpha, t_beta), _) = await asyncio.wait([send_action(alpha, ctx.bot), send_action(beta, ctx.bot)],
                                                     return_when=asyncio.ALL_COMPLETED)
-        if isinstance(t_alpha.exception(), UserSurrended):
-            return await ctx.send(f"{beta.owner} surrendered! {alpha.owner} won!")
+        surr = t_alpha.exception() or t_beta.exception()
+        if isinstance(surr, UserSurrended):
+            dee = alpha.owner if surr.user == beta.owner else beta.owner
+            der = alpha.owner if surr.user != beta.owner else beta.owner
+            return await ctx.send(f"{der} surrendered! {dee} won!")
             # TODO: free gold
-        elif isinstance(t_beta.exception(), UserSurrended):
-            return await ctx.send(f"{alpha.owner} surrendered! {beta.owner} won!")
 
         await ctx.send(f"ALPHA {alpha.owner}: {t_alpha.result()}")
         await ctx.send(f"BETA {beta.owner}: {t_beta.result()}")
