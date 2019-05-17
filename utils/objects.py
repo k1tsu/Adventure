@@ -1,6 +1,5 @@
 # -> Builtin modules
 import collections
-import decimal
 import enum
 import random
 import logging
@@ -213,11 +212,11 @@ class Player:
     def has_explored(self, map: Map):
         return map.is_safe or map in self.explored_maps
 
-    def exp_to_next_level(self) -> int:
+    def exp_to_next_level(self):
         next_exp = self._next_level ** 3
         return next_exp - self.exp
 
-    async def travel_to(self, destination: Map):
+    async def travel_to(self, destination):
         if await self.is_travelling():
             raise utils.AlreadyTravelling(self.name,
                                           humanize.naturaltime((datetime.now() + timedelta(
@@ -289,7 +288,7 @@ WHERE players.owner_id = $1;
 
 
 class Item:
-    def __init__(self, *, id: int, name: str, cost: Union[decimal.Decimal, float]):
+    def __init__(self, *, id, name, cost):
         self.id = id
         self.name = name
         self.cost = cost
@@ -299,7 +298,7 @@ class Item:
 
 
 class Enemy:
-    def __init__(self, *, id: int, name: str, maps: List[Map], tier: int):
+    def __init__(self, *, id, name, maps, tier):
         self.id: int = id
         self.name: str = name
         self.maps: List[Map] = maps
@@ -308,7 +307,7 @@ class Enemy:
     def __repr__(self):
         return '<Enemy id={0.id} name="{0.name}" maps={0.maps} tier={0.tier}>'.format(self)
 
-    def defeat(self, tier: int) -> bool:
+    def defeat(self, tier):
         diff = (tier ** 2) / (self.tier ** 2)
         normalized = math.tanh(diff / 4.6)
         ret = random.randint(1, 100) < round(normalized * 100)
@@ -316,7 +315,7 @@ class Enemy:
 
 
 class Compendium:
-    def __init__(self, player: Player):
+    def __init__(self, player):
         self.player = player
         # noinspection PyProtectedMember
         self._bot = player._bot
@@ -325,22 +324,22 @@ class Compendium:
         return "<Compendium owner={0.player.owner!r} flags={0.count}>".format(self)
 
     @property
-    def count(self) -> int:
+    def count(self):
         return sum(self.bits)
 
     @property
-    def bits(self) -> List[bool]:
+    def bits(self):
         return self.player.raw_compendium_data
 
-    def record_enemy(self, enemy: Enemy):
+    def record_enemy(self, enemy):
         if self.is_enemy_recorded(enemy):
             raise ValueError("Enemy is already in book.")
         self.player.raw_compendium_data[enemy.id-1] = 1
 
-    def is_enemy_recorded(self, enemy: Enemy) -> bool:
+    def is_enemy_recorded(self, enemy):
         return self.bits[enemy.id-1]
 
-    def format(self) -> str:
+    def format(self):
         fin = [e.name for e in sorted(self._bot.enemy_manager.enemies, key=lambda e: e.id) if self.is_enemy_recorded(e)]
         table = utils.TabularData()
         headers = fin[:2]
@@ -352,35 +351,150 @@ class Compendium:
         return table.render()
 
 
-class BattleDemon:
-    __slots__ = ("name", "_owner", "_hp", "_moves", "_strength", "_magic", "_endurance", "_agility", "_luck")
+class TypeDict(dict):
+    _k = 'physical gun fire electric wind ice bless curse almighty'.split()
 
-    def __init__(self, name: str, owner: Player, hp: int,
-                 moves: Dict[str, str], stats: Tuple[int, int, int, int, int]):
-        self.name = name
-        self._owner = owner
-        self._hp = hp
-        self._moves = moves
-        self._strength, self._magic, self._endurance, self._agility, self._luck = stats
+    def __init__(self, *values):
+        super().__init__()
+        for v in values:
+            self[self._k[values.index(v)]] = v
+
+    def __repr__(self):
+        return "TypeDict(" + ', '.join(f"{k}={v}"for k, v in self.items()) + ')'
+
+
+_severity = {
+    "miniscule": 0.5,
+    "light": 0.75,
+    "medium": 1,
+    "heavy": 1.5,
+    "severe": 3,
+    "colossal": 5
+}
+
+
+resistance = {'immune': 0.0, 'resist': 0.5, 'normal': 1.0, 'weak': 2.0, 'reflect': 0.5, 'absorb': -0.5}
+_r = {'physical': 0, 'gun': 1, 'fire': 2, 'electric': 3, 'wind': 4, 'ice': 5, 'bless': 6, 'curse': 7, 'almighty': 8}
+_res_tuple = collections.namedtuple("_res_tuple", "damage_dealt resistance")
+
+
+class Resist(enum.Enum):
+    immune = 0
+    resist = 1
+    normal = 2
+    weak = 3
+    reflect = 4
+    absorb = 5
+
+
+class BattleDemon:
+    """The class for the new PvP system."""
+
+    __slots__ = ("name", "_owner", "_hp", "_moves", "_strength", "_magic", "_endurance", "_agility", "_luck",
+                 "_resistances")
+
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name")
+        self._owner = kwargs.get("owner")
+        self._hp = kwargs.get("hp")
+        self._moves = kwargs.get("moves")
+        self._strength, self._magic, self._endurance, self._agility, self._luck = kwargs.get("stats")
+        self._resistances = TypeDict(*kwargs.get("resistances"))
+        # _resistances: {type: key} eg {'fire': 1, 'air': 3}
+        # 0:            0x damage taken
+        # 1:          0.5x damage taken
+        # 2:            1x damage taken
+        # 3:            2x damage taken
+        # 4: Reflects 0.5x damage back on the attacker
+        # 5:  Absorbs 0.5x damage to heal
+
+    @property
+    def strength(self):
+        """Returns an int of the demons Strength stat."""
+        return self._strength
+
+    @property
+    def magic(self):
+        """Returns an int of the demons Magic stat."""
+        return self._magic
+
+    @property
+    def endurance(self):
+        """Returns an int of the demons Endurance stat."""
+        return self._endurance
+
+    @property
+    def agility(self):
+        """Returns an int of the demons Agility stat."""
+        return self._agility
+
+    @property
+    def luck(self):
+        """Returns an int of the demons Luck stat."""
+        return self._luck
 
     @property
     def owner(self):
+        """Returns a Player object denoting the player this demon relates to."""
         return self._owner
 
     @property
     def hp(self):
+        """Returns the total Hit Points remaining of the Demon.
+        BattleDemon._hp but read only."""
         return self._hp
 
     def evade_chance(self, other):
+        """Returns 100 + chance of evading a hit.
+        This is affected by the Luck and Agility of
+        (WIP) This will be affected"""
         bp = self._agility + self._luck
         ep = other.agility + other.luck
         return 100 - (max(bp, ep) - min(bp, ep))
 
     def try_evade(self, other):
+        """Returns a bool whether you successfully evaded the attack.
+        This is random, based on BattleDemon.evade_chance."""
         return random.randint(1, 100) > self.evade_chance(other)
 
     def is_fainted(self):
+        """Returns a bool whether the demon has run out of HP."""
         return self._hp <= 0
+
+    def resists(self, type_):
+        """Returns a key denoting how the demon resists a type.
+        Refer to L394 for a list of keys."""
+        if type_ not in _r:
+            raise ValueError("value not valid type")
+        return Resist(self._resistances[type_])
+
+    def resist_calc(self, type_):
+        """Returns a float with a damage modifier"""
+        if not isinstance(type_, Resist):
+            raise TypeError("expected Resist enum, got {!r}".format(type_))
+        return resistance[type_.name]
+
+    def reflect_damage(self, amount):
+        """Hmm"""
+        self._hp -= amount
+
+    def take_damage(self, demon, type_, severity):
+        """Subtracts damage from the demons HP.
+        This takes into account the demons endurance, type resistances and move severity.
+        Returns a namedtuple with the total damage dealt, and the effect (resist, absorb etc)."""
+        base = demon.strength - (self.endurance ** .334)
+        res = self.resists(type_)
+        sevmod = _severity[severity]
+        base *= sevmod
+        mod = self.resist_calc(res)
+        base *= mod
+        base = base if base > 0 else 1
+        # ^ This is to ensure all moves do at least 1 hitpoint of damage.
+        if res is not Resist.reflect:
+            self._hp -= base
+        else:
+            demon.reflect_damage(base)
+        return _res_tuple(base, res)
 
 
 Quest = collections.namedtuple("Quest", "qid find exp gold")

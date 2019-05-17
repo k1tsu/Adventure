@@ -184,6 +184,16 @@ async def send_action(demon, bot):
     return ret
 
 
+_MESSAGES = {
+    "resist": "{tdemon.owner}'s {tdemon} **resists** {mtype} moves and took {damage} damage!",
+    "absorb": "{tdemon.owner}'s {tdemon} **absorbs** {mtype}! Healed for {damage} HP!",
+    "reflect": "{tdemon.owner}'s {tdemon} **reflects** {mtype} moves! {ademon.owner}'s {ademon} took {damage} damage!",
+    "immune": "{tdemon.owner}'s {tdemon} is **immune** to {mtype} attacks!",
+    "normal": "{tdemon.owner}'s {tdemon} took {damage} damage!",
+    "weak": "{tdemon.owner}'s {tdemon} is **weak** to {mtype} moves and took {damage} damage!"
+}
+
+
 async def battle_loop(ctx, alpha, beta):
     while not alpha.is_fainted() and not beta.is_fainted():
         ((t_alpha, t_beta), _) = await asyncio.wait([send_action(alpha, ctx.bot), send_action(beta, ctx.bot)],
@@ -191,12 +201,29 @@ async def battle_loop(ctx, alpha, beta):
         surr = t_alpha.exception() or t_beta.exception()
         if isinstance(surr, UserSurrended):
             if surr.user == alpha.owner.owner:
-                return await ctx.send(f"{alpha.owner} surrendered! {beta.owner} won!")
-            return await ctx.send(f"{beta.owner} surrendered! {alpha.owner} won!")
+                await ctx.send(f"{alpha.owner} surrendered! {beta.owner} won!")
+            else:
+                await ctx.send(f"{beta.owner} surrendered! {alpha.owner} won!")
             # TODO: free gold
+            return
 
-        await ctx.send(f"ALPHA {alpha.owner}: {t_alpha.result()}")
-        await ctx.send(f"BETA {beta.owner}: {t_beta.result()}")
+        m_alpha = t_alpha.result()
+        m_beta = t_beta.result()
+
+        dt_alpha, res_alpha = alpha.take_damage(beta, m_alpha.type, m_alpha.severity)
+        msg_a = _MESSAGES[res_alpha].format(tdemon=alpha, mtype=m_alpha.type, ademon=beta, damage=dt_alpha)
+
+        dt_beta, res_beta = beta.take_damage(alpha, m_beta.type, m_beta.severity)
+        msg_b = _MESSAGES[res_beta].format(tdemon=beta, mtype=m_beta.type, ademon=alpha, damage=dt_beta)
+
+        await ctx.send(msg_a + "\n" + msg_b)
+    if alpha.is_fainted():
+        msg = f"{alpha} fainted! {beta.owner} and their {beta} won!"
+    elif alpha.is_fainted():
+        msg = f"{beta} fainted! {alpha.owner} and their {alpha} won!"
+    else:
+        raise RuntimeError("no one fainted? might have surrendered.")
+    await ctx.send(msg)
 
 
 class Battle(commands.Cog):
