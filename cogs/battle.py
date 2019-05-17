@@ -197,7 +197,6 @@ async def battle_loop(ctx, alpha, beta):
 
         await ctx.send(f"ALPHA {alpha.owner}: {t_alpha.result()}")
         await ctx.send(f"BETA {beta.owner}: {t_beta.result()}")
-        break
 
 
 class Battle(commands.Cog):
