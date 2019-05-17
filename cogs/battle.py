@@ -192,7 +192,7 @@ async def battle_loop(ctx, alpha, beta):
         if isinstance(surr, UserSurrended):
             dee = alpha.owner if surr.user == beta.owner else beta.owner
             der = alpha.owner if surr.user != beta.owner else beta.owner
-            return await ctx.send(f"{der} surrendered! {dee} won!")
+            return await ctx.send(f"{dee} surrendered! {der} won!")
             # TODO: free gold
 
         await ctx.send(f"ALPHA {alpha.owner}: {t_alpha.result()}")
