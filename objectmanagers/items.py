@@ -50,7 +50,7 @@ class ItemManager(commands.Cog, name="Items"):
 
     @commands.command(hidden=True)
     async def shop(self, ctx):
-        n = ["```diff"]
+        n = ["```diff\n"]
         for item in self.items:
             fmt = f"+ {item.name} [{item.id}]\n  {item.cost} G\n"
             n.append(fmt)
