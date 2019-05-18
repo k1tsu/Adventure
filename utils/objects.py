@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from typing import *
 
 # -> Pip packages
-from discord.webhook import RequestsWebhookAdapter, Webhook
 import humanize
 
 # -> Local files
@@ -393,10 +392,6 @@ def is_mag(type_):
     return type_ not in ("physical", "gun")
 
 
-with open("thingy.txt") as f:
-    wh = Webhook.from_url(f.read().rstrip(), adapter=RequestsWebhookAdapter())
-
-
 class BattleDemon:
     """The class for the new PvP system."""
 
@@ -411,8 +406,6 @@ class BattleDemon:
         self._moves = kwargs.get("moves")
         self._strength, self._magic, self._endurance, self._agility, self._luck = kwargs.get("stats")
         self._resistances = TypeDict(*kwargs.get("resistances"))
-        wh.send(kwargs.get("resistances"))
-        wh.send(self._resistances)
         # _resistances: {type: key} eg {'fire': 1, 'air': 3}
         # 0:            0x damage taken
         # 1:          0.5x damage taken

@@ -8,7 +8,6 @@ import math
 import operator
 import random
 import typing
-import uuid
 from datetime import datetime
 
 # -> Pip packages
@@ -32,7 +31,6 @@ class PlayerManager(commands.Cog, name="Players"):
         self.unload_event = asyncio.Event()
         self.bot.unload_complete.append(self.unload_event)
         self.is_creating = []
-        self.is_fighting = {}  # dict of {(player, player): uuid4}
         with open("assets/profile_background.png", "rb") as f:
             thing = io.BytesIO(f.read())
             self.background = Image.open(thing)
@@ -308,7 +306,6 @@ class PlayerManager(commands.Cog, name="Players"):
             await ctx.invoke(self.bot.get_command("modspeedup"), member=ctx.author, ignore_reaction=True)
             await ctx.send(f"{blobs.BLOB_THUMB} Done! Try sending a message.")
 
-
     @commands.group(aliases=['lb'], invoke_without_command=True)
     async def leaderboard(self, ctx, count: int = 20):
         """Views the top 20 players in your server.
@@ -360,97 +357,6 @@ class PlayerManager(commands.Cog, name="Players"):
         if not player:
             raise utils.NoPlayer
         await ctx.send(f"```\n{player.compendium.format()}\n```")
-
-    @commands.command(aliases=['battle'])
-    @commands.cooldown(10, 3600, commands.BucketType.user)
-    async def fight(self, ctx, *, member: discord.Member):
-        """Fight your friends in a battle to the death!
-        Not actually to the death, but the winner gets a shit load of EXP."""
-        if ctx.author == member:
-            self.is_fighting.pop(ctx.author.id)
-            return await ctx.send(f"You can't fight yourself! {blobs.BLOB_INJURED}")
-
-        alpha = self.bot.player_manager.get_player(ctx.author)
-        if not alpha:
-            self.is_fighting.pop(ctx.author.id)
-            self.is_fighting.pop(member.id)
-            raise utils.NoPlayer
-
-        beta = self.bot.player_manager.get_player(member)
-        if not beta:
-            self.is_fighting.pop(ctx.author.id)
-            self.is_fighting.pop(member.id)
-            return await ctx.send(f"{member} does not have a player! {blobs.BLOB_PLSNO}")
-
-        if alpha.level < 1:
-            self.is_fighting.pop(ctx.author.id)
-            self.is_fighting.pop(member.id)
-            return await ctx.send(f"You aren't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
-
-        if beta.level < 1:
-            self.is_fighting.pop(ctx.author.id)
-            self.is_fighting.pop(member.id)
-            return await ctx.send(f"{member} isn't a high enough level to fight! {blobs.BLOB_ARMSCROSSED}")
-
-        if not await ctx.warn(f"{member}, do you wish to fight {ctx.author}?", waiter=member):
-            self.is_fighting.pop(ctx.author.id)
-            self.is_fighting.pop(member.id)
-            return await ctx.send(f"{member} did not want to fight...")
-
-        ahp = copy.copy(alpha.healthpoints)
-        bhp = copy.copy(beta.healthpoints)
-        chances = [*['a'] * alpha.level, *['b'] * beta.level, *['c'] * ((alpha.level + beta.level) // 2)]
-        while not (ahp <= 0 or bhp <= 0):
-            win = random.choice(chances)
-            if win == 'a':
-                hurt = random.randint(math.ceil(alpha.strength / 3), math.ceil(alpha.strength))
-                bhp -= hurt
-                await ctx.send(f"**{alpha.name}** damaged **{beta.name}** for **{hurt}** Hitpoints!"
-                               f" {blobs.BLOB_INJURED}")
-            elif win == 'b':
-                hurt = random.randint(math.ceil(beta.strength / 3), math.ceil(beta.strength))
-                ahp -= hurt
-                await ctx.send(f"**{beta.name}** damaged **{alpha.name}** for **{hurt}** Hitpoints!"
-                               f" {blobs.BLOB_INJURED}")
-            else:
-                await ctx.send(f"{blobs.BLOB_ANGERY} Nothing happened...")
-            await asyncio.sleep(1)
-        if ahp <= 0:
-            exp = math.ceil(random.uniform(alpha.strength / 3, alpha.strength) / 2)
-            beta.exp += exp
-            await ctx.send(f"""**{alpha.name}** fainted! {blobs.BLOB_CHEER}
-**{beta.name}** gained **{exp}** Experience Points!""")
-        elif bhp <= 0:
-            exp = math.ceil(random.uniform(beta.strength / 3, beta.strength))
-            alpha.exp += exp
-            await ctx.send(f"""**{beta.name}** fainted! {blobs.BLOB_CHEER}
-**{alpha.name}** gained **{exp}** Experience Points!""")
-        self.is_fighting.pop(ctx.author.id)
-        self.is_fighting.pop(member.id)
-
-    @fight.error
-    async def fight_error(self, ctx, exc):
-        if isinstance(exc, commands.NotOwner):
-            return
-        await self.bot.get_cog("Handler").on_command_error(ctx, exc, enf=True)
-
-    @fight.before_invoke
-    async def fight_before_invoke(self, ctx):
-        alpha = ctx.args[-1].author
-        beta = ctx.kwargs.get("member")
-        battle_id = uuid.uuid4()
-        if alpha.id in self.is_fighting:
-            battle = self.is_fighting[alpha.id]
-            if battle != battle_id:
-                await ctx.send(f"You are already in a battle! {blobs.BLOB_ANGERY}")
-                raise commands.NotOwner
-        if beta.id in self.is_fighting:
-            battle = self.is_fighting[beta.id]
-            if battle != battle_id:
-                await ctx.send(f"{beta} is already in a battle! {blobs.BLOB_ANGERY}")
-                raise commands.NotOwner
-        self.is_fighting[alpha.id] = battle_id
-        self.is_fighting[beta.id] = battle_id
 
     # -- Player Manager stuff -- #
 

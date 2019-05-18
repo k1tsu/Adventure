@@ -147,6 +147,7 @@ async def fight(demon, bot):
 
 _CHOICES = {
     '1\u20e3': fight,
+    '2\u20e3': fight,
     '3\u20e3': surrender
 }
 
@@ -154,7 +155,7 @@ _CHOICES = {
 async def send_action(demon, bot):
     ret = None
     content = """1\u20e3: Fight
-2\u20e3: Use an item (doesnt work)
+2\u20e3: Use an item (doesnt work, redirects to fight)
 3\u20e3: Surrender"""
     user = demon.owner.owner
     while ret is None:
@@ -225,9 +226,11 @@ async def battle_loop(ctx, alpha, beta):
 
         await ctx.send(msg_a + "\n" + msg_b)
     if alpha.is_fainted():
-        msg = f"{alpha} fainted! {beta.owner} and their {beta} won!"
+        msg = f"{alpha} fainted! {beta.owner} and their {beta} won!\nYou were given 5,000 G as a reward!"
+        beta.owner.gold += 5000
     elif beta.is_fainted():
-        msg = f"{beta} fainted! {alpha.owner} and their {alpha} won!"
+        msg = f"{beta} fainted! {alpha.owner} and their {alpha} won!\nYou were given 5,000 G as a reward!"
+        alpha.owner.gold += 5000
     else:
         ctx.bot.wtf = ctx, alpha, beta
         raise RuntimeError("no one fainted? might have surrendered")
@@ -315,8 +318,8 @@ class Battle(commands.Cog):
         except Exception:
             raise
 
-    @commands.command(hidden=True)
-    async def _fight(self, ctx, *, user: discord.Member):
+    @commands.command()
+    async def fight(self, ctx, *, user: discord.Member):
         """Fight another user in a battle to the death!
         Choose a demon from your compendium and battle it out.
         Each demon has their own unique moveset, stats and hitpoints.
@@ -371,7 +374,7 @@ class Battle(commands.Cog):
             self.task_ender.cancel()
         self.task_ender = self.bot.loop.create_task(self._task_ender())
 
-    @_fight.before_invoke
+    @fight.before_invoke
     async def pre_invoke_hook(self, ctx):
         user = ctx.kwargs.get("user")
 
