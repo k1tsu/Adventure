@@ -191,7 +191,8 @@ _MESSAGES = {
                "_{ademon}__ took {damage} damage!",
     "immune": "{tdemon.owner}'s __{tdemon}__ is **immune** to `{move}`!",
     "normal": "{tdemon.owner}'s __{tdemon}__ took {damage} damage!",
-    "weak": "{tdemon.owner}'s __{tdemon}__ is **weak** to `{move}` and took {damage} damage!"
+    "weak": "{tdemon.owner}'s __{tdemon}__ is **weak** to `{move}` and took {damage} damage!",
+    "evade": "{tdemon.owner}'s __{tdemon}__ evaded the attack!"
 }
 
 
@@ -311,7 +312,12 @@ class Battle(commands.Cog):
                                     resistances=_p_raw['resistances']))
 
         key = (ctx.author.id, user.id)
-        self._battles[key] = self.bot.loop.create_task(battle_loop(ctx, p1, p2))
+
+        if p1.agility >= p2.agility:
+            self._battles[key] = self.bot.loop.create_task(battle_loop(ctx, p1, p2))
+        else:
+            self._battles[key] = self.bot.loop.create_task(battle_loop(ctx, p2, p1))
+
         await ctx.send("Begin!")
         if not self.task_ender.done():
             self.task_ender.cancel()

@@ -5,7 +5,6 @@ import random
 import logging
 import math
 import operator
-from copy import copy
 from datetime import datetime, timedelta
 from typing import *
 
@@ -374,7 +373,7 @@ _severity = {
 }
 
 
-resistance = {'immune': 0.0, 'resist': 0.5, 'normal': 1.0, 'weak': 2.0, 'reflect': 0.5, 'absorb': -0.5}
+resistance = {'immune': 0.0, 'resist': 0.5, 'normal': 1.0, 'weak': 2.0, 'reflect': 0.5, 'absorb': 0.5}
 _r = {'physical': 0, 'gun': 1, 'fire': 2, 'electric': 3, 'wind': 4, 'ice': 5, 'bless': 6, 'curse': 7, 'almighty': 8}
 _res_tuple = collections.namedtuple("_res_tuple", "damage_dealt resistance")
 
@@ -386,6 +385,7 @@ class Resist(enum.Enum):
     weak = 3
     reflect = 4
     absorb = 5
+    evade = 6
 
 
 class BattleDemon:
@@ -452,7 +452,8 @@ class BattleDemon:
     def evade_chance(self, other):
         """Returns 100 + chance of evading a hit.
         This is affected by the Luck and Agility of
-        (WIP) This will be affected"""
+
+        One day this will be affected by status ailments in v3."""
         bp = self._agility + self._luck
         ep = other.agility + other.luck
         return 100 - (max(bp, ep) - min(bp, ep))
@@ -487,6 +488,8 @@ class BattleDemon:
         """Subtracts damage from the demons HP.
         This takes into account the demons endurance, type resistances and move severity.
         Returns a namedtuple with the total damage dealt, and the effect (resist, absorb etc)."""
+        if self.try_evade(demon):
+            return _res_tuple(0, Resist.evade)
         base = (demon.strength*2) - self.endurance
         base += random.randint(-3, 4)
         res = self.resists(type_)
