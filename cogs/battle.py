@@ -221,10 +221,11 @@ async def battle_loop(ctx, alpha, beta):
         await ctx.send(msg_a + "\n" + msg_b)
     if alpha.is_fainted():
         msg = f"{alpha} fainted! {beta.owner} and their {beta} won!"
-    elif alpha.is_fainted():
+    elif beta.is_fainted():
         msg = f"{beta} fainted! {alpha.owner} and their {alpha} won!"
     else:
-        raise RuntimeError("no one fainted? might have surrendered.")
+        ctx.bot.wtf = ctx, alpha, beta
+        raise RuntimeError("no one fainted? might have surrendered")
     await ctx.send(msg)
 
 

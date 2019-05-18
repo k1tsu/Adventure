@@ -5,8 +5,9 @@ import random
 import logging
 import math
 import operator
-from typing import *
+from copy import copy
 from datetime import datetime, timedelta
+from typing import *
 
 # -> Pip packages
 import humanize
@@ -496,9 +497,7 @@ class BattleDemon:
         base = base if base > 0 else 1
         # ^ This is to ensure all moves do at least 1 hitpoint of damage.
         if res is Resist.absorb:
-            toadd = min(self._max_hp, self._hp + base)
-            base = abs(self._hp - toadd)
-            self._hp = toadd
+            self._hp = min(self._max_hp, self._hp + base)
         elif res is Resist.reflect:
             demon.reflect_damage(base)
         else:
