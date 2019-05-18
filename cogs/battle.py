@@ -185,12 +185,13 @@ async def send_action(demon, bot):
 
 
 _MESSAGES = {
-    "resist": "{tdemon.owner}'s {tdemon} **resists** {mtype} moves and took {damage} damage!",
-    "absorb": "{tdemon.owner}'s {tdemon} **absorbs** {mtype} moves! Healed for {damage} HP!",
-    "reflect": "{tdemon.owner}'s {tdemon} **reflects** {mtype} moves! {ademon.owner}'s {ademon} took {damage} damage!",
-    "immune": "{tdemon.owner}'s {tdemon} is **immune** to {mtype} attacks!",
-    "normal": "{tdemon.owner}'s {tdemon} took {damage} damage!",
-    "weak": "{tdemon.owner}'s {tdemon} is **weak** to {mtype} moves and took {damage} damage!"
+    "resist": "{tdemon.owner}'s __{tdemon}__ **resists** {mtype} moves and took {damage} damage!",
+    "absorb": "{tdemon.owner}'s __{tdemon}__ **absorbs** {mtype} moves! Healed for {damage} HP!",
+    "reflect": "{tdemon.owner}'s __{tdemon}__ **reflects** {mtype} moves! {ademon.owner}'s _"
+               "_{ademon}__ took {damage} damage!",
+    "immune": "{tdemon.owner}'s __{tdemon}__ is **immune** to {mtype} attacks!",
+    "normal": "{tdemon.owner}'s __{tdemon}__ took {damage} damage!",
+    "weak": "{tdemon.owner}'s __{tdemon}__ is **weak** to {mtype} moves and took {damage} damage!"
 }
 
 

@@ -408,6 +408,9 @@ class BattleDemon:
         # 4: Reflects 0.5x damage back on the attacker
         # 5:  Absorbs 0.5x damage to heal
 
+    def __str__(self):
+        return self.name
+
     @property
     def strength(self):
         """Returns an int of the demons Strength stat."""
@@ -482,12 +485,12 @@ class BattleDemon:
         """Subtracts damage from the demons HP.
         This takes into account the demons endurance, type resistances and move severity.
         Returns a namedtuple with the total damage dealt, and the effect (resist, absorb etc)."""
-        base = demon.strength - (self.endurance ** .334)
+        base = demon.strength - (self.endurance * .334)
         res = self.resists(type_)
         sevmod = _severity[severity]
         base *= sevmod
         mod = self.resist_calc(res)
-        base *= mod
+        base = round(base * mod)
         base = base if base > 0 else 1
         # ^ This is to ensure all moves do at least 1 hitpoint of damage.
         if res is not Resist.reflect:
