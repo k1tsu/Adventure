@@ -186,7 +186,7 @@ async def send_action(demon, bot):
 
 _MESSAGES = {
     "resist": "{tdemon.owner}'s {tdemon} **resists** {mtype} moves and took {damage} damage!",
-    "absorb": "{tdemon.owner}'s {tdemon} **absorbs** {mtype}! Healed for {damage} HP!",
+    "absorb": "{tdemon.owner}'s {tdemon} **absorbs** {mtype} moves! Healed for {damage} HP!",
     "reflect": "{tdemon.owner}'s {tdemon} **reflects** {mtype} moves! {ademon.owner}'s {ademon} took {damage} damage!",
     "immune": "{tdemon.owner}'s {tdemon} is **immune** to {mtype} attacks!",
     "normal": "{tdemon.owner}'s {tdemon} took {damage} damage!",
@@ -293,9 +293,11 @@ class Battle(commands.Cog):
         _p_raw = await self.bot.db.fetchrow("SELECT * FROM persona_lookup WHERE name='Arsene';")
 
         p1, p2 = (utils.BattleDemon(owner=alpha, hp=_p_raw['hp'], moves=_p_raw['moves'],
-                                    stats=_p_raw['stats'], name=_p_raw['name']),
+                                    stats=_p_raw['stats'], name=_p_raw['name'],
+                                    resistances=_p_raw['resistances']),
                   utils.BattleDemon(owner=beta, hp=_p_raw['hp'], moves=_p_raw['moves'],
-                                    stats=_p_raw['stats'], name=_p_raw['name']))
+                                    stats=_p_raw['stats'], name=_p_raw['name'],
+                                    resistances=_p_raw['resistances']))
 
         key = (ctx.author.id, user.id)
         self._battles[key] = self.bot.loop.create_task(battle_loop(ctx, p1, p2))
