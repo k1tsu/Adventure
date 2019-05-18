@@ -64,7 +64,9 @@ EXTENSIONS = extensions()
 class Adventure(commands.Bot):
     def __init__(self):
         super().__init__(self.getprefix)
-        # noinspection PyProtectedMember
+        self.config = config
+        self.init = INIT
+
         self.dbl_client = dbl.Client(self, self.config.DBL)
         self.ipc        = utils.IPC(self)
         self.prepared   = asyncio.Event(loop=self.loop)
@@ -73,9 +75,6 @@ class Adventure(commands.Bot):
 
         self._redis = None
         self.db     = None
-
-        self.config = config
-        self.init   = INIT
 
         self.confirmation_invocation = []
         self.in_tutorial             = []
