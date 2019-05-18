@@ -258,6 +258,8 @@ async def try_get_demon(ctx, player):
         choice = await ctx.bot.wait_for("message", check=checker)
         name = choice.content.title()
         n = await player.owner.send(f"{blobs.BLOB_THINK} Are you sure you want to battle with {name}?")
+        for r in rs:
+            await n.add_reaction(r)
         r, _ = await ctx.bot.wait_for("reaction_add", check=rchecker, timeout=10)
         if str(r) == rs[0]:
             break
