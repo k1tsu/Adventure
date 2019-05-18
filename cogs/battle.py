@@ -238,9 +238,9 @@ async def try_get_demon(ctx, player):
     em = ctx.bot.enemy_manager
     demons = {e.name for e in sorted(em.enemies, key=lambda e: e.id) if player.compendium.is_enemy_recorded(e)}
     demons &= ctx.cog.valid
-    demons = set(map(str.lower, demons))
     await player.owner.send(f"{blobs.BLOB_THINK} Choose a demon!")
     await ctx.paginate(*demons, destination=player.owner)
+    demons = set(map(str.lower, demons))
 
     def checker(m):
         return m.content.lower() in demons and \
@@ -257,7 +257,7 @@ async def try_get_demon(ctx, player):
     while True:
         choice = await ctx.bot.wait_for("message", check=checker)
         name = choice.content.title()
-        n = await ctx.send(f"{blobs.BLOB_THINK} Are you sure you want to battle with {name}?")
+        n = await player.owner.send(f"{blobs.BLOB_THINK} Are you sure you want to battle with {name}?")
         r, _ = await ctx.bot.wait_for("reaction_add", check=rchecker, timeout=10)
         if str(r) == rs[0]:
             break
