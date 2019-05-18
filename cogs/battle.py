@@ -336,7 +336,7 @@ class Battle(commands.Cog):
         if not beta:
             return await ctx.send(f"{blobs.BLOB_PLSNO} {user} doesn't have a player!")
 
-        if beta.compendiumn.count == 0:
+        if beta.compendium.count == 0:
             return await ctx.send(f"{blobs.BLOB_THINK} {user} hasn't found any demons yet.")
 
         if not await ctx.warn(f"{blobs.BLOB_THINK} {user}, do you want to battle {ctx.author}?", waiter=user):
