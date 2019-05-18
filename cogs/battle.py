@@ -211,10 +211,10 @@ async def battle_loop(ctx, alpha, beta):
         m_alpha = t_alpha.result()
         m_beta = t_beta.result()
 
-        dt_alpha, res_alpha = alpha.take_damage(beta, m_alpha.type, m_alpha.severity)
+        dt_alpha, res_alpha = alpha.take_damage(beta, m_beta.type, m_beta.severity)
         msg_a = _MESSAGES[res_alpha.name].format(tdemon=alpha, mtype=m_alpha.type, ademon=beta, damage=dt_alpha)
 
-        dt_beta, res_beta = beta.take_damage(alpha, m_beta.type, m_beta.severity)
+        dt_beta, res_beta = beta.take_damage(alpha, m_alpha.type, m_alpha.severity)
         msg_b = _MESSAGES[res_beta.name].format(tdemon=beta, mtype=m_beta.type, ademon=alpha, damage=dt_beta)
 
         await ctx.send(msg_a + "\n" + msg_b)
