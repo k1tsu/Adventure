@@ -107,7 +107,7 @@ class Moderator(commands.Cog):
     @commands.command(hidden=True)
     async def forcevote(self, ctx, user: int, weekend: bool = False):
         async with self.bot.session.post(
-                "http://xuathegrate.xyz/vote",
+                "https://xuathegrate.xyz/vote",
                 json={"user": str(user), "isWeekend": True},
                 headers={"Authorization": self.bot.config.DBL_AUTH}
         ) as req:

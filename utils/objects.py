@@ -391,12 +391,13 @@ class BattleDemon:
     """The class for the new PvP system."""
 
     __slots__ = ("name", "_owner", "_hp", "_moves", "_strength", "_magic", "_endurance", "_agility", "_luck",
-                 "_resistances")
+                 "_resistances", "_max_hp")
 
     def __init__(self, **kwargs):
         self.name = kwargs.get("name")
         self._owner = kwargs.get("owner")
         self._hp = kwargs.get("hp")
+        self._max_hp = kwargs.get("hp")
         self._moves = kwargs.get("moves")
         self._strength, self._magic, self._endurance, self._agility, self._luck = kwargs.get("stats")
         self._resistances = TypeDict(*kwargs.get("resistances"))
@@ -494,10 +495,14 @@ class BattleDemon:
         base = round(base * mod)
         base = base if base > 0 else 1
         # ^ This is to ensure all moves do at least 1 hitpoint of damage.
-        if res is not Resist.reflect:
-            self._hp -= base
-        else:
+        if res is Resist.absorb:
+            toadd = min(self._max_hp, self._hp + base)
+            base = abs(self._hp - toadd)
+            self._hp = toadd
+        elif res is Resist.reflect:
             demon.reflect_damage(base)
+        else:
+            self._hp -= base
         return _res_tuple(base, res)
 
 
