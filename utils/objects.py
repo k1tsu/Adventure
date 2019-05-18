@@ -357,8 +357,8 @@ class TypeDict(dict):
 
     def __init__(self, *values):
         super().__init__()
-        for v in values:
-            self[self._k[values.index(v)]] = v
+        for i, v in enumerate(values):
+            self[self._k[i]] = v
 
     def __repr__(self):
         return "TypeDict(" + ', '.join(f"{k}={v}"for k, v in self.items()) + ')'
