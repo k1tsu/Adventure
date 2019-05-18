@@ -240,7 +240,7 @@ async def try_get_demon(ctx, player):
     demons &= ctx.cog.valid
     demons = set(map(str.lower, demons))
     await player.owner.send(f"{blobs.BLOB_THINK} Choose a demon!")
-    await ctx.paginate(demons, destination=player.owner)
+    await ctx.paginate(*demons, destination=player.owner)
 
     def checker(m):
         return m.content.lower() in demons and \
