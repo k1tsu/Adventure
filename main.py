@@ -65,20 +65,25 @@ class Adventure(commands.Bot):
     def __init__(self):
         super().__init__(self.getprefix)
         # noinspection PyProtectedMember
-        self.session = aiohttp.ClientSession()
-        self._redis = None
-        self.db = None
-        self.config = config
-        self.prepared = asyncio.Event(loop=self.loop)
-        self.unload_complete = []
-        self.blacklist = {}
-        self.in_tutorial = []
         self.dbl_client = dbl.Client(self, self.config.DBL)
-        self.prefixes = {}
-        self.process = psutil.Process()
-        self.init = INIT
+        self.ipc        = utils.IPC(self)
+        self.prepared   = asyncio.Event(loop=self.loop)
+        self.process    = psutil.Process()
+        self.session    = aiohttp.ClientSession()
+
+        self._redis = None
+        self.db     = None
+
+        self.config = config
+        self.init   = INIT
+
         self.confirmation_invocation = []
-        # lol
+        self.in_tutorial             = []
+        self.unload_complete         = []
+
+        self.blacklist = {}
+        self.prefixes  = {}
+
         self.add_check(self.blacklist_check)
         self.prepare_extensions()
 

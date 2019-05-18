@@ -4,6 +4,7 @@ from .context import *
 from .errors import *
 from .paginator import *
 from .djisktra import *
+from .ipc import IPC
 
 
 import asyncio
