@@ -330,6 +330,10 @@ class Battle(commands.Cog):
         if not self.valid:
             self.valid = set(map(operator.itemgetter('name'),
                                  await self.bot.db.fetch("SELECT name FROM persona_lookup")))
+
+        if user == ctx.author:
+            return await ctx.send(f"{blobs.BLOB_ANGERY} You can't fight yourself!")
+
         alpha = self._pm.get_player(ctx.author)
         if not alpha:
             raise utils.NoPlayer
