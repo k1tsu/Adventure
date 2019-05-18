@@ -245,11 +245,11 @@ class Battle(commands.Cog):
                     if task.done():
                         self._battles.pop(users[0])
                         self._fighting.pop(users[0])
-                    exc = task.exception()
-                    if exc:
-                        userid = self.bot.config.OWNERS[0]
-                        user = self.bot.get_user(userid)
-                        await user.send(utils.format_exception(exc))
+                        exc = task.exception()
+                        if exc:
+                            userid = self.bot.config.OWNERS[0]
+                            user = self.bot.get_user(userid)
+                            await user.send(utils.format_exception(exc))
             except asyncio.CancelledError:
                 break
 
