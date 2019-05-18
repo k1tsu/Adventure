@@ -185,13 +185,13 @@ async def send_action(demon, bot):
 
 
 _MESSAGES = {
-    "resist": "{tdemon.owner}'s __{tdemon}__ **resists** {mtype} moves and took {damage} damage!",
-    "absorb": "{tdemon.owner}'s __{tdemon}__ **absorbs** {mtype} moves! Healed for {damage} HP!",
-    "reflect": "{tdemon.owner}'s __{tdemon}__ **reflects** {mtype} moves! {ademon.owner}'s _"
+    "resist": "{tdemon.owner}'s __{tdemon}__ **resists** `{move}` and took {damage} damage!",
+    "absorb": "{tdemon.owner}'s __{tdemon}__ **absorbs** `{move}`! Healed for {damage} HP!",
+    "reflect": "{tdemon.owner}'s __{tdemon}__ **reflects** `{move}`! {ademon.owner}'s _"
                "_{ademon}__ took {damage} damage!",
-    "immune": "{tdemon.owner}'s __{tdemon}__ is **immune** to {mtype} attacks!",
+    "immune": "{tdemon.owner}'s __{tdemon}__ is **immune** to `{move}`!",
     "normal": "{tdemon.owner}'s __{tdemon}__ took {damage} damage!",
-    "weak": "{tdemon.owner}'s __{tdemon}__ is **weak** to {mtype} moves and took {damage} damage!"
+    "weak": "{tdemon.owner}'s __{tdemon}__ is **weak** to `{move}` and took {damage} damage!"
 }
 
 
@@ -213,10 +213,10 @@ async def battle_loop(ctx, alpha, beta):
         # await ctx.send((m_alpha, m_beta))
 
         dt_alpha, res_alpha = alpha.take_damage(beta, m_beta.type, m_beta.severity)
-        msg_a = _MESSAGES[res_alpha.name].format(tdemon=alpha, mtype=m_beta.type, ademon=beta, damage=dt_alpha)
+        msg_a = _MESSAGES[res_alpha.name].format(tdemon=alpha, move=m_beta.name, ademon=beta, damage=dt_alpha)
 
         dt_beta, res_beta = beta.take_damage(alpha, m_alpha.type, m_alpha.severity)
-        msg_b = _MESSAGES[res_beta.name].format(tdemon=beta, mtype=m_alpha.type, ademon=alpha, damage=dt_beta)
+        msg_b = _MESSAGES[res_beta.name].format(tdemon=beta, move=m_alpha.name, ademon=alpha, damage=dt_beta)
 
         await ctx.send(msg_a + "\n" + msg_b)
     if alpha.is_fainted():
