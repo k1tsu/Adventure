@@ -65,16 +65,16 @@ class Adventure(commands.Bot):
     def __init__(self):
         super().__init__(self.getprefix)
         self.config = config
-        self.init = INIT
+        self.init   = INIT
+
+        self._redis = None
+        self.db     = None
 
         self.dbl_client = dbl.Client(self, self.config.DBL)
         self.ipc        = utils.IPC(self)
         self.prepared   = asyncio.Event(loop=self.loop)
         self.process    = psutil.Process()
         self.session    = aiohttp.ClientSession()
-
-        self._redis = None
-        self.db     = None
 
         self.confirmation_invocation = []
         self.in_tutorial             = []
