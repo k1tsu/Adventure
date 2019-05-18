@@ -181,7 +181,7 @@ async def send_action(demon, bot):
 
         ret = await func(demon, bot)
 
-    return demon, ret
+    return ret
 
 
 _MESSAGES = {
