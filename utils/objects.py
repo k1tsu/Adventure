@@ -388,6 +388,10 @@ class Resist(enum.Enum):
     evade = 6
 
 
+def is_mag(type_):
+    return type_ not in ("physical", "gun")
+
+
 class BattleDemon:
     """The class for the new PvP system."""
 
@@ -490,7 +494,10 @@ class BattleDemon:
         Returns a namedtuple with the total damage dealt, and the effect (resist, absorb etc)."""
         if self.try_evade(demon):
             return _res_tuple(0, Resist.evade)
-        base = (demon.strength*2) - self.endurance
+        if not is_mag(type_):
+            base = (demon.strength*2) - self.endurance
+        else:
+            base = (demon.magic*2) - self.endurance
         base += random.randint(-3, 4)
         res = self.resists(type_)
         sevmod = _severity[severity]
