@@ -264,7 +264,7 @@ async def try_get_demon(ctx, player):
         if str(r) == rs[0]:
             break
 
-    data = await ctx.bot.db.fetch("SELECT * FROM persona_lookup WHERE name=$1;", name)
+    data = await ctx.bot.db.fetchrow("SELECT * FROM persona_lookup WHERE name=$1;", name)
 
     return utils.BattleDemon(name=data['name'], owner=player, hp=data['hp'], moves=data['moves'], stats=data['stats'],
                              resistances=data['resistances'])
