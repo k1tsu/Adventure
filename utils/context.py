@@ -46,13 +46,13 @@ class EpicContext(commands.Context):
         except discord.Forbidden:
             return False
 
-    async def paginate(self, *words):
+    async def paginate(self, *words, destination=None):
         embed = discord.Embed(color=discord.Colour.blurple())
         pg = WrappedPaginator(prefix="", suffix="", max_size=2048)
         for line in words:
             pg.add_line(line)
         inf = PaginatorEmbedInterface(self.bot, pg, owner=self.author, embed=embed)
-        await inf.send_to(self)
+        await inf.send_to(destination or self)
 
     async def warn(self, message, *, waiter=None):
         self.bot.confirmation_invocation.append(self.author.id)

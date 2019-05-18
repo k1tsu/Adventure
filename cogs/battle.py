@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import operator
 from collections import namedtuple
 
 import discord
@@ -233,6 +234,40 @@ async def battle_loop(ctx, alpha, beta):
     await ctx.send(msg)
 
 
+async def try_get_demon(ctx, player):
+    em = ctx.bot.enemy_manager
+    demons = {e.name for e in sorted(em.enemies, key=lambda e: e.id) if player.compendium.is_enemy_recorded(e)}
+    demons &= ctx.cog.valid
+    demons = set(map(str.lower, demons))
+    await player.owner.send(f"{blobs.BLOB_THINK} Choose a demon!")
+    await ctx.paginate(demons, destination=player.owner)
+
+    def checker(m):
+        return m.content.lower() in demons and \
+            not m.guild and \
+            m.author == player.owner
+
+    rs = [str(blobs.BLOB_TICK), str(blobs.BLOB_CROSS)]
+
+    def rchecker(r, u):
+        return str(r) in rs and \
+            u == player.owner and \
+            r.message.id == n.id
+
+    while True:
+        choice = await ctx.bot.wait_for("message", check=checker)
+        name = choice.content.title()
+        n = await ctx.send(f"{blobs.BLOB_THINK} Are you sure you want to battle with {name}?")
+        r, _ = await ctx.bot.wait_for("reaction_add", check=rchecker, timeout=10)
+        if str(r) == rs[0]:
+            break
+
+    data = await ctx.bot.db.fetch("SELECT * FROM persona_lookup WHERE name=$1;", name)
+
+    return utils.BattleDemon(name=data['name'], owner=player, hp=data['hp'], moves=data['moves'], stats=data['stats'],
+                             resistances=data['resistances'])
+
+
 class Battle(commands.Cog):
     """Contains the commands for battle related commands.
     These (will) include Boss Fights and PvP battles."""
@@ -240,6 +275,7 @@ class Battle(commands.Cog):
         self.bot = bot
         self._fighting = _Dict()
         self._battles = _TupleDict()
+        self.valid = None
         self.task_ender = self.bot.loop.create_task(self._task_ender())
 
     async def _task_ender(self):
@@ -286,30 +322,40 @@ class Battle(commands.Cog):
         WARNING: If you time out any menu, it will count as a forfeit.
 
         (disclaimer: not actually to the death)"""
+        if not self.valid:
+            self.valid = set(map(operator.itemgetter('name'),
+                                 await self.bot.db.fetch("SELECT name FROM persona_lookup")))
         alpha = self._pm.get_player(ctx.author)
         if not alpha:
             raise utils.NoPlayer
+
+        if alpha.compendium.count == 0:
+            return await ctx.send(f"{blobs.BLOB_THINK} You haven't found any demons yet.")
 
         beta = self._pm.get_player(user)
         if not beta:
             return await ctx.send(f"{blobs.BLOB_PLSNO} {user} doesn't have a player!")
 
+        if beta.compendiumn.count == 0:
+            return await ctx.send(f"{blobs.BLOB_THINK} {user} hasn't found any demons yet.")
+
         if not await ctx.warn(f"{blobs.BLOB_THINK} {user}, do you want to battle {ctx.author}?", waiter=user):
             return await ctx.send(f"{blobs.BLOB_SAD} {user} did not want to fight.")
 
+        t1 = self.bot.loop.create_task(try_get_demon(ctx, alpha))
+        t2 = self.bot.loop.create_task(try_get_demon(ctx, beta))
+
+        _, dnf = await asyncio.wait([t1, t2], return_when=asyncio.ALL_COMPLETED, timeout=120)
+        if len(dnf) > 0:
+            t1.cancel(), t1.result(), t1.exception()
+            t2.cancel(), t2.result(), t2.exception()
+            # idk if this is even useful but ok
+            return await ctx.send(f"{blobs.BLOB_SAD} Everyone didn't finish in time.")
+
         self._fighting[ctx.author.id] = user.id
 
-        await ctx.send(f"{blobs.BLOB_THINK} This command is in beta.\n"
-                       "Both of you will be given Arsene for the time being.")
-
-        _p_raw = await self.bot.db.fetchrow("SELECT * FROM persona_lookup WHERE name='Arsene';")
-
-        p1, p2 = (utils.BattleDemon(owner=alpha, hp=_p_raw['hp'], moves=_p_raw['moves'],
-                                    stats=_p_raw['stats'], name=_p_raw['name'],
-                                    resistances=_p_raw['resistances']),
-                  utils.BattleDemon(owner=beta, hp=_p_raw['hp'], moves=_p_raw['moves'],
-                                    stats=_p_raw['stats'], name=_p_raw['name'],
-                                    resistances=_p_raw['resistances']))
+        p1 = t1.result()
+        p2 = t2.result()
 
         key = (ctx.author.id, user.id)
 
