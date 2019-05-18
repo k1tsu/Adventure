@@ -485,7 +485,7 @@ class BattleDemon:
         """Subtracts damage from the demons HP.
         This takes into account the demons endurance, type resistances and move severity.
         Returns a namedtuple with the total damage dealt, and the effect (resist, absorb etc)."""
-        base = demon.strength - (self.endurance * .334)
+        base = (demon.strength**2) - self.endurance
         res = self.resists(type_)
         sevmod = _severity[severity]
         base *= sevmod
