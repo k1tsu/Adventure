@@ -181,7 +181,7 @@ async def send_action(demon, bot):
 
         ret = await func(demon, bot)
 
-    return ret
+    return demon, ret
 
 
 _MESSAGES = {
@@ -197,8 +197,11 @@ _MESSAGES = {
 
 async def battle_loop(ctx, alpha, beta):
     while not alpha.is_fainted() and not beta.is_fainted():
-        ((t_alpha, t_beta), _) = await asyncio.wait([send_action(alpha, ctx.bot), send_action(beta, ctx.bot)],
-                                                    return_when=asyncio.ALL_COMPLETED)
+        loop = ctx.bot.loop
+        t_alpha = loop.create_task(send_action(alpha, ctx.bot))
+        t_beta = loop.create_task(send_action(beta, ctx.bot))
+        await asyncio.wait([t_alpha, t_beta],
+                           return_when=asyncio.ALL_COMPLETED)
         surr = t_alpha.exception() or t_beta.exception()
         if isinstance(surr, UserSurrended):
             if surr.user == alpha.owner.owner:
