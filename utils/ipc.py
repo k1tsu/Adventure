@@ -4,17 +4,21 @@ import json
 class IPC:
     def __init__(self, bot):
         self.bot = bot
-        # noinspection PyProtectedMember
-        self.redis = bot._redis
+        self.redis = None
         self.loop = bot.loop
         self.recv = self.loop.create_task(self.receiver())
         self.recv_channel = None
+
+    def __repr__(self):
+        return "<IPC {0.recv}>".format(self)
 
     def parser(self, **data):
         return getattr(self, data['op'])(*data['args'], **data['kwargs'])
 
     async def receiver(self):
-        await self.bot.wait_until_ready()
+        await self.bot.prepared.wait()
+        # noinspection PyProtectedMember
+        self.redis = self.bot._redis
         self.recv_channel = await self.redis.execute_pubsub("SUBSCRIBE", "IPC-webserver")
         while await self.recv_channel.wait_message():
             recv = await self.recv_channel.get_json(encoding='utf-8')
