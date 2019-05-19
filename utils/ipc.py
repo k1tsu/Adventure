@@ -1,6 +1,6 @@
 import json
 
-from discord import HTTPException
+from discord import HTTPException, NotFound
 
 
 class IPC:
@@ -36,6 +36,8 @@ class IPC:
         if not user:
             try:
                 return await self.bot.http.get_user(userid)
+            except NotFound:
+                return self.abort(404, 'not found')
             except HTTPException as exc:
                 return self.abort(exc.code, exc.reason)
         return {
