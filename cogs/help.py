@@ -58,7 +58,7 @@ class Help2(commands.Cog):
                 embed.description += "\n".join(self.formatter(item.get_commands(), show=show))
             else:
                 # noinspection PyTypeChecker
-                embed.title = " ".join(self.parents(item))
+                embed.title = " ".join(self.parents(item)) + ' ' + item.signature
                 if item.help:
                     embed.description += item.help + '\n\n'
                 else:
