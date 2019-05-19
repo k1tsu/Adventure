@@ -1,5 +1,7 @@
 import json
 
+from discord import HTTPException
+
 
 class IPC:
     def __init__(self, bot):
@@ -25,11 +27,17 @@ class IPC:
             recv = await self.recv_channel.get_json(encoding='utf-8')
             find = await self.parser(**recv)
             await self.send(find)
+            
+    def abort(self, code, reason):
+        return {"error": code, "reason": reason}
 
     async def get_user(self, userid):
         user = self.bot.get_user(userid)
         if not user:
-            return await self.bot.http.get_user(userid)
+            try:
+                return await self.bot.http.get_user(userid)
+            except HTTPException as exc:
+                return self.abort(exc.code, exc.reason)
         return {
             "id": str(user.id),
             "avatar": user.avatar,
