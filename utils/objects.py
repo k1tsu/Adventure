@@ -284,7 +284,6 @@ WHERE players.owner_id = $1;
         await self._bot.redis("DEL", f"status_{self.owner.id}")
         self._bot.player_manager.players.remove(self)
         plylog.info("Player \"%s\" was deleted. (%s [%s])", self.name, self.owner, self.owner.id)
-        del self
 
 
 class Item:
