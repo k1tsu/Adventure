@@ -50,7 +50,7 @@ class IPC:
             except NotFound:
                 return self.abort(404, 'not found')
             except HTTPException as exc:
-                return self.abort(exc.code, exc.reason)
+                return self.abort(exc.code, exc.response)
         return {
             "id": str(user.id),
             "avatar": user.avatar,
