@@ -6,6 +6,8 @@ import io
 
 from utils import format_exception
 
+from discord import HTTPException, NotFound
+
 
 class IPC:
     def __init__(self, bot):
@@ -31,6 +33,9 @@ class IPC:
             recv = await self.recv_channel.get_json(encoding='utf-8')
             find = await self.parser(**recv)
             await self.send(find)
+            
+    def abort(self, code, reason):
+        return {"error": code, "reason": reason}
 
     async def send(self, data):
         await self.bot.redis("PUBLISH", "IPC-adventure", json.dumps(data))
@@ -40,7 +45,12 @@ class IPC:
     async def get_user(self, userid):
         user = self.bot.get_user(userid)
         if not user:
-            return await self.bot.http.get_user(userid)
+            try:
+                return await self.bot.http.get_user(userid)
+            except NotFound:
+                return self.abort(404, 'not found')
+            except HTTPException as exc:
+                return self.abort(exc.code, exc.reason)
         return {
             "id": str(user.id),
             "avatar": user.avatar,
