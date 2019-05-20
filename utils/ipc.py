@@ -1,4 +1,10 @@
 import json
+import textwrap
+
+from contextlib import redirect_stdout
+import io
+
+from utils import format_exception
 
 
 class IPC:
@@ -26,6 +32,11 @@ class IPC:
             find = await self.parser(**recv)
             await self.send(find)
 
+    async def send(self, data):
+        await self.bot.redis("PUBLISH", "IPC-adventure", json.dumps(data))
+
+    # OPs
+
     async def get_user(self, userid):
         user = self.bot.get_user(userid)
         if not user:
@@ -37,5 +48,26 @@ class IPC:
             "discriminator": user.discriminator
         }
 
-    async def send(self, data):
-        await self.bot.redis("PUBLISH", "IPC-adventure", json.dumps(data))
+    async def eval(self, *, body):
+        env = {"bot": self.bot,
+               "redis": self.redis,
+               "ipc": self}
+
+        to = f"async def func():\n{textwrap.indent(body, '    ')}"
+
+        try:
+            exec(to, env)
+        except Exception as e:
+            return {"error": format_exception(e)}
+
+        func = env['func']
+        stdout = io.StringIO()
+
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            return {"error": format_exception(e)}
+        return {"body": ret}
+
+
