@@ -54,7 +54,7 @@ class IPC:
         return {
             "id": str(user.id),
             "avatar": user.avatar,
-            "name": user.name,
+            "username": user.name,
             "discriminator": user.discriminator
         }
 

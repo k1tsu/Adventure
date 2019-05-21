@@ -45,7 +45,7 @@ class Moderator(commands.Cog):
             g = self.bot.get_guild(561390061963182132)
             m = g.get_member(user.id)
             if m:
-                await self.bot.http.add_role(g.id, m.id, 561404670778802193)
+                await self.bot.http.add_role(g.id, m.id, 580154857306980353)
             await ctx.send(f"{user} is now a supporter.")
         else:
             await ctx.send("User is already a supporter.")
