@@ -154,7 +154,7 @@ class Moderator(commands.Cog):
         if not player:
             log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
             return await ctx.message.add_reaction(blobs.BLOB_CROSS)
-        await self.bot.redis.set(f"daily_{member.id}", "12", "EX", "1")
+        await self.bot.redis.set(f"daily_{member.id}", "12", expire=1)
         await ctx.message.add_reaction(blobs.BLOB_TICK)
 
     @commands.command(hidden=True)
@@ -164,9 +164,9 @@ class Moderator(commands.Cog):
             log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
             return await ctx.message.add_reaction(blobs.BLOB_CROSS)
         if await player.is_travelling():
-            await self.bot.redis.set(f"travelling_{member.id}", "0", "EX", "1")
+            await self.bot.redis.set(f"travelling_{member.id}", "0", expire=1)
         elif await player.is_exploring():
-            await self.bot.redis.set(f"exploring_{member.id}", "0", "EX", "1")
+            await self.bot.redis.set(f"exploring_{member.id}", "0", expire=1)
         if not ignore_reaction:
             await ctx.message.add_reaction(blobs.BLOB_TICK)
 

@@ -230,7 +230,7 @@ class Player:
         self.next_map = destination
         plylog.info("%s is adventuring to %s and will finish in %.2f hours.",
                     self.name, destination, destination.calculate_travel_to(self))
-        await self._bot.redis.set(f"travelling_{self.owner.id}", str(time), "EX", str(time))
+        await self._bot.redis.set(f"travelling_{self.owner.id}", str(time), expire=time)
         await self._bot.redis.set(f"next_map_{self.owner.id}", str(destination.id))
         await self._bot.redis.set(f"status_{self.owner.id}", "1")
         self.status = Status.travelling
@@ -250,7 +250,7 @@ class Player:
                      ) - datetime.utcnow()).total_seconds())
         plylog.info("%s is exploring %s and will finish in %.2f hours.",
                     self.name, self.map, self.map.calculate_explore())
-        await self._bot.redis.set(f"exploring_{self.owner.id}", str(time), "EX", str(time))
+        await self._bot.redis.set(f"exploring_{self.owner.id}", str(time), expire=time)
         await self._bot.redis.set(f"status_{self.owner.id}", "2")
         self.status = Status.exploring
         self._explored_maps.append(self.map)

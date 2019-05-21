@@ -273,7 +273,7 @@ class PlayerManager(commands.Cog, name="Players"):
             player.exp += gain
             await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!\n"
                            "Did you know that you can vote for more free rewards? See `*info` for the vote link!")
-            await self.bot.redis.set(f"daily_{ctx.author.id}", "12", "EX", "86400")
+            await self.bot.redis.set(f"daily_{ctx.author.id}", "12", expire=86400)
         else:
             hours, ex = divmod(ttl, 3600)
             minutes, seconds = divmod(ex, 60)
