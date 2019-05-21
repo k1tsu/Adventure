@@ -67,7 +67,7 @@ class Adventure(commands.Bot):
         self.config = config
         self.init   = INIT
 
-        self._redis = None
+        self.redis = None
         self.db     = None
 
         self.dbl_client = dbl.Client(self, self.config.DBL)
@@ -152,12 +152,6 @@ class Adventure(commands.Bot):
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=cls or utils.EpicContext)
 
-    async def redis(self, *args, **kw):
-        try:
-            return await self._redis.execute(*args, **kw)
-        except aioredis.errors.PoolClosedError:
-            return
-
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
@@ -173,15 +167,14 @@ class Adventure(commands.Bot):
         if self.prepared.is_set():
             return
 
-        self._redis = await asyncio.wait_for(aioredis.create_pool(config.REDIS_ADDRESS,
-                                                                  password=config.REDIS_PASS),
-                                             timeout=20.0)
+        self.redis = await asyncio.wait_for(aioredis.create_redis_pool(config.REDIS_ADDRESS,
+                                                                       password=config.REDIS_PASS), timeout=20.0)
         LOG.info("Connected to Redis server.")
         self.db = await asyncpg.create_pool(**config.ASYNCPG)
         LOG.info("Connected to PostgreSQL server.")
 
         for guild in self.guilds:
-            prefix = set(map(bytes.decode, await self.redis("SMEMBERS", f"prefixes_{guild.id}")))
+            prefix = set(map(bytes.decode, await self.redis.smembers(f"prefixes_{guild.id}")))
             if not prefix:
                 prefix = set(config.PREFIX)
             self.prefixes[guild.id] = prefix
@@ -205,8 +198,8 @@ class Adventure(commands.Bot):
         self.dispatch("event_error", event, error, *args, **kwargs)
 
     async def start(self, token):
-        await self.login(token, bot=True)
-        await self.connect(reconnect=True)
+        await self.login(token)
+        await self.connect()
 
     async def logout(self):
         LOG.info("logout() called. Closing down.")
@@ -218,17 +211,17 @@ class Adventure(commands.Bot):
                 await cur.execute("INSERT INTO blacklist VALUES ($1, $2);", userid, reason)
                 # update because using *blacklist should automatically add them to the db
         for guildid, prefixes in self.prefixes.items():
-            await self.redis("DEL", f"prefixes_{guildid}")
-            await self.redis("SADD", f"prefixes_{guildid}", *prefixes)
+            await self.redis.delete(f"prefixes_{guildid}")
+            await self.redis.sadd(f"prefixes_{guildid}", *prefixes)
         for event in self.unload_complete:
             try:
                 await asyncio.wait_for(event.wait(), timeout=60.0)
             except asyncio.TimeoutError:
                 LOG.critical("Event %r failed to finish in time.", event)
-        await self._redis.execute_pubsub("UNSUBSCRIBE", "vote-channel")
+        await self.redis.unsubscribe("vote-channel")
         await self.db.close()
-        self._redis.close()
-        await self._redis.wait_closed()
+        self.redis.close()
+        await self.redis.wait_closed()
         await super().logout()
 
     def run(self):

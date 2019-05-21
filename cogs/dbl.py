@@ -29,7 +29,7 @@ async def dbl_hook(bot):
     log.debug("init %s %s", key, ch)
     while True:
         try:
-            with await bot._redis as pool:
+            with await bot.redis as pool:
                 key, stuff = await pool.execute("BLPOP", key, "0")
             payload = json.loads(stuff)
             log.debug("recieved payload %s", payload)

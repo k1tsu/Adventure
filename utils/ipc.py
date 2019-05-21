@@ -26,8 +26,8 @@ class IPC:
     async def receiver(self):
         await self.bot.prepared.wait()
         # noinspection PyProtectedMember
-        self.redis = self.bot._redis
-        await self.redis.execute_pubsub("SUBSCRIBE", "IPC-webserver")
+        self.redis = self.bot.redis
+        await self.redis.subscribe("IPC-webserver")
         self.recv_channel = self.redis.pubsub_channels['IPC-webserver']
         while await self.recv_channel.wait_message():
             recv = await self.recv_channel.get_json(encoding='utf-8')
@@ -38,7 +38,7 @@ class IPC:
         return {"error": code, "reason": reason}
 
     async def send(self, data):
-        await self.bot.redis("PUBLISH", "IPC-adventure", json.dumps(data))
+        await self.redis.publish("IPC-adventure", json.dumps(data))
 
     # OPs
 
@@ -79,5 +79,3 @@ class IPC:
         except Exception as e:
             return {"error": format_exception(e)}
         return {"body": ret}
-
-

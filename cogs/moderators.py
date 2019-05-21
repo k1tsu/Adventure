@@ -61,23 +61,23 @@ class Moderator(commands.Cog):
 
     @commands.command(hidden=True)
     async def channelignore(self, ctx, *, num: int):
-        if await self.bot.redis("SISMEMBER", "channel_ignore", str(num)):
-            await self.bot.redis("SREM", "channel_ignore", str(num))
+        if await self.bot.redis.sismember("channel_ignore", str(num)):
+            await self.bot.redis.srem("channel_ignore", str(num))
             self.bot.player_manager.ignored_channels.remove(num)
             await ctx.add_reaction(blobs.BLOB_CROSS)
         else:
-            await self.bot.redis("SADD", "channel_ignore", str(num))
+            await self.bot.redis.sadd("channel_ignore", str(num))
             self.bot.player_manager.ignored_channels.append(num)
             await ctx.add_reaction(blobs.BLOB_TICK)
         
     @commands.command(hidden=True)
     async def guildignore(self, ctx, *, num: int):
-        if await self.bot.redis("SISMEMBER", "guild_ignore", str(num)):
-            await self.bot.redis("SREM", "guild_ignore", str(num))
+        if await self.bot.redis.sismember("guild_ignore", str(num)):
+            await self.bot.redis.rem("guild_ignore", str(num))
             self.bot.player_manager.ignored_guilds.remove(num)
             await ctx.add_reaction(blobs.BLOB_CROSS)
         else:
-            await self.bot.redis("SADD", "guild_ignore", str(num))
+            await self.bot.redis.sadd("guild_ignore", str(num))
             self.bot.player_manager.ignored_guilds.append(num)
             await ctx.add_reaction(blobs.BLOB_TICK)
 
@@ -154,7 +154,7 @@ class Moderator(commands.Cog):
         if not player:
             log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
             return await ctx.message.add_reaction(blobs.BLOB_CROSS)
-        await self.bot.redis("SET", f"daily_{member.id}", "12", "EX", "1")
+        await self.bot.redis.set(f"daily_{member.id}", "12", "EX", "1")
         await ctx.message.add_reaction(blobs.BLOB_TICK)
 
     @commands.command(hidden=True)
@@ -164,9 +164,9 @@ class Moderator(commands.Cog):
             log.warning("%s / %s: No player for %s", ctx.message.clean_content, ctx.author, member)
             return await ctx.message.add_reaction(blobs.BLOB_CROSS)
         if await player.is_travelling():
-            await self.bot.redis("SET", f"travelling_{member.id}", "0", "EX", "1")
+            await self.bot.redis.set(f"travelling_{member.id}", "0", "EX", "1")
         elif await player.is_exploring():
-            await self.bot.redis("SET", f"exploring_{member.id}", "0", "EX", "1")
+            await self.bot.redis.set(f"exploring_{member.id}", "0", "EX", "1")
         if not ignore_reaction:
             await ctx.message.add_reaction(blobs.BLOB_TICK)
 
@@ -191,7 +191,7 @@ class Moderator(commands.Cog):
     @commands.command(hidden=True)
     async def redis(self, ctx, *args):
         try:
-            ret = await self.bot.redis(*args)
+            ret = await self.bot.redis.execute(*args)
             await ctx.send(getattr(ret, "decode", ret.__str__)())
         except Exception as e:
             await ctx.add_reaction(blobs.BLOB_CROSS)
@@ -256,9 +256,9 @@ class Moderator(commands.Cog):
         table.set_columns(["owner", "ttl", "type"])
         for p in self.bot.player_manager.players:
             if await p.is_travelling():
-                table.add_row([str(p.owner), await self.bot.redis("TTL", f"travelling_{p.owner.id}"), "travelling"])
+                table.add_row([str(p.owner), await self.bot.redis.ttl(f"travelling_{p.owner.id}"), "travelling"])
             elif await p.is_exploring():
-                table.add_row([str(p.owner), await self.bot.redis("TTL", f"exploring_{p.owner.id}"), "exploring"])
+                table.add_row([str(p.owner), await self.bot.redis.ttl(f"exploring_{p.owner.id}"), "exploring"])
         await ctx.send(f"```\n{table.render()}\n```")
 
     @commands.command(hidden=True)

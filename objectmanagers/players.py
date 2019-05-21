@@ -265,7 +265,7 @@ class PlayerManager(commands.Cog, name="Players"):
         player = self.get_player(ctx.author)
         if not player:
             raise utils.NoPlayer
-        ttl = await self.bot.redis("TTL", f"daily_{ctx.author.id}")
+        ttl = await self.bot.redis.ttl(f"daily_{ctx.author.id}")
         if ttl < 0:
             if player.level < 2:
                 await ctx.send(f"~~You probably won't gain any exp heads up.~~ {blobs.BLOB_INJURED}")
@@ -273,7 +273,7 @@ class PlayerManager(commands.Cog, name="Players"):
             player.exp += gain
             await ctx.send(f"{blobs.BLOB_THUMB} You collected your daily reward and gained **{gain}** Experience!\n"
                            "Did you know that you can vote for more free rewards? See `*info` for the vote link!")
-            await self.bot.redis("SET", f"daily_{ctx.author.id}", "12", "EX", "86400")
+            await self.bot.redis.set(f"daily_{ctx.author.id}", "12", "EX", "86400")
         else:
             hours, ex = divmod(ttl, 3600)
             minutes, seconds = divmod(ex, 60)
@@ -427,8 +427,8 @@ class PlayerManager(commands.Cog, name="Players"):
         if len(self.players) > 0:
             return
         # log.debug("INIT")
-        self.ignored_channels = list(map(int, await self.bot.redis("SMEMBERS", "channel_ignore")))
-        self.ignored_guilds = list(map(int, await self.bot.redis("SMEMBERS", "guild_ignore")))
+        self.ignored_channels = list(map(int, await self.bot.redis.smembers("channel_ignore")))
+        self.ignored_guilds = list(map(int, await self.bot.redis.smembers("guild_ignore")))
         for data in await self.fetch_players():
             owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
             # log.debug("DATA %s", data)
@@ -436,7 +436,7 @@ class PlayerManager(commands.Cog, name="Players"):
             if not user:
                 log.warning("Unknown user id %s. Skipping initialization. (%s)", owner_id, len(self.bot.users))
                 continue
-            status = await self.bot.redis("GET", f"status_{user.id}")
+            status = await self.bot.redis.get(f"status_{user.id}")
             if status:
                 status = utils.Status(int(status))
             else:
@@ -449,7 +449,7 @@ class PlayerManager(commands.Cog, name="Players"):
                 explored=list(map(self.bot.map_manager.get_map, explored)),
                 status=status,
                 exp=exp,
-                next_map=await self.bot.redis("GET", f"next_map_{user.id}"),
+                next_map=await self.bot.redis.get(f"next_map_{user.id}"),
                 compendium=compendium,
                 gold=gold
             )

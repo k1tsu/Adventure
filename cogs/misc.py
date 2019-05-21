@@ -249,7 +249,7 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
                                   f"\nIf you did have a player, then I'm afraid it's gone now.")
         owner_id, name, map_id, created, explored, exp, compendium, gold, *_ = data
         user = self.bot.get_user(owner_id)
-        status = await self.bot.redis("GET", f"status_{owner_id}")
+        status = await self.bot.redis.get(f"status_{owner_id}")
         if status:
             status = utils.Status(int(status))
         else:
@@ -262,7 +262,7 @@ Enemies: {len(self.bot.enemy_manager.enemies)}"""
             explored=list(map(self.bot.map_manager.get_map, explored)),
             status=status,
             exp=exp,
-            next_map=await self.bot.redis("GET", f"next_map_{user.id}"),
+            next_map=await self.bot.redis.get(f"next_map_{user.id}"),
             compendium=compendium,
             gold=gold
         )

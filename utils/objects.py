@@ -171,11 +171,11 @@ class Player:
     async def update_travelling(self) -> bool:
         if await self.is_travelling():
             if self.next_map is None:
-                dest = await self._bot.redis("GET", f"next_map_{self.owner.id}")
+                dest = await self._bot.redis.get(f"next_map_{self.owner.id}")
                 self.next_map = dest.decode()
             return False  # the TTL hasnt expired
         if self.next_map is None:
-            dest = await self._bot.redis("GET", f"next_map_{self.owner.id}")
+            dest = await self._bot.redis.get(f"next_map_{self.owner.id}")
         else:
             dest = self.next_map.id
         if dest is None:
@@ -184,28 +184,28 @@ class Player:
         self._next_map = None
         plylog.info("%s has arrived at their location.", self.name)
         self.map = dest
-        await self._bot.redis("DEL", f"next_map_{self.owner.id}")
-        await self._bot.redis("SET", f"status_{self.owner.id}", "0")
+        await self._bot.redis.delete(f"next_map_{self.owner.id}")
+        await self._bot.redis.set(f"status_{self.owner.id}", "0")
         self.status = Status.idle
         return True
 
     async def update_exploring(self) -> bool:
         if await self.is_exploring():
             return False
-        if self.status == Status.exploring or await self._bot.redis("GET", f"status_{self.owner.id}") == 2:
+        if self.status == Status.exploring or await self._bot.redis.get(f"status_{self.owner.id}") == 2:
             plylog.info("%s has finished exploring %s.", self.name, self.map)
-            await self._bot.redis("SET", f"status_{self.owner.id}", "0")
+            await self._bot.redis.set(f"status_{self.owner.id}", "0")
             self.status = Status.idle
             self.exp += self.map.explore_exp()
             return True
 
     async def travel_time(self) -> int:
         if not self.next_map:
-            self.next_map = await self._bot.redis("GET", f"next_map_{self.owner.id}")
-        return await self._bot.redis("TTL", f"travelling_{self.owner.id}")
+            self.next_map = await self._bot.redis.get(f"next_map_{self.owner.id}")
+        return await self._bot.redis.ttl(f"travelling_{self.owner.id}")
 
     async def explore_time(self) -> int:
-        return await self._bot.redis("TTL", f"exploring_{self.owner.id}")
+        return await self._bot.redis.ttl(f"exploring_{self.owner.id}")
 
     # -- Real functions -- #
 
@@ -230,9 +230,9 @@ class Player:
         self.next_map = destination
         plylog.info("%s is adventuring to %s and will finish in %.2f hours.",
                     self.name, destination, destination.calculate_travel_to(self))
-        await self._bot.redis("SET", f"travelling_{self.owner.id}", str(time), "EX", str(time))
-        await self._bot.redis("SET", f"next_map_{self.owner.id}", str(destination.id))
-        await self._bot.redis("SET", f"status_{self.owner.id}", "1")
+        await self._bot.redis.set(f"travelling_{self.owner.id}", str(time), "EX", str(time))
+        await self._bot.redis.set(f"next_map_{self.owner.id}", str(destination.id))
+        await self._bot.redis.set(f"status_{self.owner.id}", "1")
         self.status = Status.travelling
 
     async def explore(self):
@@ -250,8 +250,8 @@ class Player:
                      ) - datetime.utcnow()).total_seconds())
         plylog.info("%s is exploring %s and will finish in %.2f hours.",
                     self.name, self.map, self.map.calculate_explore())
-        await self._bot.redis("SET", f"exploring_{self.owner.id}", str(time), "EX", str(time))
-        await self._bot.redis("SET", f"status_{self.owner.id}", "2")
+        await self._bot.redis.set(f"exploring_{self.owner.id}", str(time), "EX", str(time))
+        await self._bot.redis.set(f"status_{self.owner.id}", "2")
         self.status = Status.exploring
         self._explored_maps.append(self.map)
 
@@ -278,10 +278,10 @@ WHERE players.owner_id = $1;
             await self._bot.db.execute("DELETE FROM players WHERE owner_id=$1;", self.owner.id)
         else:
             await cursor.execute("DELETE FROM players WHERE owner_id=$1;", self.owner.id)
-        await self._bot.redis("DEL", f"travelling_{self.owner.id}")
-        await self._bot.redis("DEL", f"next_map_{self.owner.id}")
-        await self._bot.redis("DEL", f"exploring_{self.owner.id}")
-        await self._bot.redis("DEL", f"status_{self.owner.id}")
+        await self._bot.redis.delete(f"travelling_{self.owner.id}")
+        await self._bot.redis.delete(f"next_map_{self.owner.id}")
+        await self._bot.redis.delete(f"exploring_{self.owner.id}")
+        await self._bot.redis.delete(f"status_{self.owner.id}")
         self._bot.player_manager.players.remove(self)
         plylog.info("Player \"%s\" was deleted. (%s [%s])", self.name, self.owner, self.owner.id)
 
