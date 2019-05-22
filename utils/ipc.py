@@ -28,7 +28,7 @@ class IPC:
         # noinspection PyProtectedMember
         self.redis = self.bot.redis
         await self.redis.subscribe("IPC-webserver")
-        self.recv_channel = self.redis.pubsub_channels['IPC-webserver']
+        self.recv_channel = self.redis.channels['IPC-webserver']
         while await self.recv_channel.wait_message():
             recv = await self.recv_channel.get_json(encoding='utf-8')
             find = await self.parser(**recv)
